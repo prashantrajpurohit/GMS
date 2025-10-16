@@ -1,0 +1,47 @@
+"use client";
+import BlankLayout from "@/components/blank-layout";
+
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { useState } from "react";
+import RouteProgress from "./route-progress";
+import { Toaster } from "./ui/sonner";
+import { AuthProvider } from "@/contexts/auth-context";
+import UserLayout from "./user-layout";
+import { usePathname } from "next/navigation";
+
+export default function ClientLayoutSwitcher({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const pathName = usePathname();
+  const [queryClient] = useState<QueryClient>(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: {
+            refetchOnWindowFocus: false,
+            staleTime: 1000 * 10,
+          },
+        },
+      })
+  );
+  const freePaths = ["/login", "/register", "/404", "/401", "/"];
+  const isFreePath = freePaths.includes(pathName || "/");
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        {/* <AbilityProvider aclAbilities={undefined}> */}
+        <RouteProgress />
+        {isFreePath ? (
+          <BlankLayout>{children}</BlankLayout>
+        ) : (
+          <UserLayout>{children}</UserLayout>
+        )}
+        <Toaster closeButton position="top-right" richColors />
+        {/* </AbilityProvider> */}
+      </AuthProvider>
+    </QueryClientProvider>
+  );
+}
