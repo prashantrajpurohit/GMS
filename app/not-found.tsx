@@ -1,7 +1,8 @@
-"use client"
-import { Button } from '@/components/ui/button';
-import Image from 'next/image';
-import Link from 'next/link';
+"use client";
+import BlankLayout from "@/components/blank-layout";
+import { Button } from "@/components/ui/button";
+import Image from "next/image";
+import Link from "next/link";
 export default function NotFound() {
   return (
     <div className="flex items-center justify-center min-h-screen px-4">
@@ -15,13 +16,15 @@ export default function NotFound() {
             <Link href="/">Back to Home</Link>
           </Button>
         </div>
-        <Image src={"/images/pages/404.png"} alt="error-illustration" className="mt-8 h-[400px] md:h-[450px] lg:h-[500px] lg:mt-10"
+        <Image
+          src={"/images/pages/404.png"}
+          alt="error-illustration"
+          className="mt-8 h-[400px] md:h-[450px] lg:h-[500px] lg:mt-10"
           width={0}
           height={0}
           sizes="100vw"
-          style={{ width: '100%',height:"65vh" }}
+          style={{ width: "100%", height: "65vh" }}
         />
-
       </div>
       {/* <FooterIllustrations /> */}
     </div>

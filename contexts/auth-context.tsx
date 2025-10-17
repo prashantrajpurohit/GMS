@@ -52,10 +52,10 @@ const AuthProvider = ({ children }: Props) => {
         setUser(authdata);
         dispatch(login(authdata));
         router.replace("/" as string);
+        router.refresh();
         setAuthLoading(false);
       }
     } catch {
-      // router.replace("/" as string);
       setAuthLoading(false);
     }
   };

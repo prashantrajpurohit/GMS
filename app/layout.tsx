@@ -5,26 +5,27 @@ import { ActiveThemeProvider } from "@/components/active-theme";
 import { cn } from "@/lib/utils";
 import ClientLayoutSwitcher from "@/components/client-layout-switcher";
 import Providers from "./providers";
+import { cookies } from "next/headers";
 
 const META_THEME_COLORS = {
   light: "#fffff",
-  dark: "#09090b"
-}
+  dark: "#09090b",
+};
 
 export const metadata: Metadata = {
   title: "Loop | Store Admin",
   description: "Generated Loopos",
-}
+};
 
-
-export default function RootLayout({
-  children
+export default async function RootLayout({
+  children,
 }: {
   children: React.ReactNode;
-
 }) {
+  const cookieStore = await cookies();
+  const parsed = JSON.parse(cookieStore.get("role")?.value ?? "{}");
 
-
+  const AllowedOptions = parsed?.options || [];
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -47,7 +48,8 @@ export default function RootLayout({
 
       <body
         className={cn(
-          "text-foreground group/body overscroll-none font-sans antialiased [--footer-height:calc(var(--spacing)*14)] [--header-height:calc(var(--spacing)*14)] xl:[--footer-height:calc(var(--spacing)*24)]")}
+          "text-foreground group/body overscroll-none font-sans antialiased [--footer-height:calc(var(--spacing)*14)] [--header-height:calc(var(--spacing)*14)] xl:[--footer-height:calc(var(--spacing)*24)]"
+        )}
       >
         <Providers>
           <ThemeProvider
@@ -57,7 +59,9 @@ export default function RootLayout({
             disableTransitionOnChange
           >
             <ActiveThemeProvider>
-              <ClientLayoutSwitcher>{children}</ClientLayoutSwitcher>
+              <ClientLayoutSwitcher allowedOptions={AllowedOptions}>
+                {children}
+              </ClientLayoutSwitcher>
             </ActiveThemeProvider>
           </ThemeProvider>
         </Providers>

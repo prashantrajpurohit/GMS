@@ -1,39 +1,26 @@
-"use client";
-import BlankLayout from "@/components/blank-layout";
-import { useAuth } from "@/hooks/use-auth";
-import Image from "next/image";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 
-export default function Home() {
-  const router = useRouter();
+export default async function Home() {
+  const cookieStore = await cookies();
 
-  // const getHomeRoute = (role: string) => {
-  //   if (role === "admin") {
-  //     return "/dashboard";
-  //   } else if (role === "staff") {
-  //     return "/404";
-  //   } else {
-  //     return "/401";
-  //   }
-  // };
+  const userRole = cookieStore.get("role")?.value;
+  const parsedRole = JSON.parse(userRole || "null");
+  console.log(parsedRole, "PP");
 
-  useEffect(() => {
-    console.log("IN PAGE");
+  const getHomeRoute = (role: string | undefined) => {
+    if (role === "admin") {
+      return "/dashboard";
+    } else if (role === "staff") {
+      return "/staff-dashboard";
+    } else if (role) {
+      return "/dashboard";
+    } else {
+      return "/login";
+    }
+  };
 
-    router.replace("/dashboard");
-  }, []);
+  const homeRoute = getHomeRoute(parsedRole?.role);
 
-  return (
-    <BlankLayout>
-      <Image
-        src="/images/logo_1.gif"
-        alt="logo_1.gif"
-        width={0}
-        height={0}
-        sizes="100vw"
-        style={{ width: "100%", height: "65vh" }}
-      />
-    </BlankLayout>
-  );
+  redirect(homeRoute);
 }

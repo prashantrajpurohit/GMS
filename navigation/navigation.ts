@@ -1,22 +1,24 @@
+import { LayoutDashboard, User, WorkflowIcon } from "lucide-react";
+
 export const routeConfig = [
   {
     title: "Dashboard",
     path: "/dashboard",
-    icon: "tabler:layout-dashboard",
+    icon: LayoutDashboard,
     subject: "dashboard",
     action: "read",
   },
   {
     title: "Designation",
     path: "/designation",
-    icon: "tabler:user-check",
+    icon: WorkflowIcon,
     subject: "designation",
     action: "read",
   },
   {
     title: "Designation Options",
     path: "/module",
-    icon: "tabler:versions",
+    icon: User,
     subject: "modules",
     action: "read",
   },

@@ -10,8 +10,10 @@ import UserLayout from "./user-layout";
 import { usePathname } from "next/navigation";
 
 export default function ClientLayoutSwitcher({
+  allowedOptions,
   children,
 }: {
+  allowedOptions: string[];
   children: React.ReactNode;
 }) {
   const pathName = usePathname();
@@ -26,21 +28,20 @@ export default function ClientLayoutSwitcher({
         },
       })
   );
-  const freePaths = ["/login", "/register", "/404", "/401", "/"];
-  const isFreePath = freePaths.includes(pathName || "/");
+  const freePaths = ["/login", "/register", "/404", "/401"];
+
+  const isFreePath = freePaths.includes(pathName);
 
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        {/* <AbilityProvider aclAbilities={undefined}> */}
         <RouteProgress />
         {isFreePath ? (
           <BlankLayout>{children}</BlankLayout>
         ) : (
-          <UserLayout>{children}</UserLayout>
+          <UserLayout allowedOptions={allowedOptions}>{children}</UserLayout>
         )}
         <Toaster closeButton position="top-right" richColors />
-        {/* </AbilityProvider> */}
       </AuthProvider>
     </QueryClientProvider>
   );
