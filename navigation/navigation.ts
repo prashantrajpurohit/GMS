@@ -1,4 +1,4 @@
-import { LayoutDashboard, User, WorkflowIcon } from "lucide-react";
+import { ChartColumn, CreditCard, LayoutDashboard, NotepadText, Settings, UserCog, Users } from "lucide-react";
 
 export const routeConfig = [
   {
@@ -8,15 +8,47 @@ export const routeConfig = [
     subject: "dashboard",
   },
   {
-    title: "Designation",
-    path: "/designation",
-    icon: WorkflowIcon,
-    subject: "designation",
+    title: "Members",
+    path: "/members",
+    icon: Users,
+    subject: "dashboard",
+    action: "read",
   },
   {
-    title: "Designation Options",
-    path: "/module",
-    icon: User,
-    subject: "modules",
+    title: "Staff",
+    path: "/staff",
+    icon: UserCog,
+    subject: "dashboard",
+    action: "read",
   },
+  {
+    title: "Payments",
+    path: "/payments",
+    icon: CreditCard,
+    subject: "dashboard",
+    action: "read",
+  },
+  {
+    title: "Plans",
+    path: "/plans",
+    icon: NotepadText,
+    subject: "dashboard",
+    action: "read",
+  },
+  {
+    title: "Reports",
+    path: "/reports",
+    icon: ChartColumn,
+    subject: "dashboard",
+    action: "read",
+  },
+  {
+    title: "Settings",
+    path: "/settings",
+    icon: Settings,
+    subject: "dashboard",
+    action: "read",
+  },
+
+
 ];
