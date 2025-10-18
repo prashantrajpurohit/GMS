@@ -6,16 +6,21 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Separator } from "@/components/ui/separator";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Switch } from "@/components/ui/switch";
-import { Badge } from "@/components/ui/badge";
+} from "@/components//ui/card";
+import { Button } from "@/components//ui/button";
+import { Input } from "@/components//ui/input";
+import { Label } from "@/components//ui/label";
+import { Textarea } from "@/components//ui/textarea";
+import { Separator } from "@/components//ui/separator";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components//ui/avatar";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components//ui/tabs";
+import { Switch } from "@/components//ui/switch";
+import { Badge } from "@/components//ui/badge";
 import {
   Building2,
   Clock,
@@ -111,24 +116,35 @@ function Settings() {
       </div>
 
       <Tabs defaultValue="gym-info" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 mb-6">
-          <TabsTrigger value="gym-info" className="gap-2">
-            <Building2 className="w-4 h-4" />
-            Gym Information
+        <TabsList className="grid w-full grid-cols-1 md:grid-cols-3 gap-3 mb-6 bg-transparent h-auto p-0">
+          <TabsTrigger
+            value="gym-info"
+            className="gap-2 h-auto p-4 data-[state=active]:bg-gradient-to-r data-[state=active]:from-neon-green/20 data-[state=active]:to-neon-green/10 border-2 border-transparent data-[state=active]:border-neon-green/50 data-[state=active]:shadow-lg data-[state=active]:shadow-neon-green/20 rounded-lg hover:bg-muted/50 transition-all"
+          >
+            <Building2 className="w-5 h-5 data-[state=active]:text-neon-green" />
+            <span className="hidden sm:inline">Gym Information</span>
+            <span className="sm:hidden">Gym Info</span>
           </TabsTrigger>
-          <TabsTrigger value="timings" className="gap-2">
-            <Clock className="w-4 h-4" />
+          <TabsTrigger
+            value="timings"
+            className="gap-2 h-auto p-4 data-[state=active]:bg-gradient-to-r data-[state=active]:from-neon-blue/20 data-[state=active]:to-neon-blue/10 border-2 border-transparent data-[state=active]:border-neon-blue/50 data-[state=active]:shadow-lg data-[state=active]:shadow-neon-blue/20 rounded-lg hover:bg-muted/50 transition-all"
+          >
+            <Clock className="w-5 h-5 data-[state=active]:text-neon-blue" />
             Timings
           </TabsTrigger>
-          <TabsTrigger value="profile" className="gap-2">
-            <User className="w-4 h-4" />
-            User Profile
+          <TabsTrigger
+            value="profile"
+            className="gap-2 h-auto p-4 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500/20 data-[state=active]:to-purple-500/10 border-2 border-transparent data-[state=active]:border-purple-500/50 data-[state=active]:shadow-lg data-[state=active]:shadow-purple-500/20 rounded-lg hover:bg-muted/50 transition-all"
+          >
+            <User className="w-5 h-5 data-[state=active]:text-purple-500" />
+            <span className="hidden sm:inline">User Profile</span>
+            <span className="sm:hidden">Profile</span>
           </TabsTrigger>
         </TabsList>
 
         {/* Gym Information Tab */}
         <TabsContent value="gym-info">
-          <Card className="border-border/50">
+          <Card className="border-neon-green/20 bg-muted/30 dark:bg-slate-800/50 hover:border-neon-green/50 dark:hover:border-neon-green/60 transition-all">
             <CardHeader>
               <div className="flex items-center gap-3">
                 <Building2 className="w-5 h-5 text-neon-green" />
@@ -302,7 +318,7 @@ function Settings() {
 
         {/* Gym Timings Tab */}
         <TabsContent value="timings">
-          <Card className="border-border/50">
+          <Card className="border-neon-blue/20 bg-muted/30 dark:bg-slate-800/50 hover:border-neon-blue/50 dark:hover:border-neon-blue/60 transition-all">
             <CardHeader>
               <div className="flex items-center gap-3">
                 <Clock className="w-5 h-5 text-neon-blue" />
@@ -508,7 +524,7 @@ function Settings() {
 
         {/* User Profile Tab */}
         <TabsContent value="profile">
-          <Card className="border-border/50">
+          <Card className="border-purple-500/20 bg-muted/30 dark:bg-slate-800/50 hover:border-purple-500/50 dark:hover:border-purple-500/60 transition-all">
             <CardHeader>
               <div className="flex items-center gap-3">
                 <User className="w-5 h-5 text-purple-500" />

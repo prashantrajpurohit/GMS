@@ -6,11 +6,16 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Progress } from "@/components/ui/progress";
+} from "@/components//ui/card";
+import { Button } from "@/components//ui/button";
+import { Badge } from "@/components//ui/badge";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components//ui/tabs";
+import { Progress } from "@/components//ui/progress";
 import {
   Users,
   Calendar,
@@ -80,37 +85,41 @@ function Dashboard() {
 
       {/* Top Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="border-border/50">
+        <Card className="border-2 border-neon-green/30 bg-gradient-to-br from-neon-green/10 to-neon-green/5 dark:bg-gradient-to-br dark:from-neon-green/20 dark:to-slate-800/50 hover:border-neon-green/60 hover:shadow-lg hover:shadow-neon-green/20 transition-all">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm">Active Members</CardTitle>
             <Users className="h-4 w-4 text-neon-green" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl">{mockData.activeMembers}</div>
+            <div className="text-2xl text-neon-green">
+              {mockData.activeMembers}
+            </div>
             <p className="text-xs text-muted-foreground">
               <span className="text-neon-green">+12%</span> from last month
             </p>
           </CardContent>
         </Card>
 
-        <Card className="border-border/50">
+        <Card className="border-2 border-neon-blue/30 bg-gradient-to-br from-neon-blue/10 to-neon-blue/5 dark:bg-gradient-to-br dark:from-neon-blue/20 dark:to-slate-800/50 hover:border-neon-blue/60 hover:shadow-lg hover:shadow-neon-blue/20 transition-all">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm">Upcoming Renewals</CardTitle>
             <Calendar className="h-4 w-4 text-neon-blue" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl">{mockData.upcomingRenewals}</div>
+            <div className="text-2xl text-neon-blue">
+              {mockData.upcomingRenewals}
+            </div>
             <p className="text-xs text-muted-foreground">Next 7 days</p>
           </CardContent>
         </Card>
 
-        <Card className="border-border/50">
+        <Card className="border-2 border-orange-500/30 bg-gradient-to-br from-orange-500/10 to-orange-500/5 dark:bg-gradient-to-br dark:from-orange-500/20 dark:to-slate-800/50 hover:border-orange-500/60 hover:shadow-lg hover:shadow-orange-500/20 transition-all">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm">Pending Dues</CardTitle>
             <AlertTriangle className="h-4 w-4 text-orange-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl">
+            <div className="text-2xl text-orange-500">
               ₹{mockData.pendingDues.toLocaleString()}
             </div>
             <p className="text-xs text-muted-foreground">
@@ -120,13 +129,13 @@ function Dashboard() {
           </CardContent>
         </Card>
 
-        <Card className="border-border/50">
+        <Card className="border-2 border-purple-500/30 bg-gradient-to-br from-purple-500/10 to-purple-500/5 dark:bg-gradient-to-br dark:from-purple-500/20 dark:to-slate-800/50 hover:border-purple-500/60 hover:shadow-lg hover:shadow-purple-500/20 transition-all">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm">Monthly Revenue</CardTitle>
-            <DollarSign className="h-4 w-4 text-neon-green" />
+            <DollarSign className="h-4 w-4 text-purple-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl">
+            <div className="text-2xl text-purple-400">
               ₹{mockData.monthlyRevenue.toLocaleString()}
             </div>
             <p className="text-xs text-muted-foreground">
@@ -138,7 +147,7 @@ function Dashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Today's Check-ins */}
-        <Card className="border-border/50">
+        <Card className="border-neon-blue/20 bg-muted/30 dark:bg-slate-800/50 hover:border-neon-blue/50 dark:hover:border-neon-blue/60 transition-all">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <UserCheck className="h-5 w-5 text-neon-blue" />
@@ -220,7 +229,7 @@ function Dashboard() {
         </Card>
 
         {/* Revenue vs Pending */}
-        <Card className="border-border/50">
+        <Card className="border-neon-green/20 bg-muted/30 dark:bg-slate-800/50 hover:border-neon-green/50 dark:hover:border-neon-green/60 transition-all">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <TrendingUp className="h-5 w-5 text-neon-green" />
@@ -268,7 +277,7 @@ function Dashboard() {
       </div>
 
       {/* Peak Hours Chart */}
-      <Card className="border-border/50">
+      <Card className="border-neon-blue/20 bg-muted/30 dark:bg-slate-800/50 hover:border-neon-blue/50 dark:hover:border-neon-blue/60 transition-all">
         <CardHeader>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
@@ -354,13 +363,13 @@ function Dashboard() {
       </Card>
 
       {/* Quick Actions */}
-      <Card className="border-border/50">
+      <Card className="border-neon-green/20 bg-muted/30 dark:bg-slate-800/50 hover:border-neon-green/50 dark:hover:border-neon-green/60 transition-all">
         <CardHeader>
           <CardTitle>Quick Actions</CardTitle>
           <CardDescription>Common tasks and shortcuts</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <Button
               className="h-auto p-4 flex-col gap-2 bg-gradient-to-r from-neon-green/20 to-neon-green/10 hover:from-neon-green/30 hover:to-neon-green/20 border-2 border-neon-green/40 shadow-lg shadow-neon-green/10"
               onClick={() => router.push("/members")}

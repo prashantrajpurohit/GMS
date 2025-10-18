@@ -67,6 +67,7 @@ export function NavMain({ items }: Navitems) {
   }, []);
 
   const HasNoChild = (item: SingleNav) => {
+    const isActive = item.path === pathname;
     return (
       <SidebarMenuItem>
         <SidebarMenuButton
@@ -74,9 +75,26 @@ export function NavMain({ items }: Navitems) {
           onClick={() => handleClick(item.path)}
           tooltip={item.title}
           isActive={!!(item.path === pathname)}
+          className={`w-full justify-start gap-3 text-sidebar-foreground ${
+            isActive
+              ? "bg-gradient-to-r from-neon-green/10 to-neon-blue/10 text-neon-green border-neon-green/20 font-medium"
+              : "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+          }`}
         >
-          <item.icon />
-          <span>{item.title}</span>
+          <item.icon
+            className={`w-5 h-5 ${
+              isActive ? "text-neon-green" : "text-sidebar-foreground"
+            }`}
+          />
+          <span
+            className={` ${
+              isActive
+                ? " text-neon-green font-medium"
+                : "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+            }`}
+          >
+            {item.title}
+          </span>
         </SidebarMenuButton>
       </SidebarMenuItem>
     );
