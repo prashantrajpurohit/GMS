@@ -7,7 +7,6 @@ import { Toaster } from "./ui/sonner";
 import { AuthProvider } from "@/contexts/auth-context";
 import UserLayout from "./user-layout";
 import { usePathname } from "next/navigation";
-import { getUserOptions } from "@/app/action/auth";
 import { Loader2, Route } from "lucide-react";
 import RouteProgress from "./route-progress";
 

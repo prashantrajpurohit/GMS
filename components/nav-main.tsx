@@ -42,18 +42,22 @@ export function NavMain({ items }: Navitems) {
   const router = useRouter();
   const pathname = usePathname();
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [allowedOptions, setAllowedOptions] = useState<string[]>([]);
+  const [roleData, setRoleData] = useState<{ role: string; options: string[] }>(
+    { role: "", options: [] }
+  );
 
   const handleClick = (path: string) => {
     router.replace(path);
   };
-  const updatedItems = items.filter((item) =>
-    allowedOptions.includes(item.subject)
-  );
+  const updatedItems =
+    roleData.role == "owner"
+      ? items
+      : items.filter((item) => roleData.options.includes(item.subject));
+
   useEffect(() => {
     getUserOptions()
-      .then((options) => {
-        setAllowedOptions(options);
+      .then((roleData) => {
+        setRoleData(roleData);
         setIsLoading(false);
       })
       .catch((err) => {
@@ -61,6 +65,7 @@ export function NavMain({ items }: Navitems) {
         setIsLoading(false);
       });
   }, []);
+
   const HasNoChild = (item: SingleNav) => {
     return (
       <SidebarMenuItem>
