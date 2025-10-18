@@ -2,13 +2,7 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { SiteHeader } from "@/components/site-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { ReactNode } from "react";
-export default function UserLayout({
-  allowedOptions,
-  children,
-}: {
-  allowedOptions: string[];
-  children: ReactNode;
-}) {
+export default function UserLayout({ children }: { children: ReactNode }) {
   return (
     <SidebarProvider
       style={
@@ -18,7 +12,7 @@ export default function UserLayout({
         } as React.CSSProperties
       }
     >
-      <AppSidebar variant="inset" allowedOptions={allowedOptions} />
+      <AppSidebar variant="inset" />
       <SidebarInset>
         <SiteHeader />
         <span style={{ padding: "20px" }}>{children}</span>

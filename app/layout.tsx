@@ -5,7 +5,6 @@ import { ActiveThemeProvider } from "@/components/active-theme";
 import { cn } from "@/lib/utils";
 import ClientLayoutSwitcher from "@/components/client-layout-switcher";
 import Providers from "./providers";
-import { cookies } from "next/headers";
 
 const META_THEME_COLORS = {
   light: "#fffff",
@@ -22,10 +21,6 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const cookieStore = await cookies();
-  const parsed = JSON.parse(cookieStore.get("role")?.value ?? "{}");
-
-  const AllowedOptions = parsed?.options || [];
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -59,9 +54,7 @@ export default async function RootLayout({
             disableTransitionOnChange
           >
             <ActiveThemeProvider>
-              <ClientLayoutSwitcher allowedOptions={AllowedOptions}>
-                {children}
-              </ClientLayoutSwitcher>
+              <ClientLayoutSwitcher>{children}</ClientLayoutSwitcher>
             </ActiveThemeProvider>
           </ThemeProvider>
         </Providers>
@@ -69,15 +62,3 @@ export default async function RootLayout({
     </html>
   );
 }
-
-// import { Geist, Geist_Mono } from "next/font/google";
-
-// const geistSans = Geist({
-//   variable: "--font-geist-sans",
-//   subsets: ["latin"],
-// });
-
-// const geistMono = Geist_Mono({
-//   variable: "--font-geist-mono",
-//   subsets: ["latin"],
-// });

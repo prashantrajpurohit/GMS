@@ -12,7 +12,6 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { useRouter } from "next/navigation";
 import { routeConfig } from "@/navigation/navigation";
 import Image from "next/image";
 
@@ -26,8 +25,6 @@ const data = {
   navMain: routeConfig,
 };
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { allowedOptions } = props;
-
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
@@ -45,7 +42,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} allowedOptions={allowedOptions} />
+        <NavMain items={data.navMain} />
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={data.user} />

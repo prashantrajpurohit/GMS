@@ -11,24 +11,24 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "./ui/collapsible";
-import { ChevronRight } from "lucide-react";
-import { Fragment } from "react";
+import { ChevronRight, LucideProps } from "lucide-react";
+import { Fragment, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useRouter } from "next/navigation";
-import { useAbility } from "@/hooks/use-ability";
+import { getUserOptions } from "@/app/action/auth";
 
 interface SingleNav {
   title: string;
   path: string;
-  icon: string;
+  icon: React.ComponentType<LucideProps>;
   subject: string;
-  action: string;
   children?:
     | undefined
     | {
         title: string;
         path: string;
-        icon: string;
+        icon: React.ComponentType<LucideProps>;
+
         subject: string;
         action: string;
       }[];
@@ -36,12 +36,13 @@ interface SingleNav {
 
 interface Navitems {
   items: SingleNav[];
-  allowedOptions: string[];
 }
 
-export function NavMain({ items, allowedOptions }: Navitems) {
+export function NavMain({ items }: Navitems) {
   const router = useRouter();
   const pathname = usePathname();
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [allowedOptions, setAllowedOptions] = useState<string[]>([]);
 
   const handleClick = (path: string) => {
     router.replace(path);
@@ -49,8 +50,17 @@ export function NavMain({ items, allowedOptions }: Navitems) {
   const updatedItems = items.filter((item) =>
     allowedOptions.includes(item.subject)
   );
-  console.log(items, "TILES", updatedItems);
-
+  useEffect(() => {
+    getUserOptions()
+      .then((options) => {
+        setAllowedOptions(options);
+        setIsLoading(false);
+      })
+      .catch((err) => {
+        console.error("Failed to get options:", err);
+        setIsLoading(false);
+      });
+  }, []);
   const HasNoChild = (item: SingleNav) => {
     return (
       <SidebarMenuItem>

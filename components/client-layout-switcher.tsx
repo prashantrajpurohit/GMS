@@ -2,18 +2,18 @@
 import BlankLayout from "@/components/blank-layout";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useState } from "react";
-import RouteProgress from "./route-progress";
+import { useEffect, useState } from "react";
 import { Toaster } from "./ui/sonner";
 import { AuthProvider } from "@/contexts/auth-context";
 import UserLayout from "./user-layout";
 import { usePathname } from "next/navigation";
+import { getUserOptions } from "@/app/action/auth";
+import { Loader2, Route } from "lucide-react";
+import RouteProgress from "./route-progress";
 
 export default function ClientLayoutSwitcher({
-  allowedOptions,
   children,
 }: {
-  allowedOptions: string[];
   children: React.ReactNode;
 }) {
   const pathName = usePathname();
@@ -39,7 +39,7 @@ export default function ClientLayoutSwitcher({
         {isFreePath ? (
           <BlankLayout>{children}</BlankLayout>
         ) : (
-          <UserLayout allowedOptions={allowedOptions}>{children}</UserLayout>
+          <UserLayout>{children}</UserLayout>
         )}
         <Toaster closeButton position="top-right" richColors />
       </AuthProvider>

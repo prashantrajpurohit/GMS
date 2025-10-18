@@ -16,7 +16,16 @@ export function middleware(req: NextRequest) {
   const path = pathname === "/" ? "/" : pathname.replace(/^\//, "");
   const publicPaths = ["login", "register", "404", "401"];
   const isPublicPath = publicPaths.includes(path);
-
+  if (pathname === "/" && token) {
+    const role = parsed?.role;
+    if (role === "owner") {
+      return NextResponse.redirect(new URL("/dashboard", req.url));
+    } else if (role === "staff") {
+      return NextResponse.redirect(new URL("/staff-dashboard", req.url));
+    } else {
+      return NextResponse.redirect(new URL("/dashboard", req.url));
+    }
+  }
   if (!token && !isPublicPath && pathname !== "/") {
     return NextResponse.redirect(new URL("/login", req.url));
   }

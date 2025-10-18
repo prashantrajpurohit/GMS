@@ -155,12 +155,10 @@ function Sidebar({
   side = "left",
   variant = "sidebar",
   collapsible = "offcanvas",
-  allowedOptions,
   className,
   children,
   ...props
 }: React.ComponentProps<"div"> & {
-  allowedOptions: string[];
   side?: "left" | "right";
   variant?: "sidebar" | "floating" | "inset";
   collapsible?: "offcanvas" | "icon" | "none";
@@ -216,7 +214,6 @@ function Sidebar({
       data-side={side}
       data-slot="sidebar"
     >
-      {/* This is what handles the sidebar gap on desktop */}
       <div
         data-slot="sidebar-gap"
         className={cn(
