@@ -41,6 +41,12 @@ import {
   Award,
   Clock,
 } from "lucide-react";
+import { FormProvider, useForm } from "react-hook-form";
+import CustomField from "@/components/reusableComponents/customField";
+import StaffController from "./controller";
+import { useMutation } from "@tanstack/react-query";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { StaffFormData, staffSchema } from "@/lib/validation-schemas";
 
 interface Staff {
   id: string;
@@ -102,20 +108,35 @@ const mockStaff: Staff[] = [
   },
 ];
 
+const roleOptions = [
+  {
+    name: "Head Coach",
+    value: "head-coach",
+  },
+  {
+    name: "Personal Trainer",
+    value: "personal-trainer",
+  },
+  {
+    name: "Nutritionist",
+    value: "nutritionist",
+  },
+  {
+    name: "Receptionist",
+    value: "receptionist",
+  },
+];
+
 function StaffManagement() {
+  const staffController = new StaffController();
+  const { mutate } = useMutation({
+    mutationFn: staffController.addStaff,
+  });
   const [staff, setStaff] = useState<Staff[]>(mockStaff);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [editingStaff, setEditingStaff] = useState<Staff | null>(null);
   const [filterRole, setFilterRole] = useState<string>("all");
-  const [newStaff, setNewStaff] = useState({
-    name: "",
-    role: "personal-trainer" as Staff["role"],
-    email: "",
-    phone: "",
-    specialization: "",
-    isActive: true,
-  });
 
   const getRoleBadge = (role: Staff["role"]) => {
     switch (role) {
@@ -169,31 +190,6 @@ function StaffManagement() {
       .slice(0, 2);
   };
 
-  const handleCreateStaff = () => {
-    const staffMember: Staff = {
-      id: Date.now().toString(),
-      name: newStaff.name,
-      role: newStaff.role,
-      email: newStaff.email,
-      phone: newStaff.phone,
-      joinDate: new Date().toISOString().split("T")[0],
-      specialization: newStaff.specialization,
-      isActive: newStaff.isActive,
-      assignedMembers: 0,
-    };
-
-    setStaff([...staff, staffMember]);
-    setIsCreateOpen(false);
-    setNewStaff({
-      name: "",
-      role: "personal-trainer",
-      email: "",
-      phone: "",
-      specialization: "",
-      isActive: true,
-    });
-  };
-
   const handleEditStaff = () => {
     if (editingStaff) {
       setStaff(staff.map((s) => (s.id === editingStaff.id ? editingStaff : s)));
@@ -210,6 +206,9 @@ function StaffManagement() {
     setEditingStaff(staffMember);
     setIsEditOpen(true);
   };
+  const onSubmit = (data: any) => {
+    mutate(data);
+  };
 
   const filteredStaff =
     filterRole === "all" ? staff : staff.filter((s) => s.role === filterRole);
@@ -221,6 +220,20 @@ function StaffManagement() {
       (s) => s.role === "head-coach" || s.role === "personal-trainer"
     ).length,
   };
+
+  const form = useForm<StaffFormData>({
+    defaultValues: {
+      name: "",
+      role: "personal-trainer",
+      email: "",
+      phone: "",
+      specialization: "",
+      isActive: true,
+    },
+    resolver: zodResolver(staffSchema),
+  });
+
+  const values = form.watch();
 
   return (
     <div className="space-y-6">
@@ -239,104 +252,81 @@ function StaffManagement() {
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[500px]">
-            <DialogHeader>
-              <DialogTitle>Add New Staff Member</DialogTitle>
-              <DialogDescription>
-                Add a new coach or staff member to your gym team.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="name">Full Name</Label>
-                <Input
-                  id="name"
-                  value={newStaff.name}
-                  onChange={(e) =>
-                    setNewStaff({ ...newStaff, name: e.target.value })
-                  }
-                  placeholder="Enter full name"
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="role">Role</Label>
-                <Select
-                  value={newStaff.role}
-                  onValueChange={(value: Staff["role"]) =>
-                    setNewStaff({ ...newStaff, role: value })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="head-coach">Head Coach</SelectItem>
-                    <SelectItem value="personal-trainer">
-                      Personal Trainer
-                    </SelectItem>
-                    <SelectItem value="nutritionist">Nutritionist</SelectItem>
-                    <SelectItem value="receptionist">Receptionist</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={newStaff.email}
-                  onChange={(e) =>
-                    setNewStaff({ ...newStaff, email: e.target.value })
-                  }
-                  placeholder="coach@gym.com"
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="phone">Phone</Label>
-                <Input
-                  id="phone"
-                  value={newStaff.phone}
-                  onChange={(e) =>
-                    setNewStaff({ ...newStaff, phone: e.target.value })
-                  }
-                  placeholder="+91 98765 43210"
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="specialization">Specialization</Label>
-                <Input
-                  id="specialization"
-                  value={newStaff.specialization}
-                  onChange={(e) =>
-                    setNewStaff({ ...newStaff, specialization: e.target.value })
-                  }
-                  placeholder="e.g., Strength Training, Yoga"
-                />
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label htmlFor="isActive">Active Status</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Mark this staff member as active
-                  </p>
+            <FormProvider {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)}>
+                <DialogHeader>
+                  <DialogTitle>Add New Staff Member</DialogTitle>
+                  <DialogDescription>
+                    Add a new coach or staff member to your gym team.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="grid gap-2">
+                    <CustomField
+                      name="name"
+                      label="Full Name"
+                      isLoading={false}
+                      placeholder="Enter full name"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <CustomField
+                      name="role"
+                      label="Role"
+                      isLoading={false}
+                      placeholder="Select role"
+                      select
+                      options={roleOptions}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <CustomField
+                      name="email"
+                      label="Email"
+                      isLoading={false}
+                      placeholder="coach@gym.com"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <CustomField
+                      name="phone"
+                      label="Phone"
+                      isLoading={false}
+                      placeholder="+91 98765 43210"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <CustomField
+                      name="specialization"
+                      label="Specialization"
+                      isLoading={false}
+                      placeholder="e.g., Strength Training, Yoga"
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="isActive">Active Status</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Mark this staff member as active
+                      </p>
+                    </div>
+                    <Switch
+                      id="isActive"
+                      {...form.register("isActive")}
+                      defaultChecked={values.isActive}
+                    />
+                  </div>
                 </div>
-                <Switch
-                  id="isActive"
-                  checked={newStaff.isActive}
-                  onCheckedChange={(checked) =>
-                    setNewStaff({ ...newStaff, isActive: checked })
-                  }
-                />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button
-                type="submit"
-                onClick={handleCreateStaff}
-                className="bg-gradient-to-r from-neon-green to-neon-blue text-white"
-              >
-                Add Staff Member
-              </Button>
-            </DialogFooter>
+                <DialogFooter>
+                  <Button
+                    type="submit"
+                    className="bg-gradient-to-r from-neon-green to-neon-blue text-white"
+                  >
+                    Add Staff Member
+                  </Button>
+                </DialogFooter>
+              </form>
+            </FormProvider>
           </DialogContent>
         </Dialog>
       </div>

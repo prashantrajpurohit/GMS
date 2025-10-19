@@ -42,6 +42,8 @@ import { FormProvider, useForm } from "react-hook-form";
 import CustomTextarea from "@/components/reusableComponents/textArea";
 import { useMutation } from "@tanstack/react-query";
 import PlansController from "./controller";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { planFormData, planSchema } from "@/lib/validation-schemas";
 
 interface MembershipPlan {
   id: string;
@@ -156,8 +158,8 @@ function WorkoutPlans() {
     useState<MembershipPlan | null>(null);
 
   // Helper function to check if plan qualifies for freeze days (>= 6 months)
-  const qualifiesForFreeze = (durationValue: string, durationUnit: string) => {
-    const value = parseInt(durationValue) || 0;
+  const qualifiesForFreeze = (durationValue: number, durationUnit: string) => {
+    const value = durationValue || 0;
     if (durationUnit === "years") return value >= 1;
     if (durationUnit === "months") return value >= 6;
     return false; // Days don't qualify
@@ -186,16 +188,17 @@ function WorkoutPlans() {
     0
   );
   const activePlans = mockMembershipPlans.filter((p) => p.isActive).length;
-  const form = useForm({
+  const form = useForm<planFormData>({
     defaultValues: {
       name: "",
-      durationValue: "1",
+      durationValue: 1,
       durationUnit: "months",
       price: "",
       features: "",
       description: "",
       freezeDays: "",
     },
+    resolver: zodResolver(planSchema),
   });
 
   const values = form.watch();
@@ -219,14 +222,14 @@ function WorkoutPlans() {
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[525px]">
-            <DialogHeader>
-              <DialogTitle>Create Membership Plan</DialogTitle>
-              <DialogDescription>
-                Add a new subscription plan for your gym members.
-              </DialogDescription>
-            </DialogHeader>
             <FormProvider {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)}>
+                <DialogHeader>
+                  <DialogTitle>Create Membership Plan</DialogTitle>
+                  <DialogDescription>
+                    Add a new subscription plan for your gym members.
+                  </DialogDescription>
+                </DialogHeader>
                 <div className="grid gap-4 py-4">
                   <div className="grid gap-2">
                     <CustomField
@@ -276,7 +279,7 @@ function WorkoutPlans() {
                   </div>
                   <div className="grid gap-2">
                     <CustomTextarea
-                      name="plan-description"
+                      name="description"
                       label="Description"
                       placeholder="Brief description of the plan..."
                       isLoading={false}
@@ -300,16 +303,16 @@ function WorkoutPlans() {
                     </div>
                   )}
                 </div>
+                <DialogFooter>
+                  <Button
+                    type="submit"
+                    className="bg-gradient-to-r from-neon-green to-neon-blue text-white"
+                  >
+                    Create Plan
+                  </Button>
+                </DialogFooter>
               </form>
             </FormProvider>
-            <DialogFooter>
-              <Button
-                type="submit"
-                className="bg-gradient-to-r from-neon-green to-neon-blue text-white"
-              >
-                Create Plan
-              </Button>
-            </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
@@ -571,7 +574,7 @@ function WorkoutPlans() {
                 />
               </div>
               {qualifiesForFreeze(
-                editingMembershipPlan.duration.value.toString(),
+                editingMembershipPlan.duration.value,
                 editingMembershipPlan.duration.unit
               ) && (
                 <div className="grid gap-2">

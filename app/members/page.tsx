@@ -37,7 +37,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-// import { ImportMembersDialog } from "./ImportMembersDialog";
 import {
   Search,
   Plus,
@@ -55,6 +54,13 @@ import {
   Image as ImageIcon,
 } from "lucide-react";
 import { toast } from "sonner";
+import { FormProvider, useForm } from "react-hook-form";
+import CustomField from "@/components/reusableComponents/customField";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { memberFormData, memberSchema } from "@/lib/validation-schemas";
+import MembersController from "./controller";
+import { useMutation } from "@tanstack/react-query";
+import { ImportMembersDialog } from "@/components/ImportMembersDialog";
 
 interface Member {
   id: string;
@@ -169,6 +175,8 @@ const initialMembers: Member[] = [
 ];
 
 function MembershipManagement() {
+  const memberController = new MembersController();
+  const { mutate } = useMutation({ mutationFn: memberController.addMember });
   const [members, setMembers] = useState<Member[]>(initialMembers);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedFilter, setSelectedFilter] = useState("all");
@@ -231,78 +239,6 @@ function MembershipManagement() {
     }
   };
 
-  const handleAddMember = () => {
-    // Validate required fields
-    if (
-      !newMember.name ||
-      !newMember.email ||
-      !newMember.phone ||
-      !newMember.planType ||
-      !newMember.startDate
-    ) {
-      toast.error("Please fill in all required fields");
-      return;
-    }
-
-    // Calculate end date based on plan type
-    const startDate = new Date(newMember.startDate);
-    let endDate = new Date(startDate);
-
-    if (newMember.planType.includes("monthly")) {
-      endDate.setMonth(endDate.getMonth() + 1);
-    } else if (newMember.planType.includes("annual")) {
-      endDate.setFullYear(endDate.getFullYear() + 1);
-    }
-
-    // Extract amount from plan type
-    let amount = 0;
-    if (newMember.planType === "basic-monthly") amount = 6400;
-    else if (newMember.planType === "premium-monthly") amount = 12000;
-    else if (newMember.planType === "basic-annual") amount = 64000;
-    else if (newMember.planType === "premium-annual") amount = 96000;
-
-    const member: Member = {
-      id: (members.length + 1).toString(),
-      name: newMember.name,
-      email: newMember.email,
-      phone: newMember.phone,
-      planType: newMember.planType
-        .replace("-", " ")
-        .replace(/\b\w/g, (l) => l.toUpperCase()),
-      startDate: newMember.startDate,
-      endDate: endDate.toISOString().split("T")[0],
-      status: "pending",
-      amount: amount,
-      photo: newMember.photo,
-      dob: newMember.dob,
-      gender: newMember.gender,
-      weight: newMember.weight,
-      height: newMember.height,
-      batch: newMember.batch,
-      joinDate: newMember.startDate,
-      lastPayment: newMember.startDate,
-      nextBilling: endDate.toISOString().split("T")[0],
-    };
-
-    setMembers([...members, member]);
-    setIsAddMemberOpen(false);
-    setNewMember({
-      name: "",
-      email: "",
-      phone: "",
-      planType: "",
-      startDate: "",
-      amount: "",
-      photo: "",
-      dob: "",
-      gender: "",
-      weight: "",
-      height: "",
-      batch: "",
-    });
-    toast.success("Member added successfully!");
-  };
-
   const handleViewProfile = (member: Member) => {
     setSelectedMember(member);
     setEditedMember({ ...member });
@@ -342,15 +278,15 @@ function MembershipManagement() {
 
   const handleUpdatePayment = () => {
     // In a real app, this would process payment
-    console.log("Processing payment for:", billingMember?.name);
-    setIsBillingOpen(false);
-    if (billingMember) {
-      const updatedMember = { ...billingMember, status: "active" };
-      setMembers(
-        members.map((m) => (m.id === updatedMember.id ? updatedMember : m))
-      );
-      toast.success("Payment processed successfully!");
-    }
+    // console.log("Processing payment for:", billingMember?.name);
+    // setIsBillingOpen(false);
+    // if (billingMember) {
+    //   const updatedMember = { ...billingMember, status: "active" };
+    //   setMembers(
+    //     members.map((m) => (m.id === updatedMember.id ? updatedMember : m))
+    //   );
+    //   toast.success("Payment processed successfully!");
+    // }
   };
 
   const handleImportComplete = (importedMembers: any[]) => {
@@ -374,6 +310,28 @@ function MembershipManagement() {
     pending: members.filter((m) => m.status === "pending").length,
   };
 
+  const onSubmit = (data: Record<string, any>) => {
+    mutate(data);
+  };
+
+  const form = useForm<memberFormData>({
+    defaultValues: {
+      name: "",
+      email: "",
+      phone: "",
+      planType: "",
+      startDate: "",
+      amount: "",
+      photo: "",
+      dob: "",
+      gender: "",
+      weight: "",
+      height: "",
+      batch: "",
+    },
+    resolver: zodResolver(memberSchema),
+  });
+  const values = form.watch();
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -385,7 +343,7 @@ function MembershipManagement() {
         </div>
 
         <div className="flex gap-2 w-full sm:w-auto">
-          {/* <ImportMembersDialog onImportComplete={handleImportComplete} /> */}
+          <ImportMembersDialog onImportComplete={handleImportComplete} />
 
           <Dialog open={isAddMemberOpen} onOpenChange={setIsAddMemberOpen}>
             <DialogTrigger asChild>
@@ -396,389 +354,301 @@ function MembershipManagement() {
               </Button>
             </DialogTrigger>
             <DialogContent className="w-[95vw] max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl max-h-[90vh] overflow-y-auto mx-4 sm:mx-0">
-              <DialogHeader className="px-1 sm:px-0">
-                <DialogTitle className="text-lg sm:text-xl">
-                  Add New Member
-                </DialogTitle>
-                <DialogDescription className="text-sm sm:text-base">
-                  Add a new member to your gym. Fill in all the required
-                  information.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="grid gap-3 sm:gap-4 py-3 sm:py-4 px-1 sm:px-0">
-                {/* Photo Section */}
-                <div className="grid gap-2">
-                  <Label htmlFor="photo" className="text-sm sm:text-base">
-                    Member Photo
-                  </Label>
-                  <div
-                    className={`relative border-2 border-dashed rounded-lg transition-all ${
-                      dragActive
-                        ? "border-neon-green bg-neon-green/10"
-                        : "border-border hover:border-neon-green/50 bg-muted/20"
-                    }`}
-                    onDragEnter={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      setDragActive(true);
-                    }}
-                    onDragLeave={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      setDragActive(false);
-                    }}
-                    onDragOver={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                    }}
-                    onDrop={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      setDragActive(false);
+              <FormProvider {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)}>
+                  <DialogHeader className="px-1 sm:px-0">
+                    <DialogTitle className="text-lg sm:text-xl">
+                      Add New Member
+                    </DialogTitle>
+                    <DialogDescription className="text-sm sm:text-base">
+                      Add a new member to your gym. Fill in all the required
+                      information.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="grid gap-3 sm:gap-4 py-3 sm:py-4 px-1 sm:px-0">
+                    {/* Photo Section */}
+                    <div className="grid gap-2">
+                      <Label htmlFor="photo" className="text-sm sm:text-base">
+                        Member Photo
+                      </Label>
+                      <div
+                        className={`relative border-2 border-dashed rounded-lg transition-all ${
+                          dragActive
+                            ? "border-neon-green bg-neon-green/10"
+                            : "border-border hover:border-neon-green/50 bg-muted/20"
+                        }`}
+                        onDragEnter={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setDragActive(true);
+                        }}
+                        onDragLeave={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setDragActive(false);
+                        }}
+                        onDragOver={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                        }}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setDragActive(false);
 
-                      const file = e.dataTransfer.files?.[0];
-                      if (file && file.type.startsWith("image/")) {
-                        const reader = new FileReader();
-                        reader.onload = (event) => {
-                          setNewMember({
-                            ...newMember,
-                            photo: event.target?.result as string,
-                          });
-                        };
-                        reader.readAsDataURL(file);
-                      }
-                    }}
-                  >
-                    <input
-                      id="photo"
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) {
-                          const reader = new FileReader();
-                          reader.onload = (event) => {
-                            setNewMember({
-                              ...newMember,
-                              photo: event.target?.result as string,
-                            });
-                          };
-                          reader.readAsDataURL(file);
-                        }
-                      }}
-                    />
-
-                    {!newMember.photo ? (
-                      <div className="p-6 sm:p-8 text-center">
-                        <div className="flex justify-center mb-3">
-                          <Upload className="h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground" />
-                        </div>
-                        <div className="space-y-2 mb-4">
-                          <p className="text-sm sm:text-base">
-                            <span className="text-neon-green">
-                              Click to upload
-                            </span>{" "}
-                            or drag and drop
-                          </p>
-                          <p className="text-xs sm:text-sm text-muted-foreground">
-                            PNG, JPG, WEBP up to 10MB
-                          </p>
-                        </div>
-                        <div className="flex flex-col sm:flex-row gap-2 justify-center">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() =>
-                              document.getElementById("photo")?.click()
-                            }
-                            className="gap-2"
-                          >
-                            <ImageIcon className="h-4 w-4" />
-                            Choose File
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              const input = document.createElement("input");
-                              input.type = "file";
-                              input.accept = "image/*";
-                              input.capture = "user";
-                              input.onchange = (e) => {
-                                const file = (e.target as HTMLInputElement)
-                                  .files?.[0];
-                                if (file) {
-                                  const reader = new FileReader();
-                                  reader.onload = (event) => {
-                                    setNewMember({
-                                      ...newMember,
-                                      photo: event.target?.result as string,
-                                    });
-                                  };
-                                  reader.readAsDataURL(file);
-                                }
+                          const file = e.dataTransfer.files?.[0];
+                          if (file && file.type.startsWith("image/")) {
+                            const reader = new FileReader();
+                            reader.onload = (event) => {
+                              setNewMember({
+                                ...newMember,
+                                photo: event.target?.result as string,
+                              });
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                      >
+                        <input
+                          id="photo"
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              const reader = new FileReader();
+                              reader.onload = (event) => {
+                                setNewMember({
+                                  ...newMember,
+                                  photo: event.target?.result as string,
+                                });
                               };
-                              input.click();
-                            }}
-                            className="gap-2 sm:inline-flex"
-                          >
-                            <Camera className="h-4 w-4" />
-                            Take Photo
-                          </Button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="p-4 sm:p-6">
-                        <div className="relative w-32 h-32 sm:w-40 sm:h-40 mx-auto rounded-lg overflow-hidden border-2 border-neon-green">
-                          <img
-                            src={newMember.photo}
-                            alt="Member preview"
-                            className="w-full h-full object-cover"
-                          />
-                          <Button
-                            type="button"
-                            variant="destructive"
-                            size="sm"
-                            className="absolute top-2 right-2 h-8 w-8 p-0"
-                            onClick={() =>
-                              setNewMember({ ...newMember, photo: "" })
+                              reader.readAsDataURL(file);
                             }
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </div>
-                        <div className="mt-4 flex justify-center gap-2">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() =>
-                              document.getElementById("photo")?.click()
-                            }
-                            className="gap-2"
-                          >
-                            <Upload className="h-4 w-4" />
-                            Change Photo
-                          </Button>
-                        </div>
+                          }}
+                        />
+
+                        {!newMember.photo ? (
+                          <div className="p-6 sm:p-8 text-center">
+                            <div className="flex justify-center mb-3">
+                              <Upload className="h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground" />
+                            </div>
+                            <div className="space-y-2 mb-4">
+                              <p className="text-sm sm:text-base">
+                                <span className="text-neon-green">
+                                  Click to upload
+                                </span>{" "}
+                                or drag and drop
+                              </p>
+                              <p className="text-xs sm:text-sm text-muted-foreground">
+                                PNG, JPG, WEBP up to 10MB
+                              </p>
+                            </div>
+                            <div className="flex flex-col sm:flex-row gap-2 justify-center">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                  document.getElementById("photo")?.click()
+                                }
+                                className="gap-2"
+                              >
+                                <ImageIcon className="h-4 w-4" />
+                                Choose File
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  const input = document.createElement("input");
+                                  input.type = "file";
+                                  input.accept = "image/*";
+                                  input.capture = "user";
+                                  input.onchange = (e) => {
+                                    const file = (e.target as HTMLInputElement)
+                                      .files?.[0];
+                                    if (file) {
+                                      const reader = new FileReader();
+                                      reader.onload = (event) => {
+                                        setNewMember({
+                                          ...newMember,
+                                          photo: event.target?.result as string,
+                                        });
+                                      };
+                                      reader.readAsDataURL(file);
+                                    }
+                                  };
+                                  input.click();
+                                }}
+                                className="gap-2 sm:inline-flex"
+                              >
+                                <Camera className="h-4 w-4" />
+                                Take Photo
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="p-4 sm:p-6">
+                            <div className="relative w-32 h-32 sm:w-40 sm:h-40 mx-auto rounded-lg overflow-hidden border-2 border-neon-green">
+                              <img
+                                src={newMember.photo}
+                                alt="Member preview"
+                                className="w-full h-full object-cover"
+                              />
+                              <Button
+                                type="button"
+                                variant="destructive"
+                                size="sm"
+                                className="absolute top-2 right-2 h-8 w-8 p-0"
+                                onClick={() =>
+                                  setNewMember({ ...newMember, photo: "" })
+                                }
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                            <div className="mt-4 flex justify-center gap-2">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                  document.getElementById("photo")?.click()
+                                }
+                                className="gap-2"
+                              >
+                                <Upload className="h-4 w-4" />
+                                Change Photo
+                              </Button>
+                            </div>
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
-                </div>
+                    </div>
 
-                {/* Personal Information Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                  <div className="grid gap-2 sm:col-span-2">
-                    <Label htmlFor="name" className="text-sm sm:text-base">
-                      Full Name
-                    </Label>
-                    <Input
-                      id="name"
-                      value={newMember.name}
-                      onChange={(e) =>
-                        setNewMember({ ...newMember, name: e.target.value })
-                      }
-                      placeholder="Enter member's full name"
-                      className="text-sm sm:text-base"
-                    />
+                    {/* Personal Information Grid */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                      <div className="grid gap-2 sm:col-span-2">
+                        <CustomField
+                          name="name"
+                          label="Full name"
+                          isLoading={false}
+                          placeholder="Enter member's full name"
+                        />
+                      </div>
+
+                      <div className="grid gap-2">
+                        <CustomField
+                          name="email"
+                          label="Email"
+                          isLoading={false}
+                          placeholder="member@example.com"
+                        />
+                      </div>
+
+                      <div className="grid gap-2">
+                        <CustomField
+                          name="phone"
+                          label="Phone"
+                          isLoading={false}
+                          placeholder="+1 (555) 123-4567"
+                        />
+                      </div>
+
+                      <div className="grid gap-2">
+                        <CustomField
+                          name="dob"
+                          label="Date of Birth"
+                          isLoading={false}
+                          placeholder="dd-mm-yyyy"
+                          type="date"
+                        />
+                      </div>
+
+                      <div className="grid gap-2">
+                        <CustomField
+                          name="gender"
+                          label="Gender"
+                          isLoading={false}
+                          placeholder="Select gender"
+                          select
+                          options={["male", "female", "other"]}
+                        />
+                      </div>
+
+                      <div className="grid gap-2">
+                        <CustomField
+                          name="weight"
+                          label="Weight (kg)"
+                          isLoading={false}
+                          placeholder="Enter weight in kg"
+                          type="number"
+                          step="0.1"
+                        />
+                      </div>
+
+                      <div className="grid gap-2">
+                        <CustomField
+                          name="height"
+                          label="Height (cm)"
+                          isLoading={false}
+                          placeholder="Enter height in cm"
+                          type="number"
+                          step="0.1"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Plan and Batch Information */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                      <div className="grid gap-2">
+                        <CustomField
+                          name="planType"
+                          label="Plan Type"
+                          isLoading={false}
+                          placeholder="Select plan type"
+                          select
+                          options={["basic-monthly", "premium-monthly"]}
+                        />
+                      </div>
+
+                      <div className="grid gap-2">
+                        <CustomField
+                          name="batch"
+                          label="Workout Batch"
+                          isLoading={false}
+                          placeholder="Select workout batch"
+                          select
+                          options={["morning", "evening"]}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Start Date */}
+                    <div className="grid gap-2">
+                      <CustomField
+                        name="startDate"
+                        label="Start Date"
+                        isLoading={false}
+                        placeholder="Select workout batch"
+                        type="date"
+                      />
+                    </div>
                   </div>
 
-                  <div className="grid gap-2">
-                    <Label htmlFor="email" className="text-sm sm:text-base">
-                      Email
-                    </Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={newMember.email}
-                      onChange={(e) =>
-                        setNewMember({ ...newMember, email: e.target.value })
-                      }
-                      placeholder="member@example.com"
-                      className="text-sm sm:text-base"
-                    />
-                  </div>
-
-                  <div className="grid gap-2">
-                    <Label htmlFor="phone" className="text-sm sm:text-base">
-                      Phone
-                    </Label>
-                    <Input
-                      id="phone"
-                      value={newMember.phone}
-                      onChange={(e) =>
-                        setNewMember({ ...newMember, phone: e.target.value })
-                      }
-                      placeholder="+1 (555) 123-4567"
-                      className="text-sm sm:text-base"
-                    />
-                  </div>
-
-                  <div className="grid gap-2">
-                    <Label htmlFor="dob" className="text-sm sm:text-base">
-                      Date of Birth
-                    </Label>
-                    <Input
-                      id="dob"
-                      type="date"
-                      value={newMember.dob || ""}
-                      onChange={(e) =>
-                        setNewMember({ ...newMember, dob: e.target.value })
-                      }
-                      className="text-sm sm:text-base"
-                    />
-                  </div>
-
-                  <div className="grid gap-2">
-                    <Label htmlFor="gender" className="text-sm sm:text-base">
-                      Gender
-                    </Label>
-                    <Select
-                      value={newMember.gender || ""}
-                      onValueChange={(value) =>
-                        setNewMember({ ...newMember, gender: value })
-                      }
+                  <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:gap-0 px-1 sm:px-0">
+                    <Button
+                      type="submit"
+                      className="w-full sm:w-auto bg-gradient-to-r from-neon-green to-neon-blue text-white order-2 sm:order-1"
                     >
-                      <SelectTrigger className="text-sm sm:text-base">
-                        <SelectValue placeholder="Select gender" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="male" className="text-sm">
-                          Male
-                        </SelectItem>
-                        <SelectItem value="female" className="text-sm">
-                          Female
-                        </SelectItem>
-                        <SelectItem value="other" className="text-sm">
-                          Other
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="grid gap-2">
-                    <Label htmlFor="weight" className="text-sm sm:text-base">
-                      Weight (kg)
-                    </Label>
-                    <Input
-                      id="weight"
-                      type="number"
-                      value={newMember.weight || ""}
-                      onChange={(e) =>
-                        setNewMember({ ...newMember, weight: e.target.value })
-                      }
-                      placeholder="Enter weight in kg"
-                      min="1"
-                      step="0.1"
-                      className="text-sm sm:text-base"
-                    />
-                  </div>
-
-                  <div className="grid gap-2">
-                    <Label htmlFor="height" className="text-sm sm:text-base">
-                      Height (cm)
-                    </Label>
-                    <Input
-                      id="height"
-                      type="number"
-                      value={newMember.height || ""}
-                      onChange={(e) =>
-                        setNewMember({ ...newMember, height: e.target.value })
-                      }
-                      placeholder="Enter height in cm"
-                      min="1"
-                      step="0.1"
-                      className="text-sm sm:text-base"
-                    />
-                  </div>
-                </div>
-
-                {/* Plan and Batch Information */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="planType" className="text-sm sm:text-base">
-                      Plan Type
-                    </Label>
-                    <Select
-                      value={newMember.planType}
-                      onValueChange={(value) =>
-                        setNewMember({ ...newMember, planType: value })
-                      }
-                    >
-                      <SelectTrigger className="text-sm sm:text-base">
-                        <SelectValue placeholder="Select a plan" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="basic-monthly" className="text-sm">
-                          Basic Monthly - ₹6,400
-                        </SelectItem>
-                        <SelectItem value="premium-monthly" className="text-sm">
-                          Premium Monthly - ₹12,000
-                        </SelectItem>
-                        <SelectItem value="basic-annual" className="text-sm">
-                          Basic Annual - ₹64,000
-                        </SelectItem>
-                        <SelectItem value="premium-annual" className="text-sm">
-                          Premium Annual - ₹96,000
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="grid gap-2">
-                    <Label htmlFor="batch" className="text-sm sm:text-base">
-                      Workout Batch
-                    </Label>
-                    <Select
-                      value={newMember.batch || ""}
-                      onValueChange={(value) =>
-                        setNewMember({ ...newMember, batch: value })
-                      }
-                    >
-                      <SelectTrigger className="text-sm sm:text-base">
-                        <SelectValue placeholder="Select workout batch" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="morning" className="text-sm">
-                          Morning Batch (6:00 AM - 12:00 PM)
-                        </SelectItem>
-                        <SelectItem value="evening" className="text-sm">
-                          Evening Batch (4:00 PM - 10:00 PM)
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                {/* Start Date */}
-                <div className="grid gap-2">
-                  <Label htmlFor="startDate" className="text-sm sm:text-base">
-                    Start Date
-                  </Label>
-                  <Input
-                    id="startDate"
-                    type="date"
-                    value={newMember.startDate}
-                    onChange={(e) =>
-                      setNewMember({ ...newMember, startDate: e.target.value })
-                    }
-                    className="text-sm sm:text-base"
-                  />
-                </div>
-              </div>
-
-              <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:gap-0 px-1 sm:px-0">
-                <Button
-                  type="submit"
-                  onClick={handleAddMember}
-                  className="w-full sm:w-auto bg-gradient-to-r from-neon-green to-neon-blue text-white order-2 sm:order-1"
-                >
-                  Add Member
-                </Button>
-              </DialogFooter>
+                      Add Member
+                    </Button>
+                  </DialogFooter>
+                </form>
+              </FormProvider>
             </DialogContent>
           </Dialog>
         </div>

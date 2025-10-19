@@ -28,6 +28,7 @@ type CommonProps = {
   onClick?: React.MouseEventHandler<HTMLInputElement>;
   onChangeFun?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   defaultValue?: string;
+  step?: string;
 };
 
 type SelectFieldProps = CommonProps & {
@@ -54,6 +55,7 @@ const CustomField = ({
   onClick,
   onChangeFun,
   defaultValue,
+  step,
 }: CustomFieldProps) => {
   const { control } = useFormContext();
 
@@ -124,6 +126,7 @@ const CustomField = ({
                   {...(defaultValue ? { defaultValue } : {})}
                   {...(onBlur ? { onBlur } : {})}
                   {...(onClick ? { onClick } : {})}
+                  {...(step ? { step } : {})}
                 />
               )}
             </FormControl>
