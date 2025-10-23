@@ -55,24 +55,42 @@ import CustomField from "@/components/reusableComponents/customField";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { MemberInterface, memberSchema } from "@/lib/validation-schemas";
 import MembersController from "./controller";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ImportMembersDialog } from "@/components/ImportMembersDialog";
 import PlansController from "../plans/controller";
 import AddEditMember from "@/components/forms/addEditMember";
 
 interface extendedMemberInterface extends MemberInterface {
   _id: string;
+  currentPlanId: {
+    _id: string;
+    name: string;
+  };
+  amount?: number;
 }
 function MembershipManagement() {
+  const [isEditingMember, setIsEditingMember] =
+    useState<extendedMemberInterface | null>(null);
+  const queryClient = useQueryClient();
   const memberController = new MembersController();
   const { mutate, isPending } = useMutation({
-    mutationFn: memberController.addMember,
+    mutationFn: (data: any) =>
+      isEditingMember
+        ? memberController.updateMember({
+            id: isEditingMember._id,
+            payload: data,
+          })
+        : memberController.addMember(data),
     onSuccess: () => {
       setIsAddMemberOpen(false);
+      queryClient.invalidateQueries({ queryKey: ["members-list"] });
+      toast.success(
+        `Member ${isEditingMember ? "updated" : "added"} successfully!`
+      );
     },
   });
   const { data } = useQuery({
-    queryKey: ["members"],
+    queryKey: ["members-list"],
     queryFn: memberController.getAllMembers,
   });
 
@@ -82,9 +100,8 @@ function MembershipManagement() {
   const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
 
   const [isBillingOpen, setIsBillingOpen] = useState(false);
-  const [billingMember, setBillingMember] = useState<MemberInterface | null>(
-    null
-  );
+  const [billingMember, setBillingMember] =
+    useState<extendedMemberInterface | null>(null);
 
   const filteredMembers = members?.filter((member) => {
     const matchesSearch =
@@ -116,9 +133,31 @@ function MembershipManagement() {
     }
   };
 
-  const handleViewProfile = (member: extendedMemberInterface) => {};
+  const handleViewProfile = (member: extendedMemberInterface) => {
+    setIsEditingMember(member);
+    setIsAddMemberOpen(true);
+    form.reset({
+      fullName: member?.fullName,
+      email: member?.email || "",
+      phone: member?.phone || "",
+      weight: (member?.weight && +member?.weight) || 0,
+      height: (member?.height && +member?.height) || 0,
+      currentPlanId: member?.currentPlanId?._id || "",
+      startDate: member?.startDate?.split("T")?.[0] || "",
+      photo: member?.photo || "",
+      dateOfBirth: member?.dateOfBirth?.split("T")?.[0] || "",
+      gender: member?.gender || "male",
+      address: member?.address || "",
+      emergencyContact: member?.emergencyContact || "8989898989",
+      endDate: member?.endDate?.split("T")?.[0] || "",
+      memberCode: member?.memberCode || "",
+      status: member?.status || "ACTIVE",
+      notes: member?.notes || "",
+      batch: member?.batch || "",
+    });
+  };
 
-  const handleViewBilling = (member: MemberInterface) => {
+  const handleViewBilling = (member: extendedMemberInterface) => {
     setBillingMember(member);
     setIsBillingOpen(true);
   };
@@ -137,9 +176,6 @@ function MembershipManagement() {
   };
 
   const handleImportComplete = (importedMembers: any[]) => {
-    console.log("Imported members:", importedMembers);
-    // In a real app, this would save the members to the database
-    // For now, we'll just log them
     setMembers([
       ...members,
       ...importedMembers?.map((m, index) => ({
@@ -160,27 +196,27 @@ function MembershipManagement() {
   const onSubmit = (data: MemberInterface) => {
     mutate(data);
   };
-
+  const initialFormValues = {
+    fullName: "",
+    email: "",
+    phone: "",
+    weight: 0,
+    height: 0,
+    currentPlanId: "",
+    startDate: "",
+    photo: "",
+    dateOfBirth: "",
+    gender: "male",
+    address: "",
+    emergencyContact: "8989898989",
+    endDate: "",
+    memberCode: "",
+    status: "ACTIVE",
+    notes: "",
+    batch: "",
+  };
   const form = useForm<MemberInterface>({
-    defaultValues: {
-      fullName: "",
-      email: "",
-      phone: "",
-      weight: 0,
-      height: 0,
-      currentPlanId: "",
-      startDate: "",
-      photo: "",
-      dateOfBirth: "",
-      gender: "male",
-      address: "",
-      emergencyContact: "8989898989",
-      endDate: "",
-      memberCode: "",
-      status: "ACTIVE",
-      notes: "",
-      batch: "",
-    },
+    defaultValues: { ...initialFormValues },
     resolver: zodResolver(memberSchema),
   });
   useEffect(() => {
@@ -201,7 +237,13 @@ function MembershipManagement() {
 
           <Dialog open={isAddMemberOpen} onOpenChange={setIsAddMemberOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-gradient-to-r from-neon-green to-neon-blue text-white flex-1 sm:flex-none">
+              <Button
+                onClick={() => {
+                  form.reset({ ...initialFormValues });
+                  setIsEditingMember(null);
+                }}
+                className="bg-gradient-to-r from-neon-green to-neon-blue text-white flex-1 sm:flex-none"
+              >
                 <Plus className="w-4 h-4 mr-2" />
                 <span className="hidden sm:inline">Add New Member</span>
                 <span className="sm:hidden">Add Member</span>
@@ -210,7 +252,7 @@ function MembershipManagement() {
             <DialogContent className="w-[95vw] max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl max-h-[90vh] overflow-y-auto mx-4 sm:mx-0">
               <FormProvider {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)}>
-                  <AddEditMember />
+                  <AddEditMember isEditingMember={isEditingMember} />
 
                   <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:gap-0 px-1 sm:px-0">
                     <Button
@@ -219,6 +261,8 @@ function MembershipManagement() {
                     >
                       {isPending ? (
                         <Loader className="animate-spin h-4 w-4" />
+                      ) : isEditingMember ? (
+                        "Update Member"
                       ) : (
                         "Add Member"
                       )}
@@ -252,7 +296,7 @@ function MembershipManagement() {
                 <div>
                   <h4 className="font-medium">{billingMember.fullName}</h4>
                   <p className="text-sm text-muted-foreground">
-                    {billingMember.currentPlanId}
+                    {billingMember?.currentPlanId?.name}
                   </p>
                 </div>
               </div>
@@ -264,13 +308,13 @@ function MembershipManagement() {
                   <div>
                     <Label>Current Plan</Label>
                     <p className="text-sm text-muted-foreground">
-                      {billingMember.currentPlanId}
+                      {billingMember.currentPlanId?.name}
                     </p>
                   </div>
                   <div>
                     <Label>Amount</Label>
                     <p className="text-sm text-neon-green font-medium">
-                      ₹{billingMember.amount ?? 0}
+                      ₹{billingMember?.amount ?? 0}
                     </p>
                   </div>
                   <div>
@@ -458,10 +502,10 @@ function MembershipManagement() {
                     <TableCell>
                       <div>
                         <div className="font-medium">
-                          {member.currentPlanId}
+                          {member?.currentPlanId?.name}
                         </div>
                         <div className="text-sm text-muted-foreground">
-                          ₹{member.amount ?? 0}
+                          ₹{member?.amount ?? 0}
                         </div>
                       </div>
                     </TableCell>

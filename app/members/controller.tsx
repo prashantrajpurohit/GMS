@@ -17,7 +17,7 @@ export default class MembersController {
     id: string;
     payload: Record<string, any>;
   }) {
-    const data = await httpRequest.put(ApiUrl.Member, payload);
+    const data = await httpRequest.patch(`${ApiUrl.Member}/${id}`, payload);
     return data?.data;
   }
 }

@@ -5,8 +5,13 @@ import CustomField from "../reusableComponents/customField";
 
 import PlansController from "@/app/plans/controller";
 import { useQuery } from "@tanstack/react-query";
+import { MemberInterface } from "@/lib/validation-schemas";
 
-export default function AddEditMember() {
+export default function AddEditMember({
+  isEditingMember,
+}: {
+  isEditingMember: Record<string, any> | null;
+}) {
   const planController = new PlansController();
 
   const { data, isLoading } = useQuery({
@@ -16,9 +21,13 @@ export default function AddEditMember() {
   return (
     <div>
       <DialogHeader className="px-1 sm:px-0">
-        <DialogTitle className="text-lg sm:text-xl">Add New Member</DialogTitle>
+        <DialogTitle className="text-lg sm:text-xl">
+          {isEditingMember ? "Update Member profile" : "Add New Member"}
+        </DialogTitle>
         <DialogDescription className="text-sm sm:text-base">
-          Add a new member to your gym. Fill in all the required information.
+          {isEditingMember
+            ? "Update the member's information below."
+            : "Add a new member to your gym. Fill in all the required information."}
         </DialogDescription>
       </DialogHeader>
       <div className="grid gap-3 sm:gap-4 py-3 sm:py-4 px-1 sm:px-0">

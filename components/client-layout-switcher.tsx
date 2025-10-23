@@ -29,7 +29,7 @@ export default function ClientLayoutSwitcher({
   );
   const freePaths = ["/login", "/register", "/404", "/401"];
 
-  const isFreePath = freePaths.includes(pathName);
+  const isFreePath = freePaths?.includes(pathName?.length > 0 ? pathName : "/");
 
   return (
     <QueryClientProvider client={queryClient}>

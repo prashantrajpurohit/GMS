@@ -52,7 +52,7 @@ export function NavMain({ items }: Navitems) {
   const updatedItems =
     roleData.role == "owner"
       ? items
-      : items.filter((item) => roleData.options.includes(item.subject));
+      : items?.filter((item) => roleData?.options?.includes(item?.subject));
 
   useEffect(() => {
     getUserOptions()
