@@ -1,20 +1,14 @@
-import { createSlice } from '@reduxjs/toolkit';
-
-const initialState = {
-    idData: null,
-   
-};
+import { createSlice } from "@reduxjs/toolkit";
 
 const editDataSlice = createSlice({
-    name: 'editdata',
-    initialState,
-    reducers: {
-        addEditData: (state, action) => {
-            state.idData = action.payload;
-        },
-       
+  name: "editdata",
+  initialState: null,
+  reducers: {
+    addEditData: (state, action) => {
+      return action.payload;
     },
+  },
 });
 
-export const { addEditData} = editDataSlice.actions;
+export const { addEditData } = editDataSlice.actions;
 export default editDataSlice.reducer;

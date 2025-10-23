@@ -1,7 +1,7 @@
 export const ApiUrl = {
   LOGIN_URL: `/auth/login`,
   AUTH_LOGOUT: `/auth/logout`,
-  PLAN: `/workouts`,
+  PLAN: `/plans`,
   STAFF: `/staff`,
   Member: `/members`,
 };

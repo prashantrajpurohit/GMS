@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Card,
   CardContent,
@@ -10,7 +10,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
   TableBody,
@@ -36,7 +35,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Search,
   Plus,
@@ -46,173 +44,52 @@ import {
   Mail,
   User,
   CreditCard,
-  Edit,
-  Save,
   X,
-  Upload,
   Camera,
-  Image as ImageIcon,
+  Image,
+  Loader,
 } from "lucide-react";
 import { toast } from "sonner";
-import { FormProvider, useForm } from "react-hook-form";
+import { FormProvider, useForm, useWatch } from "react-hook-form";
 import CustomField from "@/components/reusableComponents/customField";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { memberFormData, memberSchema } from "@/lib/validation-schemas";
+import { MemberInterface, memberSchema } from "@/lib/validation-schemas";
 import MembersController from "./controller";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { ImportMembersDialog } from "@/components/ImportMembersDialog";
+import PlansController from "../plans/controller";
+import AddEditMember from "@/components/forms/addEditMember";
 
-interface Member {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  planType: string;
-  startDate: string;
-  endDate: string;
-  status: "active" | "expired" | "pending";
-  amount: number;
-  photo?: string;
-  address?: string;
-  emergencyContact?: string;
-  joinDate?: string;
-  lastPayment?: string;
-  nextBilling?: string;
-  notes?: string;
-  batch?: string;
-  dob?: string;
-  gender?: string;
-  weight?: string;
-  height?: string;
+interface extendedMemberInterface extends MemberInterface {
+  _id: string;
 }
-
-const initialMembers: Member[] = [
-  {
-    id: "1",
-    name: "John Smith",
-    email: "john.smith@email.com",
-    phone: "+1 (555) 123-4567",
-    planType: "Premium Annual",
-    startDate: "2024-01-15",
-    endDate: "2025-01-15",
-    status: "active",
-    amount: 1200,
-    address: "123 Main St, City, State 12345",
-    emergencyContact: "+1 (555) 123-4568",
-    joinDate: "2024-01-15",
-    lastPayment: "2024-01-15",
-    nextBilling: "2025-01-15",
-    notes: "Prefers evening workouts",
-  },
-  {
-    id: "2",
-    name: "Sarah Johnson",
-    email: "sarah.j@email.com",
-    phone: "+1 (555) 234-5678",
-    planType: "Monthly Basic",
-    startDate: "2024-02-01",
-    endDate: "2024-03-01",
-    status: "expired",
-    amount: 80,
-    address: "456 Oak Ave, City, State 12345",
-    emergencyContact: "+1 (555) 234-5679",
-    joinDate: "2024-02-01",
-    lastPayment: "2024-02-01",
-    nextBilling: "2024-03-01",
-    notes: "Needs membership renewal reminder",
-  },
-  {
-    id: "3",
-    name: "Mike Wilson",
-    email: "mike.wilson@email.com",
-    phone: "+1 (555) 345-6789",
-    planType: "Premium Monthly",
-    startDate: "2024-02-15",
-    endDate: "2024-03-15",
-    status: "pending",
-    amount: 150,
-    address: "789 Pine St, City, State 12345",
-    emergencyContact: "+1 (555) 345-6790",
-    joinDate: "2024-02-15",
-    lastPayment: "2024-02-15",
-    nextBilling: "2024-03-15",
-    notes: "Payment pending verification",
-  },
-  {
-    id: "4",
-    name: "Emily Davis",
-    email: "emily.davis@email.com",
-    phone: "+1 (555) 456-7890",
-    planType: "Basic Annual",
-    startDate: "2024-01-01",
-    endDate: "2025-01-01",
-    status: "active",
-    amount: 800,
-    address: "321 Elm St, City, State 12345",
-    emergencyContact: "+1 (555) 456-7891",
-    joinDate: "2024-01-01",
-    lastPayment: "2024-01-01",
-    nextBilling: "2025-01-01",
-    notes: "Personal trainer sessions on weekends",
-  },
-  {
-    id: "5",
-    name: "Alex Brown",
-    email: "alex.brown@email.com",
-    phone: "+1 (555) 567-8901",
-    planType: "Premium Monthly",
-    startDate: "2024-02-20",
-    endDate: "2024-03-20",
-    status: "active",
-    amount: 150,
-    address: "654 Maple Dr, City, State 12345",
-    emergencyContact: "+1 (555) 567-8902",
-    joinDate: "2024-02-20",
-    lastPayment: "2024-02-20",
-    nextBilling: "2024-03-20",
-    notes: "Interested in group fitness classes",
-  },
-];
-
 function MembershipManagement() {
   const memberController = new MembersController();
-  const { mutate } = useMutation({ mutationFn: memberController.addMember });
-  const [members, setMembers] = useState<Member[]>(initialMembers);
+  const { mutate, isPending } = useMutation({
+    mutationFn: memberController.addMember,
+    onSuccess: () => {
+      setIsAddMemberOpen(false);
+    },
+  });
+  const { data } = useQuery({
+    queryKey: ["members"],
+    queryFn: memberController.getAllMembers,
+  });
+
+  const [members, setMembers] = useState<extendedMemberInterface[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedFilter, setSelectedFilter] = useState("all");
   const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
-  const [newMember, setNewMember] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    planType: "",
-    startDate: "",
-    amount: "",
-    photo: "",
-    dob: "",
-    gender: "",
-    weight: "",
-    height: "",
-    batch: "",
-  });
 
-  // Member profile dialog state
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [selectedMember, setSelectedMember] = useState<Member | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
-  const [editedMember, setEditedMember] = useState<Member | null>(null);
-
-  // Dropzone state
-  const [dragActive, setDragActive] = useState(false);
-
-  // Billing dialog state
   const [isBillingOpen, setIsBillingOpen] = useState(false);
-  const [billingMember, setBillingMember] = useState<Member | null>(null);
+  const [billingMember, setBillingMember] = useState<MemberInterface | null>(
+    null
+  );
 
-  const filteredMembers = members.filter((member) => {
+  const filteredMembers = members?.filter((member) => {
     const matchesSearch =
-      member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      member.email.toLowerCase().includes(searchTerm.toLowerCase());
+      member?.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      member?.email.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesFilter =
       selectedFilter === "all" || member.status === selectedFilter;
     return matchesSearch && matchesFilter;
@@ -239,39 +116,9 @@ function MembershipManagement() {
     }
   };
 
-  const handleViewProfile = (member: Member) => {
-    setSelectedMember(member);
-    setEditedMember({ ...member });
-    setIsEditing(false);
-    setIsProfileOpen(true);
-  };
+  const handleViewProfile = (member: extendedMemberInterface) => {};
 
-  const handleEditProfile = () => {
-    setIsEditing(true);
-  };
-
-  const handleSaveProfile = () => {
-    if (editedMember) {
-      // In a real app, this would make an API call
-      console.log("Saving member profile:", editedMember);
-      setSelectedMember(editedMember);
-      setIsEditing(false);
-      // Here you would typically update the member in your state/database
-      setMembers(
-        members.map((m) => (m.id === editedMember.id ? editedMember : m))
-      );
-      toast.success("Member profile updated successfully!");
-    }
-  };
-
-  const handleCancelEdit = () => {
-    if (selectedMember) {
-      setEditedMember({ ...selectedMember });
-      setIsEditing(false);
-    }
-  };
-
-  const handleViewBilling = (member: Member) => {
+  const handleViewBilling = (member: MemberInterface) => {
     setBillingMember(member);
     setIsBillingOpen(true);
   };
@@ -295,43 +142,50 @@ function MembershipManagement() {
     // For now, we'll just log them
     setMembers([
       ...members,
-      ...importedMembers.map((m, index) => ({
+      ...importedMembers?.map((m, index) => ({
         ...m,
-        id: (members.length + index + 1).toString(),
+        id: (members?.length + index + 1).toString(),
       })),
     ]);
     toast.success("Members imported successfully!");
   };
 
   const memberCounts = {
-    all: members.length,
-    active: members.filter((m) => m.status === "active").length,
-    expired: members.filter((m) => m.status === "expired").length,
-    pending: members.filter((m) => m.status === "pending").length,
+    all: members?.length,
+    active: members?.filter((m) => m.status === "ACTIVE").length,
+    expired: members?.filter((m) => m.status === "INACTIVE").length,
+    pending: members?.filter((m) => m.status === "SUSPENDED").length,
   };
 
-  const onSubmit = (data: Record<string, any>) => {
+  const onSubmit = (data: MemberInterface) => {
     mutate(data);
   };
 
-  const form = useForm<memberFormData>({
+  const form = useForm<MemberInterface>({
     defaultValues: {
-      name: "",
+      fullName: "",
       email: "",
       phone: "",
-      planType: "",
+      weight: 0,
+      height: 0,
+      currentPlanId: "",
       startDate: "",
-      amount: "",
       photo: "",
-      dob: "",
-      gender: "",
-      weight: "",
-      height: "",
+      dateOfBirth: "",
+      gender: "male",
+      address: "",
+      emergencyContact: "8989898989",
+      endDate: "",
+      memberCode: "",
+      status: "ACTIVE",
+      notes: "",
       batch: "",
     },
     resolver: zodResolver(memberSchema),
   });
-  const values = form.watch();
+  useEffect(() => {
+    setMembers(data);
+  }, [data]);
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -356,295 +210,18 @@ function MembershipManagement() {
             <DialogContent className="w-[95vw] max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl max-h-[90vh] overflow-y-auto mx-4 sm:mx-0">
               <FormProvider {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)}>
-                  <DialogHeader className="px-1 sm:px-0">
-                    <DialogTitle className="text-lg sm:text-xl">
-                      Add New Member
-                    </DialogTitle>
-                    <DialogDescription className="text-sm sm:text-base">
-                      Add a new member to your gym. Fill in all the required
-                      information.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="grid gap-3 sm:gap-4 py-3 sm:py-4 px-1 sm:px-0">
-                    {/* Photo Section */}
-                    <div className="grid gap-2">
-                      <Label htmlFor="photo" className="text-sm sm:text-base">
-                        Member Photo
-                      </Label>
-                      <div
-                        className={`relative border-2 border-dashed rounded-lg transition-all ${
-                          dragActive
-                            ? "border-neon-green bg-neon-green/10"
-                            : "border-border hover:border-neon-green/50 bg-muted/20"
-                        }`}
-                        onDragEnter={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setDragActive(true);
-                        }}
-                        onDragLeave={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setDragActive(false);
-                        }}
-                        onDragOver={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                        }}
-                        onDrop={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setDragActive(false);
-
-                          const file = e.dataTransfer.files?.[0];
-                          if (file && file.type.startsWith("image/")) {
-                            const reader = new FileReader();
-                            reader.onload = (event) => {
-                              setNewMember({
-                                ...newMember,
-                                photo: event.target?.result as string,
-                              });
-                            };
-                            reader.readAsDataURL(file);
-                          }
-                        }}
-                      >
-                        <input
-                          id="photo"
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) {
-                              const reader = new FileReader();
-                              reader.onload = (event) => {
-                                setNewMember({
-                                  ...newMember,
-                                  photo: event.target?.result as string,
-                                });
-                              };
-                              reader.readAsDataURL(file);
-                            }
-                          }}
-                        />
-
-                        {!newMember.photo ? (
-                          <div className="p-6 sm:p-8 text-center">
-                            <div className="flex justify-center mb-3">
-                              <Upload className="h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground" />
-                            </div>
-                            <div className="space-y-2 mb-4">
-                              <p className="text-sm sm:text-base">
-                                <span className="text-neon-green">
-                                  Click to upload
-                                </span>{" "}
-                                or drag and drop
-                              </p>
-                              <p className="text-xs sm:text-sm text-muted-foreground">
-                                PNG, JPG, WEBP up to 10MB
-                              </p>
-                            </div>
-                            <div className="flex flex-col sm:flex-row gap-2 justify-center">
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                onClick={() =>
-                                  document.getElementById("photo")?.click()
-                                }
-                                className="gap-2"
-                              >
-                                <ImageIcon className="h-4 w-4" />
-                                Choose File
-                              </Button>
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                onClick={() => {
-                                  const input = document.createElement("input");
-                                  input.type = "file";
-                                  input.accept = "image/*";
-                                  input.capture = "user";
-                                  input.onchange = (e) => {
-                                    const file = (e.target as HTMLInputElement)
-                                      .files?.[0];
-                                    if (file) {
-                                      const reader = new FileReader();
-                                      reader.onload = (event) => {
-                                        setNewMember({
-                                          ...newMember,
-                                          photo: event.target?.result as string,
-                                        });
-                                      };
-                                      reader.readAsDataURL(file);
-                                    }
-                                  };
-                                  input.click();
-                                }}
-                                className="gap-2 sm:inline-flex"
-                              >
-                                <Camera className="h-4 w-4" />
-                                Take Photo
-                              </Button>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="p-4 sm:p-6">
-                            <div className="relative w-32 h-32 sm:w-40 sm:h-40 mx-auto rounded-lg overflow-hidden border-2 border-neon-green">
-                              <img
-                                src={newMember.photo}
-                                alt="Member preview"
-                                className="w-full h-full object-cover"
-                              />
-                              <Button
-                                type="button"
-                                variant="destructive"
-                                size="sm"
-                                className="absolute top-2 right-2 h-8 w-8 p-0"
-                                onClick={() =>
-                                  setNewMember({ ...newMember, photo: "" })
-                                }
-                              >
-                                <X className="h-4 w-4" />
-                              </Button>
-                            </div>
-                            <div className="mt-4 flex justify-center gap-2">
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                onClick={() =>
-                                  document.getElementById("photo")?.click()
-                                }
-                                className="gap-2"
-                              >
-                                <Upload className="h-4 w-4" />
-                                Change Photo
-                              </Button>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Personal Information Grid */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                      <div className="grid gap-2 sm:col-span-2">
-                        <CustomField
-                          name="name"
-                          label="Full name"
-                          isLoading={false}
-                          placeholder="Enter member's full name"
-                        />
-                      </div>
-
-                      <div className="grid gap-2">
-                        <CustomField
-                          name="email"
-                          label="Email"
-                          isLoading={false}
-                          placeholder="member@example.com"
-                        />
-                      </div>
-
-                      <div className="grid gap-2">
-                        <CustomField
-                          name="phone"
-                          label="Phone"
-                          isLoading={false}
-                          placeholder="+1 (555) 123-4567"
-                        />
-                      </div>
-
-                      <div className="grid gap-2">
-                        <CustomField
-                          name="dob"
-                          label="Date of Birth"
-                          isLoading={false}
-                          placeholder="dd-mm-yyyy"
-                          type="date"
-                        />
-                      </div>
-
-                      <div className="grid gap-2">
-                        <CustomField
-                          name="gender"
-                          label="Gender"
-                          isLoading={false}
-                          placeholder="Select gender"
-                          select
-                          options={["male", "female", "other"]}
-                        />
-                      </div>
-
-                      <div className="grid gap-2">
-                        <CustomField
-                          name="weight"
-                          label="Weight (kg)"
-                          isLoading={false}
-                          placeholder="Enter weight in kg"
-                          type="number"
-                          step="0.1"
-                        />
-                      </div>
-
-                      <div className="grid gap-2">
-                        <CustomField
-                          name="height"
-                          label="Height (cm)"
-                          isLoading={false}
-                          placeholder="Enter height in cm"
-                          type="number"
-                          step="0.1"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Plan and Batch Information */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                      <div className="grid gap-2">
-                        <CustomField
-                          name="planType"
-                          label="Plan Type"
-                          isLoading={false}
-                          placeholder="Select plan type"
-                          select
-                          options={["basic-monthly", "premium-monthly"]}
-                        />
-                      </div>
-
-                      <div className="grid gap-2">
-                        <CustomField
-                          name="batch"
-                          label="Workout Batch"
-                          isLoading={false}
-                          placeholder="Select workout batch"
-                          select
-                          options={["morning", "evening"]}
-                        />
-                      </div>
-                    </div>
-
-                    {/* Start Date */}
-                    <div className="grid gap-2">
-                      <CustomField
-                        name="startDate"
-                        label="Start Date"
-                        isLoading={false}
-                        placeholder="Select workout batch"
-                        type="date"
-                      />
-                    </div>
-                  </div>
+                  <AddEditMember />
 
                   <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:gap-0 px-1 sm:px-0">
                     <Button
                       type="submit"
                       className="w-full sm:w-auto bg-gradient-to-r from-neon-green to-neon-blue text-white order-2 sm:order-1"
                     >
-                      Add Member
+                      {isPending ? (
+                        <Loader className="animate-spin h-4 w-4" />
+                      ) : (
+                        "Add Member"
+                      )}
                     </Button>
                   </DialogFooter>
                 </form>
@@ -654,274 +231,14 @@ function MembershipManagement() {
         </div>
       </div>
 
-      {/* Member Profile Dialog */}
-      <Dialog open={isProfileOpen} onOpenChange={setIsProfileOpen}>
-        <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center justify-between">
-              Member Profile
-              {!isEditing && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleEditProfile}
-                  className="ml-2"
-                >
-                  <Edit className="w-4 h-4 mr-2" />
-                  Edit
-                </Button>
-              )}
-            </DialogTitle>
-            <DialogDescription>
-              {isEditing
-                ? "Edit member information"
-                : "View member details and information"}
-            </DialogDescription>
-          </DialogHeader>
-
-          {selectedMember && editedMember && (
-            <div className="grid gap-6 py-4">
-              {/* Member Photo and Basic Info */}
-              <div className="flex items-start gap-4">
-                <div className="w-20 h-20 bg-gradient-to-r from-neon-green to-neon-blue rounded-full flex items-center justify-center text-white text-xl">
-                  {selectedMember.name.charAt(0)}
-                </div>
-                <div className="flex-1 space-y-2">
-                  {isEditing ? (
-                    <Input
-                      value={editedMember.name}
-                      onChange={(e) =>
-                        setEditedMember({
-                          ...editedMember,
-                          name: e.target.value,
-                        })
-                      }
-                      className="text-lg font-semibold"
-                    />
-                  ) : (
-                    <h3 className="text-lg font-semibold">
-                      {selectedMember.name}
-                    </h3>
-                  )}
-                  <div className="flex items-center gap-2">
-                    {getStatusBadge(selectedMember.status)}
-                    <Badge variant="outline">{selectedMember.planType}</Badge>
-                  </div>
-                </div>
-              </div>
-
-              {/* Contact Information */}
-              <div className="grid gap-4">
-                <h4 className="font-medium">Contact Information</h4>
-                <div className="grid sm:grid-cols-2 gap-4">
-                  <div>
-                    <Label>Email</Label>
-                    {isEditing ? (
-                      <Input
-                        type="email"
-                        value={editedMember.email}
-                        onChange={(e) =>
-                          setEditedMember({
-                            ...editedMember,
-                            email: e.target.value,
-                          })
-                        }
-                      />
-                    ) : (
-                      <p className="text-sm text-muted-foreground">
-                        {selectedMember.email}
-                      </p>
-                    )}
-                  </div>
-                  <div>
-                    <Label>Phone</Label>
-                    {isEditing ? (
-                      <Input
-                        value={editedMember.phone}
-                        onChange={(e) =>
-                          setEditedMember({
-                            ...editedMember,
-                            phone: e.target.value,
-                          })
-                        }
-                      />
-                    ) : (
-                      <p className="text-sm text-muted-foreground">
-                        {selectedMember.phone}
-                      </p>
-                    )}
-                  </div>
-                </div>
-                <div>
-                  <Label>Address</Label>
-                  {isEditing ? (
-                    <Textarea
-                      value={editedMember.address || ""}
-                      onChange={(e) =>
-                        setEditedMember({
-                          ...editedMember,
-                          address: e.target.value,
-                        })
-                      }
-                      rows={2}
-                    />
-                  ) : (
-                    <p className="text-sm text-muted-foreground">
-                      {selectedMember.address || "Not provided"}
-                    </p>
-                  )}
-                </div>
-                <div>
-                  <Label>Emergency Contact</Label>
-                  {isEditing ? (
-                    <Input
-                      value={editedMember.emergencyContact || ""}
-                      onChange={(e) =>
-                        setEditedMember({
-                          ...editedMember,
-                          emergencyContact: e.target.value,
-                        })
-                      }
-                    />
-                  ) : (
-                    <p className="text-sm text-muted-foreground">
-                      {selectedMember.emergencyContact || "Not provided"}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              {/* Membership Information */}
-              <div className="grid gap-4">
-                <h4 className="font-medium">Membership Information</h4>
-                <div className="grid sm:grid-cols-2 gap-4">
-                  <div>
-                    <Label>Plan Type</Label>
-                    {isEditing ? (
-                      <Select
-                        value={editedMember.planType}
-                        onValueChange={(value) =>
-                          setEditedMember({ ...editedMember, planType: value })
-                        }
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Basic Monthly">
-                            Basic Monthly
-                          </SelectItem>
-                          <SelectItem value="Premium Monthly">
-                            Premium Monthly
-                          </SelectItem>
-                          <SelectItem value="Basic Annual">
-                            Basic Annual
-                          </SelectItem>
-                          <SelectItem value="Premium Annual">
-                            Premium Annual
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                    ) : (
-                      <p className="text-sm text-muted-foreground">
-                        {selectedMember.planType}
-                      </p>
-                    )}
-                  </div>
-                  <div>
-                    <Label>Amount</Label>
-                    <p className="text-sm text-muted-foreground">
-                      ₹{selectedMember.amount}
-                    </p>
-                  </div>
-                  <div>
-                    <Label>Start Date</Label>
-                    <p className="text-sm text-muted-foreground">
-                      {new Date(selectedMember.startDate).toLocaleDateString()}
-                    </p>
-                  </div>
-                  <div>
-                    <Label>End Date</Label>
-                    <p className="text-sm text-muted-foreground">
-                      {new Date(selectedMember.endDate).toLocaleDateString()}
-                    </p>
-                  </div>
-                  <div>
-                    <Label>Join Date</Label>
-                    <p className="text-sm text-muted-foreground">
-                      {selectedMember.joinDate
-                        ? new Date(selectedMember.joinDate).toLocaleDateString()
-                        : "N/A"}
-                    </p>
-                  </div>
-                  <div>
-                    <Label>Last Payment</Label>
-                    <p className="text-sm text-muted-foreground">
-                      {selectedMember.lastPayment
-                        ? new Date(
-                            selectedMember.lastPayment
-                          ).toLocaleDateString()
-                        : "N/A"}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Notes */}
-              <div>
-                <Label>Notes</Label>
-                {isEditing ? (
-                  <Textarea
-                    value={editedMember.notes || ""}
-                    onChange={(e) =>
-                      setEditedMember({
-                        ...editedMember,
-                        notes: e.target.value,
-                      })
-                    }
-                    rows={3}
-                    placeholder="Add notes about this member..."
-                  />
-                ) : (
-                  <p className="text-sm text-muted-foreground">
-                    {selectedMember.notes || "No notes available"}
-                  </p>
-                )}
-              </div>
-            </div>
-          )}
-
-          <DialogFooter>
-            {isEditing ? (
-              <div className="flex gap-2">
-                <Button variant="outline" onClick={handleCancelEdit}>
-                  <X className="w-4 h-4 mr-2" />
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleSaveProfile}
-                  className="bg-gradient-to-r from-neon-green to-neon-blue text-white"
-                >
-                  <Save className="w-4 h-4 mr-2" />
-                  Save Changes
-                </Button>
-              </div>
-            ) : (
-              <Button variant="outline" onClick={() => setIsProfileOpen(false)}>
-                Close
-              </Button>
-            )}
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
       {/* Billing Management Dialog */}
       <Dialog open={isBillingOpen} onOpenChange={setIsBillingOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Billing Management</DialogTitle>
             <DialogDescription>
-              Manage payment and billing information for {billingMember?.name}
+              Manage payment and billing information for{" "}
+              {billingMember?.fullName}
             </DialogDescription>
           </DialogHeader>
 
@@ -930,12 +247,12 @@ function MembershipManagement() {
               {/* Member Info */}
               <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-lg">
                 <div className="w-12 h-12 bg-gradient-to-r from-neon-green to-neon-blue rounded-full flex items-center justify-center text-white">
-                  {billingMember.name.charAt(0)}
+                  {billingMember.fullName.charAt(0)}
                 </div>
                 <div>
-                  <h4 className="font-medium">{billingMember.name}</h4>
+                  <h4 className="font-medium">{billingMember.fullName}</h4>
                   <p className="text-sm text-muted-foreground">
-                    {billingMember.planType}
+                    {billingMember.currentPlanId}
                   </p>
                 </div>
               </div>
@@ -947,32 +264,28 @@ function MembershipManagement() {
                   <div>
                     <Label>Current Plan</Label>
                     <p className="text-sm text-muted-foreground">
-                      {billingMember.planType}
+                      {billingMember.currentPlanId}
                     </p>
                   </div>
                   <div>
                     <Label>Amount</Label>
                     <p className="text-sm text-neon-green font-medium">
-                      ₹{billingMember.amount}
+                      ₹{billingMember.amount ?? 0}
                     </p>
                   </div>
                   <div>
                     <Label>Last Payment</Label>
                     <p className="text-sm text-muted-foreground">
-                      {billingMember.lastPayment
-                        ? new Date(
-                            billingMember.lastPayment
-                          ).toLocaleDateString()
+                      {billingMember.endDate
+                        ? new Date(billingMember.endDate).toLocaleDateString()
                         : "N/A"}
                     </p>
                   </div>
                   <div>
                     <Label>Next Billing</Label>
                     <p className="text-sm text-muted-foreground">
-                      {billingMember.nextBilling
-                        ? new Date(
-                            billingMember.nextBilling
-                          ).toLocaleDateString()
+                      {billingMember.startDate
+                        ? new Date(billingMember.startDate).toLocaleDateString()
                         : "N/A"}
                     </p>
                   </div>
@@ -986,11 +299,11 @@ function MembershipManagement() {
                   <div className="flex items-center gap-2">
                     {getStatusBadge(billingMember.status)}
                     <span className="text-sm">
-                      {billingMember.status === "active" &&
+                      {billingMember.status === "ACTIVE" &&
                         "Payment up to date"}
-                      {billingMember.status === "expired" &&
+                      {billingMember.status === "INACTIVE" &&
                         "Payment required - membership expired"}
-                      {billingMember.status === "pending" &&
+                      {billingMember.status === "SUSPENDED" &&
                         "Payment pending verification"}
                     </span>
                   </div>
@@ -1005,7 +318,10 @@ function MembershipManagement() {
                     variant="outline"
                     className="justify-start"
                     onClick={() =>
-                      console.log("Processing payment for:", billingMember.name)
+                      console.log(
+                        "Processing payment for:",
+                        billingMember.fullName
+                      )
                     }
                   >
                     <CreditCard className="w-4 h-4 mr-2" />
@@ -1024,16 +340,7 @@ function MembershipManagement() {
                     <Mail className="w-4 h-4 mr-2" />
                     Send Payment Reminder
                   </Button>
-                  <Button
-                    variant="outline"
-                    className="justify-start"
-                    onClick={() =>
-                      console.log(
-                        "Updating billing info for:",
-                        billingMember.name
-                      )
-                    }
-                  >
+                  <Button variant="outline" className="justify-start">
                     <Calendar className="w-4 h-4 mr-2" />
                     Update Billing Date
                   </Button>
@@ -1098,7 +405,7 @@ function MembershipManagement() {
       {/* Members Table */}
       <Card className="border-border/50">
         <CardHeader>
-          <CardTitle>Members ({filteredMembers.length})</CardTitle>
+          <CardTitle>Members ({filteredMembers?.length})</CardTitle>
           <CardDescription>
             {selectedFilter === "all"
               ? "All registered members"
@@ -1121,15 +428,15 @@ function MembershipManagement() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredMembers.map((member) => (
-                  <TableRow key={member.id}>
+                {filteredMembers?.map((member) => (
+                  <TableRow key={member._id}>
                     <TableCell>
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 bg-gradient-to-r from-neon-green to-neon-blue rounded-full flex items-center justify-center text-white text-sm">
-                          {member.name.charAt(0)}
+                          {member.fullName.charAt(0)}
                         </div>
                         <div>
-                          <div className="font-medium">{member.name}</div>
+                          <div className="font-medium">{member.fullName}</div>
                           <div className="text-sm text-muted-foreground sm:hidden">
                             {member.email}
                           </div>
@@ -1150,9 +457,11 @@ function MembershipManagement() {
                     </TableCell>
                     <TableCell>
                       <div>
-                        <div className="font-medium">{member.planType}</div>
+                        <div className="font-medium">
+                          {member.currentPlanId}
+                        </div>
                         <div className="text-sm text-muted-foreground">
-                          ₹{member.amount}
+                          ₹{member.amount ?? 0}
                         </div>
                       </div>
                     </TableCell>
