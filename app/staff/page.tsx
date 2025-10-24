@@ -40,106 +40,53 @@ import {
   Users,
   Award,
   Clock,
+  Loader,
 } from "lucide-react";
-import { FormProvider, useForm } from "react-hook-form";
+import { FormProvider, useForm, useWatch } from "react-hook-form";
 import CustomField from "@/components/reusableComponents/customField";
 import StaffController from "./controller";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { StaffFormData, staffSchema } from "@/lib/validation-schemas";
-
-interface Staff {
-  id: string;
-  name: string;
-  role: "head-coach" | "personal-trainer" | "nutritionist" | "receptionist";
-  email: string;
-  phone: string;
-  joinDate: string;
-  specialization?: string;
-  avatar?: string;
-  isActive: boolean;
-  assignedMembers?: number;
-}
-
-const mockStaff: Staff[] = [
-  {
-    id: "1",
-    name: "Rajesh Kumar",
-    role: "head-coach",
-    email: "rajesh.kumar@gym.com",
-    phone: "+91 98765 43210",
-    joinDate: "2023-01-15",
-    specialization: "Strength Training, CrossFit",
-    isActive: true,
-    assignedMembers: 25,
-  },
-  {
-    id: "2",
-    name: "Priya Sharma",
-    role: "personal-trainer",
-    email: "priya.sharma@gym.com",
-    phone: "+91 98765 43211",
-    joinDate: "2023-03-20",
-    specialization: "Weight Loss, Cardio",
-    isActive: true,
-    assignedMembers: 15,
-  },
-  {
-    id: "3",
-    name: "Amit Patel",
-    role: "nutritionist",
-    email: "amit.patel@gym.com",
-    phone: "+91 98765 43212",
-    joinDate: "2023-05-10",
-    specialization: "Sports Nutrition, Meal Planning",
-    isActive: true,
-    assignedMembers: 30,
-  },
-  {
-    id: "4",
-    name: "Sneha Reddy",
-    role: "personal-trainer",
-    email: "sneha.reddy@gym.com",
-    phone: "+91 98765 43213",
-    joinDate: "2023-07-01",
-    specialization: "Yoga, Flexibility Training",
-    isActive: true,
-    assignedMembers: 12,
-  },
-];
-
-const roleOptions = [
-  {
-    name: "Head Coach",
-    value: "head-coach",
-  },
-  {
-    name: "Personal Trainer",
-    value: "personal-trainer",
-  },
-  {
-    name: "Nutritionist",
-    value: "nutritionist",
-  },
-  {
-    name: "Receptionist",
-    value: "receptionist",
-  },
-];
+import { Staff } from "@/types/types";
+import { useDispatch, useSelector } from "react-redux";
+import { addEditData } from "@/reduxstore/editIDataSlice";
+import { StoreRootState } from "@/reduxstore/reduxStore";
+import {
+  ShimmerCard,
+  StatsCardShimmer,
+} from "@/components/reusableComponents/shimmer";
 
 function StaffManagement() {
+  const dispatch = useDispatch();
+  const staffEditData = useSelector(
+    (state: StoreRootState) => state.data.editData as Staff | null
+  );
   const staffController = new StaffController();
-  const { mutate } = useMutation({
-    mutationFn: staffController.addStaff,
+  const queryClient = useQueryClient();
+  const { data: roles = [], isLoading: isLoadingRoleOptions } = useQuery({
+    queryKey: ["role"],
+    queryFn: staffController.getRoles,
   });
-  const [staff, setStaff] = useState<Staff[]>(mockStaff);
+  const { data: staffList = [], isLoading: isLoadingStaffList } = useQuery({
+    queryKey: ["staffList"],
+    queryFn: staffController.getStaffList,
+  });
+  const { mutate, isPending } = useMutation({
+    mutationFn: staffEditData
+      ? staffController.updateStaff
+      : staffController.addStaff,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["staffList"] });
+      setIsCreateOpen(false);
+    },
+  });
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [isEditOpen, setIsEditOpen] = useState(false);
-  const [editingStaff, setEditingStaff] = useState<Staff | null>(null);
+
   const [filterRole, setFilterRole] = useState<string>("all");
 
   const getRoleBadge = (role: Staff["role"]) => {
-    switch (role) {
+    switch (role.value) {
       case "head-coach":
         return (
           <Badge className="bg-neon-green/10 text-neon-green border-neon-green/20">
@@ -190,51 +137,48 @@ function StaffManagement() {
       .slice(0, 2);
   };
 
-  const handleEditStaff = () => {
-    if (editingStaff) {
-      setStaff(staff.map((s) => (s.id === editingStaff.id ? editingStaff : s)));
-      setIsEditOpen(false);
-      setEditingStaff(null);
-    }
-  };
-
-  const handleDeleteStaff = (id: string) => {
-    setStaff(staff.filter((s) => s.id !== id));
-  };
-
-  const openEditDialog = (staffMember: Staff) => {
-    setEditingStaff(staffMember);
-    setIsEditOpen(true);
-  };
-  const onSubmit = (data: any) => {
-    mutate(data);
+  const onSubmit = (data: StaffFormData) => {
+    mutate({ ...data, ...(staffEditData && { id: staffEditData?._id }) });
   };
 
   const filteredStaff =
-    filterRole === "all" ? staff : staff.filter((s) => s.role === filterRole);
+    filterRole === "all"
+      ? staffList
+      : staffList.filter((s: Staff) => s.role.value === filterRole);
 
   const staffStats = {
-    total: staff.length,
-    active: staff.filter((s) => s.isActive).length,
-    coaches: staff.filter(
-      (s) => s.role === "head-coach" || s.role === "personal-trainer"
+    total: staffList.length,
+    active: staffList.filter((s: Staff) => s.isActive).length,
+    coaches: staffList.filter(
+      (s: Staff) =>
+        s.role.value === "head-coach" || s.role.value === "personal-trainer"
     ).length,
   };
 
   const form = useForm<StaffFormData>({
-    defaultValues: {
-      name: "",
-      role: "personal-trainer",
-      email: "",
-      phone: "",
-      specialization: "",
+    values: {
+      fullName: staffEditData?.fullName || "",
+      role: staffEditData?.role?._id || "",
+      email: staffEditData?.email || "",
+      phone: staffEditData?.phone || "",
+      specialization: staffEditData?.specialization || "",
       isActive: true,
     },
     resolver: zodResolver(staffSchema),
   });
-
-  const values = form.watch();
-
+  const isActive = useWatch({
+    control: form.control,
+    name: "isActive",
+  });
+  function handleOpen(open: boolean) {
+    dispatch(addEditData(null));
+    form.reset();
+    setIsCreateOpen(open);
+  }
+  function openEditDialog(staffMember: Staff) {
+    setIsCreateOpen(true);
+    dispatch(addEditData(staffMember));
+  }
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -244,7 +188,7 @@ function StaffManagement() {
             Manage your gym coaches and staff members
           </p>
         </div>
-        <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+        <Dialog open={isCreateOpen} onOpenChange={handleOpen}>
           <DialogTrigger asChild>
             <Button className="bg-gradient-to-r from-neon-green to-neon-blue text-white">
               <Plus className="w-4 h-4 mr-2" />
@@ -263,7 +207,7 @@ function StaffManagement() {
                 <div className="grid gap-4 py-4">
                   <div className="grid gap-2">
                     <CustomField
-                      name="name"
+                      name="fullName"
                       label="Full Name"
                       isLoading={false}
                       placeholder="Enter full name"
@@ -273,10 +217,10 @@ function StaffManagement() {
                     <CustomField
                       name="role"
                       label="Role"
-                      isLoading={false}
+                      isLoading={isLoadingRoleOptions}
                       placeholder="Select role"
                       select
-                      options={roleOptions}
+                      options={roles}
                     />
                   </div>
                   <div className="grid gap-2">
@@ -313,7 +257,10 @@ function StaffManagement() {
                     <Switch
                       id="isActive"
                       {...form.register("isActive")}
-                      defaultChecked={values.isActive}
+                      onCheckedChange={(c: boolean) =>
+                        form.setValue("isActive", c)
+                      }
+                      checked={isActive}
                     />
                   </div>
                 </div>
@@ -322,7 +269,13 @@ function StaffManagement() {
                     type="submit"
                     className="bg-gradient-to-r from-neon-green to-neon-blue text-white"
                   >
-                    Add Staff Member
+                    {isPending ? (
+                      <Loader className="animate-spin h-6 w-6" />
+                    ) : staffEditData ? (
+                      "Update Staff Member"
+                    ) : (
+                      "Add Staff Member"
+                    )}
                   </Button>
                 </DialogFooter>
               </form>
@@ -333,48 +286,58 @@ function StaffManagement() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        <Card className="border-border/50">
-          <CardHeader className="pb-3">
-            <CardDescription>Total Staff</CardDescription>
-            <CardTitle className="text-3xl">{staffStats.total}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Users className="w-4 h-4" />
-              All team members
-            </div>
-          </CardContent>
-        </Card>
+        {isLoadingStaffList ? (
+          <>
+            <StatsCardShimmer />
+            <StatsCardShimmer />
+            <StatsCardShimmer />
+          </>
+        ) : (
+          <>
+            <Card className="border-border/50">
+              <CardHeader className="pb-3">
+                <CardDescription>Total Staff</CardDescription>
+                <CardTitle className="text-3xl">{staffStats.total}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Users className="w-4 h-4" />
+                  All team members
+                </div>
+              </CardContent>
+            </Card>
 
-        <Card className="border-border/50">
-          <CardHeader className="pb-3">
-            <CardDescription>Active Staff</CardDescription>
-            <CardTitle className="text-3xl text-neon-green">
-              {staffStats.active}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Clock className="w-4 h-4" />
-              Currently working
-            </div>
-          </CardContent>
-        </Card>
+            <Card className="border-border/50">
+              <CardHeader className="pb-3">
+                <CardDescription>Active Staff</CardDescription>
+                <CardTitle className="text-3xl text-neon-green">
+                  {staffStats.active}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Clock className="w-4 h-4" />
+                  Currently working
+                </div>
+              </CardContent>
+            </Card>
 
-        <Card className="border-border/50">
-          <CardHeader className="pb-3">
-            <CardDescription>Trainers & Coaches</CardDescription>
-            <CardTitle className="text-3xl text-neon-blue">
-              {staffStats.coaches}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Award className="w-4 h-4" />
-              Training staff
-            </div>
-          </CardContent>
-        </Card>
+            <Card className="border-border/50">
+              <CardHeader className="pb-3">
+                <CardDescription>Trainers & Coaches</CardDescription>
+                <CardTitle className="text-3xl text-neon-blue">
+                  {staffStats.coaches}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Award className="w-4 h-4" />
+                  Training staff
+                </div>
+              </CardContent>
+            </Card>
+          </>
+        )}
       </div>
 
       {/* Filter */}
@@ -396,203 +359,89 @@ function StaffManagement() {
 
       {/* Staff Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredStaff.map((staffMember) => (
-          <Card
-            key={staffMember.id}
-            className="border-border/50 hover:border-border transition-colors"
-          >
-            <CardHeader className="pb-4">
-              <div className="flex items-start justify-between mb-3">
-                <Avatar className="h-16 w-16">
-                  <AvatarImage
-                    src={staffMember.avatar}
-                    alt={staffMember.name}
-                  />
-                  <AvatarFallback className="bg-gradient-to-br from-neon-green/20 to-neon-blue/20 text-lg">
-                    {getInitials(staffMember.name)}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex gap-2">
-                  {getRoleBadge(staffMember.role)}
-                </div>
-              </div>
-              <CardTitle className="text-xl">{staffMember.name}</CardTitle>
-              <div className="flex items-center gap-2 mt-1">
-                {getStatusBadge(staffMember.isActive)}
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="space-y-2 text-sm">
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Mail className="w-4 h-4" />
-                  <span className="truncate">{staffMember.email}</span>
-                </div>
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Phone className="w-4 h-4" />
-                  <span>{staffMember.phone}</span>
-                </div>
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Calendar className="w-4 h-4" />
-                  <span>
-                    Joined {new Date(staffMember.joinDate).toLocaleDateString()}
-                  </span>
-                </div>
-              </div>
-
-              {staffMember.specialization && (
-                <div className="pt-3 border-t border-border">
-                  <h4 className="text-sm mb-2 flex items-center gap-1">
-                    <Award className="w-4 h-4" />
-                    Specialization
-                  </h4>
-                  <p className="text-sm text-muted-foreground">
-                    {staffMember.specialization}
-                  </p>
-                </div>
-              )}
-
-              {staffMember.assignedMembers !== undefined && (
-                <div className="pt-3 border-t border-border">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">
-                      Assigned Members
-                    </span>
-                    <Badge variant="secondary">
-                      {staffMember.assignedMembers}
-                    </Badge>
+        {isLoadingStaffList ? (
+          <>
+            <ShimmerCard />
+            <ShimmerCard />
+            <ShimmerCard />
+            <ShimmerCard />
+            <ShimmerCard />
+            <ShimmerCard />
+          </>
+        ) : (
+          <>
+            {filteredStaff.map((staffMember: Staff) => (
+              <Card
+                key={staffMember._id}
+                className="border-border/50 hover:border-border transition-colors"
+              >
+                <CardHeader className="pb-4">
+                  <div className="flex items-start justify-between mb-3">
+                    <Avatar className="h-16 w-16">
+                      <AvatarImage src={""} alt={staffMember.fullName} />
+                      <AvatarFallback className="bg-gradient-to-br from-neon-green/20 to-neon-blue/20 text-lg">
+                        {getInitials(staffMember.fullName)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex gap-2">
+                      {getRoleBadge(staffMember.role)}
+                    </div>
                   </div>
-                </div>
-              )}
+                  <CardTitle className="text-xl">
+                    {staffMember.fullName}
+                  </CardTitle>
+                  <div className="flex items-center gap-2 mt-1">
+                    {getStatusBadge(staffMember.isActive)}
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="space-y-2 text-sm">
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <Mail className="w-4 h-4" />
+                      <span className="truncate">{staffMember.email}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <Phone className="w-4 h-4" />
+                      <span>{staffMember.phone}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <Calendar className="w-4 h-4" />
+                      <span>
+                        Joined{" "}
+                        {new Date(staffMember.createdAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                  </div>
 
-              <div className="flex gap-2 pt-3 border-t border-border">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex-1"
-                  onClick={() => openEditDialog(staffMember)}
-                >
-                  <Edit className="w-4 h-4 mr-1" />
-                  Edit
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex-1 text-red-500 hover:text-red-600 hover:bg-red-500/10"
-                  onClick={() => handleDeleteStaff(staffMember.id)}
-                >
-                  <Trash2 className="w-4 h-4 mr-1" />
-                  Delete
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+                  {staffMember.specialization && (
+                    <div className="pt-3 border-t border-border">
+                      <h4 className="text-sm mb-2 flex items-center gap-1">
+                        <Award className="w-4 h-4" />
+                        Specialization
+                      </h4>
+                      <p className="text-sm text-muted-foreground">
+                        {staffMember.specialization}
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="flex gap-2 pt-3 border-t border-border">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1"
+                      onClick={() => openEditDialog(staffMember)}
+                    >
+                      <Edit className="w-4 h-4 mr-1" />
+                      Edit
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </>
+        )}
       </div>
-
-      {/* Edit Dialog */}
-      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>Edit Staff Member</DialogTitle>
-            <DialogDescription>
-              Update staff member information.
-            </DialogDescription>
-          </DialogHeader>
-          {editingStaff && (
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="edit-name">Full Name</Label>
-                <Input
-                  id="edit-name"
-                  value={editingStaff.name}
-                  onChange={(e) =>
-                    setEditingStaff({ ...editingStaff, name: e.target.value })
-                  }
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="edit-role">Role</Label>
-                <Select
-                  value={editingStaff.role}
-                  onValueChange={(value: Staff["role"]) =>
-                    setEditingStaff({ ...editingStaff, role: value })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="head-coach">Head Coach</SelectItem>
-                    <SelectItem value="personal-trainer">
-                      Personal Trainer
-                    </SelectItem>
-                    <SelectItem value="nutritionist">Nutritionist</SelectItem>
-                    <SelectItem value="receptionist">Receptionist</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="edit-email">Email</Label>
-                <Input
-                  id="edit-email"
-                  type="email"
-                  value={editingStaff.email}
-                  onChange={(e) =>
-                    setEditingStaff({ ...editingStaff, email: e.target.value })
-                  }
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="edit-phone">Phone</Label>
-                <Input
-                  id="edit-phone"
-                  value={editingStaff.phone}
-                  onChange={(e) =>
-                    setEditingStaff({ ...editingStaff, phone: e.target.value })
-                  }
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="edit-specialization">Specialization</Label>
-                <Input
-                  id="edit-specialization"
-                  value={editingStaff.specialization || ""}
-                  onChange={(e) =>
-                    setEditingStaff({
-                      ...editingStaff,
-                      specialization: e.target.value,
-                    })
-                  }
-                />
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label htmlFor="edit-isActive">Active Status</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Mark this staff member as active
-                  </p>
-                </div>
-                <Switch
-                  id="edit-isActive"
-                  checked={editingStaff.isActive}
-                  onCheckedChange={(checked) =>
-                    setEditingStaff({ ...editingStaff, isActive: checked })
-                  }
-                />
-              </div>
-            </div>
-          )}
-          <DialogFooter>
-            <Button
-              type="submit"
-              onClick={handleEditStaff}
-              className="bg-gradient-to-r from-neon-green to-neon-blue text-white"
-            >
-              Update Staff Member
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

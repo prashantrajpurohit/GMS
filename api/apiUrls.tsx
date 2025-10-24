@@ -4,4 +4,5 @@ export const ApiUrl = {
   PLAN: `/plans`,
   STAFF: `/staff`,
   Member: `/members`,
+  ROLES: `roles`,
 };

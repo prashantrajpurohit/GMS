@@ -52,7 +52,10 @@ interface Role {
   id: string;
   name: string;
   value: string;
+  _id?: string;
   options: Option[];
+  createdAt: string; // or Date if you parse it
+  updatedAt: string; // or Date if you parse it
 }
 
 export type UserDataType = {
@@ -83,3 +86,16 @@ export type AbilityContextvalue = {
 //=============================== grid===========================//
 
 export type GridSpan = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
+
+export interface Staff {
+  _id: string;
+  fullName: string;
+  role: Role;
+  email: string;
+  phone: string;
+  specialization: string;
+  gymId: string;
+  isActive: boolean;
+  createdAt: string; // or Date if you parse it
+  updatedAt: string; // or Date if you parse it
+}

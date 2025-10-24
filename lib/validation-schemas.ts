@@ -11,7 +11,7 @@ const requiredNumber = (val: string) => z.number().min(1, `${val} is required`);
 
 // Staff/Faculty validation schema
 export const staffSchema = z.object({
-  name: requiredString("Name").min(2, "Name must be at least 2 characters"),
+  fullName: requiredString("Name").min(2, "Name must be at least 2 characters"),
   email: emailSchema,
   phone: phoneSchema,
   role: requiredString("Role"),
