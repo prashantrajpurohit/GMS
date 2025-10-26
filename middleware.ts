@@ -15,7 +15,7 @@ export function middleware(req: NextRequest) {
   }
   const pathname = req.nextUrl.pathname;
   const path = pathname === "/" ? "/" : pathname.replace(/^\//, "");
-  const publicPaths = ["login", "register", "404", "401"];
+  const publicPaths = ["auth/login", "auth/register", "404", "401"];
   const isPublicPath = publicPaths.includes(path);
   if (pathname === "/" && token) {
     const role = parsed?.role;
@@ -28,10 +28,10 @@ export function middleware(req: NextRequest) {
     }
   }
   if (!token && !isPublicPath && pathname !== "/") {
-    return NextResponse.redirect(new URL("/login", req.url));
+    return NextResponse.redirect(new URL("/auth/login", req.url));
   }
 
-  if (token && (path === "login" || path === "register")) {
+  if (token && (path === "auth/login" || path === "auth/register")) {
     return NextResponse.redirect(new URL("/dashboard", req.url));
   }
 

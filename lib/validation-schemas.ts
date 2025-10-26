@@ -15,6 +15,7 @@ export const staffSchema = z.object({
   email: emailSchema,
   phone: phoneSchema,
   role: requiredString("Role"),
+  password: requiredString("password").min(8, "Password must be at least 8 characters"),
   specialization: z.string().optional(),
   isActive: z.boolean(),
 });
@@ -49,11 +50,8 @@ export const memberSchema = z.object({
   address: z.string().min(1, "Address is required"),
   emergencyContact: z.string().optional(),
   photo: z.string().optional(),
-  status: z.enum(["ACTIVE", "INACTIVE", "SUSPENDED"]),
+  status: z.enum(["active", "inactive", "suspended", "guest", 'expired']),
   startDate: z
-    .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be in YYYY-MM-DD format"),
-  endDate: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be in YYYY-MM-DD format"),
   currentPlanId: z.string().min(1, "Current plan ID is required"),

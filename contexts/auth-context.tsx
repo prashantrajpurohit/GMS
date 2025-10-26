@@ -64,7 +64,7 @@ const AuthProvider = ({ children }: Props) => {
     try {
       let response = await httpRequest.post(`${ApiUrl.AUTH_LOGOUT}`);
       if (response.status === ApiStatus.STATUS_200) {
-        router.replace("/login");
+        router.replace("/auth/login");
         setUser(null);
         dispatch(logout());
         localStorage.removeItem("persist:root");

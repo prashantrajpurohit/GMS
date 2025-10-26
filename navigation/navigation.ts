@@ -1,4 +1,4 @@
-import { ChartColumn, CreditCard, LayoutDashboard, NotepadText, Settings, UserCog, Users } from "lucide-react";
+import { ChartColumn, CreditCard, Gift, LayoutDashboard, NotepadText, Settings, UserCog, Users } from "lucide-react";
 
 export const routeConfig = [
   {
@@ -35,11 +35,18 @@ export const routeConfig = [
     subject: "plans",
     action: "read",
   },
+  // {
+  //   title: "Reports",
+  //   path: "/reports",
+  //   icon: ChartColumn,
+  //   subject: "reports",
+  //   action: "read",
+  // },
   {
-    title: "Reports",
-    path: "/reports",
-    icon: ChartColumn,
-    subject: "reports",
+    title: "Referrals",
+    path: "/referral",
+    icon: Gift,
+    subject: "referral",
     action: "read",
   },
   {

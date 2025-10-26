@@ -201,13 +201,14 @@ export default function AddEditMember({
               type="date"
             />
           </div>{" "}
-          <div className="grid gap-2">
+          <div>
             <CustomField
-              name="endDate"
-              label="End Date"
+              name="status"
+              label="Status"
               isLoading={false}
-              placeholder="Select workout batch"
-              type="date"
+              placeholder="Select status"
+              select
+              options={["active", "expired", "suspended", "guest", "inactive"]}
             />
           </div>
         </div>

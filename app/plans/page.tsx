@@ -42,7 +42,7 @@ import {
 import CustomField from "@/components/reusableComponents/customField";
 import { FormProvider, useForm } from "react-hook-form";
 import CustomTextarea from "@/components/reusableComponents/textArea";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import PlansController from "./controller";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PlanInterface, planSchema } from "@/lib/validation-schemas";
@@ -51,6 +51,7 @@ import AddEditPlans from "@/components/forms/addEditPlans";
 import { addEditData } from "@/reduxstore/editIDataSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { StoreRootState } from "@/reduxstore/reduxStore";
+import { toast } from "sonner";
 
 // Helper function to format duration display
 const formatDuration = (value: number, unit: "days" | "months" | "years") => {
@@ -71,6 +72,7 @@ interface extendedPlanInterface extends PlanInterface {
   _id: string;
 }
 function WorkoutPlans() {
+  const queryClient = useQueryClient();
   const dispatch = useDispatch();
   const planController = new PlansController();
   const plansData = useSelector(
@@ -82,8 +84,15 @@ function WorkoutPlans() {
     queryFn: planController.getPlans,
   });
   const { mutate, isPending } = useMutation({
-    mutationFn: plansData ? planController.editPlan : planController.addPlan,
+    mutationFn: (data: any) =>
+      plansData
+        ? planController.editPlan({ payload: data, _id: plansData?._id })
+        : planController.addPlan(data),
     onSuccess() {
+      toast.success(
+        `Plan ${plansData?._id ? "updated" : "added"} successfully!`
+      );
+      queryClient.invalidateQueries({ queryKey: ["plans"] });
       setOpen(false);
       dispatch(addEditData(null));
       form.reset();
@@ -109,7 +118,7 @@ function WorkoutPlans() {
     dispatch(addEditData(null));
   };
   const onSubmit = (data: any) => {
-    mutate({ ...data, ...(plansData && { _id: plansData?._id }) });
+    mutate(data);
   };
 
   const totalRevenue = mockMembershipPlans?.reduce(
@@ -162,7 +171,7 @@ function WorkoutPlans() {
                   type="submit"
                   className="bg-gradient-to-r from-neon-green to-neon-blue text-white"
                 >
-                  {!isPending ? (
+                  {isPending ? (
                     <Loader className="w-4 h-4 animate-spin" />
                   ) : (
                     `${plansData ? "Edit" : "Add"} Plan`

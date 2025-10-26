@@ -56,6 +56,7 @@ import {
   ShimmerCard,
   StatsCardShimmer,
 } from "@/components/reusableComponents/shimmer";
+import { toast } from "sonner";
 
 function StaffManagement() {
   const dispatch = useDispatch();
@@ -77,6 +78,9 @@ function StaffManagement() {
       ? staffController.updateStaff
       : staffController.addStaff,
     onSuccess: () => {
+      toast.success(
+        `Staff ${staffEditData?._id ? "updated" : "added"} successfully!`
+      );
       queryClient.invalidateQueries({ queryKey: ["staffList"] });
       setIsCreateOpen(false);
     },
@@ -162,7 +166,8 @@ function StaffManagement() {
       email: staffEditData?.email || "",
       phone: staffEditData?.phone || "",
       specialization: staffEditData?.specialization || "",
-      isActive: true,
+      isActive: staffEditData?.isActive ? true : false || false,
+      password: staffEditData?.password || "",
     },
     resolver: zodResolver(staffSchema),
   });
@@ -211,6 +216,14 @@ function StaffManagement() {
                       label="Full Name"
                       isLoading={false}
                       placeholder="Enter full name"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <CustomField
+                      name="password"
+                      label="Password"
+                      isLoading={false}
+                      placeholder="Enter Password"
                     />
                   </div>
                   <div className="grid gap-2">

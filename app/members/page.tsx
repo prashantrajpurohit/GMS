@@ -100,8 +100,10 @@ function MembershipManagement() {
   const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
 
   const [isBillingOpen, setIsBillingOpen] = useState(false);
-  const [billingMember, setBillingMember] =
-    useState<extendedMemberInterface | null>(null);
+  const [billingMember, setBillingMember] = useState<Record<
+    string,
+    any
+  > | null>(null);
 
   const filteredMembers = members?.filter((member) => {
     const matchesSearch =
@@ -114,15 +116,31 @@ function MembershipManagement() {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
+      case "guest":
+        return (
+          <Badge className="bg-purple-500/10 text-purple-500 border-purple-500/20">
+            Guest
+          </Badge>
+        );
       case "active":
         return (
-          <Badge className="bg-neon-green/10 text-neon-green border-neon-green/20">
+          <Badge className="bg-green-500/10 text-green-500 border-green-500/20">
             Active
           </Badge>
         );
+      case "inactive":
+        return (
+          <Badge className="bg-gray-500/10 text-gray-500 border-gray-500/20">
+            In-Active
+          </Badge>
+        );
       case "expired":
-        return <Badge variant="destructive">Expired</Badge>;
-      case "pending":
+        return (
+          <Badge className="bg-red-500/10 text-red-500 border-red-500/20">
+            Expired
+          </Badge>
+        );
+      case "suspended":
         return (
           <Badge className="bg-yellow-500/10 text-yellow-500 border-yellow-500/20">
             Pending
@@ -149,9 +167,8 @@ function MembershipManagement() {
       gender: member?.gender || "male",
       address: member?.address || "",
       emergencyContact: member?.emergencyContact || "8989898989",
-      endDate: member?.endDate?.split("T")?.[0] || "",
       memberCode: member?.memberCode || "",
-      status: member?.status || "ACTIVE",
+      status: member?.status || "active",
       notes: member?.notes || "",
       batch: member?.batch || "",
     });
@@ -188,15 +205,17 @@ function MembershipManagement() {
 
   const memberCounts = {
     all: members?.length,
-    active: members?.filter((m) => m.status === "ACTIVE").length,
-    expired: members?.filter((m) => m.status === "INACTIVE").length,
-    pending: members?.filter((m) => m.status === "SUSPENDED").length,
+    active: members?.filter((m) => m.status === "active").length,
+    inactive: members?.filter((m) => m.status === "inactive").length,
+    expired: members?.filter((m) => m.status === "expired").length,
+    suspended: members?.filter((m) => m.status === "suspended").length,
+    guest: members?.filter((m) => m.status === "guest").length,
   };
 
   const onSubmit = (data: MemberInterface) => {
     mutate(data);
   };
-  const initialFormValues = {
+  const initialFormValues: MemberInterface = {
     fullName: "",
     email: "",
     phone: "",
@@ -209,9 +228,8 @@ function MembershipManagement() {
     gender: "male",
     address: "",
     emergencyContact: "8989898989",
-    endDate: "",
     memberCode: "",
-    status: "ACTIVE",
+    status: "active",
     notes: "",
     batch: "",
   };
@@ -317,14 +335,7 @@ function MembershipManagement() {
                       ₹{billingMember?.amount ?? 0}
                     </p>
                   </div>
-                  <div>
-                    <Label>Last Payment</Label>
-                    <p className="text-sm text-muted-foreground">
-                      {billingMember.endDate
-                        ? new Date(billingMember.endDate).toLocaleDateString()
-                        : "N/A"}
-                    </p>
-                  </div>
+
                   <div>
                     <Label>Next Billing</Label>
                     <p className="text-sm text-muted-foreground">
@@ -436,8 +447,14 @@ function MembershipManagement() {
                   <SelectItem value="expired">
                     Expired ({memberCounts.expired})
                   </SelectItem>
-                  <SelectItem value="pending">
-                    Pending ({memberCounts.pending})
+                  <SelectItem value="suspended">
+                    Pending ({memberCounts.suspended})
+                  </SelectItem>
+                  <SelectItem value="inactive">
+                    InActive ({memberCounts.inactive})
+                  </SelectItem>
+                  <SelectItem value="guest">
+                    Guest ({memberCounts.guest})
                   </SelectItem>
                 </SelectContent>
               </Select>
@@ -513,9 +530,6 @@ function MembershipManagement() {
                       <div className="space-y-1">
                         <div className="text-sm">
                           {new Date(member.startDate).toLocaleDateString()}
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          to {new Date(member.endDate).toLocaleDateString()}
                         </div>
                       </div>
                     </TableCell>

@@ -1,16 +1,10 @@
 "use client";
-import React, { useState } from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import React, { useState, useMemo } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Table,
   TableBody,
@@ -28,570 +22,741 @@ import {
 } from "@/components/ui/select";
 import {
   Search,
-  CreditCard,
-  CheckCircle,
-  Clock,
-  AlertTriangle,
+  Download,
+  CheckCircle2,
+  XCircle,
+  DollarSign,
   TrendingUp,
-  Send,
-  Mail,
-  MessageCircle,
+  Users,
   Calendar,
+  Eye,
+  Send,
+  MessageSquare,
 } from "lucide-react";
-import { toast } from "sonner";
+import {
+  MonthlyPayment,
+  MonthlyPaymentDialog,
+} from "@/components/payments/MonthlyPaymentDialog";
+import { MonthlySendReminderDialog } from "@/components/payments/MonthlySendReminderDialog";
+import { MonthlyBulkReminderDialog } from "@/components/payments/MonthlyBulkReminderDialog";
 
-interface Payment {
+interface Member {
   id: string;
-  memberName: string;
-  memberEmail: string;
-  memberPhone: string;
-  amount: number;
-  dueDate: string;
-  status: "paid" | "pending";
-  planType: string;
-  paymentMethod?: string;
-  paidDate?: string;
-  remindersCount: number;
+  name: string;
+  phone: string;
+  email: string;
+  avatar?: string;
+  planName: string;
+  planType: "Monthly" | "Quarterly" | "Yearly";
+  monthlyFee: number;
+  payments: MonthlyPayment[];
 }
 
-const initialPayments: Payment[] = [
+// Generate last 12 months
+const generateMonths = () => {
+  const months = [];
+  const currentDate = new Date();
+
+  for (let i = 11; i >= 0; i--) {
+    const date = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth() - i,
+      1
+    );
+    const monthName = date.toLocaleDateString("en-US", {
+      month: "short",
+      year: "numeric",
+    });
+    months.push(monthName);
+  }
+
+  return months;
+};
+
+const allMonths = generateMonths();
+
+// Mock member data with monthly payment history
+const mockMembers: Member[] = [
   {
-    id: "1",
-    memberName: "John Smith",
-    memberEmail: "john.smith@email.com",
-    memberPhone: "+91 98765 43210",
-    amount: 12000,
-    dueDate: "2025-10-05",
-    status: "paid",
-    planType: "Premium Monthly",
-    paymentMethod: "UPI",
-    paidDate: "2025-10-04",
-    remindersCount: 0,
+    id: "M001",
+    name: "Rajesh Kumar",
+    phone: "+91 98765 43210",
+    email: "rajesh@example.com",
+    planName: "Premium Plan",
+    planType: "Monthly",
+    monthlyFee: 2500,
+    payments: allMonths.map((month, index) => ({
+      month,
+      status: index < 10 ? "paid" : "pending",
+      paymentDate:
+        index < 10 ? new Date(2025, 9 - index, 15).toISOString() : undefined,
+      amount: 2500,
+    })),
   },
   {
-    id: "2",
-    memberName: "Sarah Johnson",
-    memberEmail: "sarah.j@email.com",
-    memberPhone: "+91 98765 43211",
-    amount: 6400,
-    dueDate: "2025-10-18",
-    status: "pending",
-    planType: "Basic Monthly",
-    remindersCount: 3,
+    id: "M002",
+    name: "Priya Sharma",
+    phone: "+91 98765 43211",
+    email: "priya@example.com",
+    planName: "Basic Plan",
+    planType: "Monthly",
+    monthlyFee: 1500,
+    payments: allMonths.map((month, index) => ({
+      month,
+      status: index < 12 ? "paid" : "pending",
+      paymentDate:
+        index < 12 ? new Date(2025, 9 - index, 20).toISOString() : undefined,
+      amount: 1500,
+    })),
   },
   {
-    id: "3",
-    memberName: "Mike Wilson",
-    memberEmail: "mike.wilson@email.com",
-    memberPhone: "+91 98765 43212",
-    amount: 12000,
-    dueDate: "2025-10-22",
-    status: "pending",
-    planType: "Premium Monthly",
-    remindersCount: 0,
+    id: "M003",
+    name: "Amit Singh",
+    phone: "+91 98765 43212",
+    email: "amit@example.com",
+    planName: "Premium Plan",
+    planType: "Monthly",
+    monthlyFee: 2500,
+    payments: allMonths.map((month, index) => ({
+      month,
+      status: index < 8 ? "paid" : "pending",
+      paymentDate:
+        index < 8 ? new Date(2025, 9 - index, 10).toISOString() : undefined,
+      amount: 2500,
+    })),
   },
   {
-    id: "4",
-    memberName: "Emily Davis",
-    memberEmail: "emily.davis@email.com",
-    memberPhone: "+91 98765 43213",
-    amount: 96000,
-    dueDate: "2025-10-20",
-    status: "pending",
-    planType: "Premium Annual",
-    remindersCount: 1,
+    id: "M004",
+    name: "Sneha Patel",
+    phone: "+91 98765 43213",
+    email: "sneha@example.com",
+    planName: "Premium Plan",
+    planType: "Quarterly",
+    monthlyFee: 2300,
+    payments: allMonths.map((month, index) => ({
+      month,
+      status: index < 9 ? "paid" : "pending",
+      paymentDate:
+        index < 9 ? new Date(2025, 9 - index, 5).toISOString() : undefined,
+      amount: 2300,
+    })),
   },
   {
-    id: "5",
-    memberName: "Alex Brown",
-    memberEmail: "alex.brown@email.com",
-    memberPhone: "+91 98765 43214",
-    amount: 6400,
-    dueDate: "2025-10-25",
-    status: "pending",
-    planType: "Basic Monthly",
-    remindersCount: 2,
+    id: "M005",
+    name: "Rahul Verma",
+    phone: "+91 98765 43214",
+    email: "rahul@example.com",
+    planName: "Basic Plan",
+    planType: "Monthly",
+    monthlyFee: 1500,
+    payments: allMonths.map((month, index) => ({
+      month,
+      status: index < 11 ? "paid" : "pending",
+      paymentDate:
+        index < 11 ? new Date(2025, 9 - index, 22).toISOString() : undefined,
+      amount: 1500,
+    })),
   },
   {
-    id: "6",
-    memberName: "Lisa Anderson",
-    memberEmail: "lisa.a@email.com",
-    memberPhone: "+91 98765 43215",
-    amount: 12000,
-    dueDate: "2025-10-15",
-    status: "paid",
-    planType: "Premium Monthly",
-    paymentMethod: "Cash",
-    paidDate: "2025-10-14",
-    remindersCount: 0,
+    id: "M006",
+    name: "Ananya Reddy",
+    phone: "+91 98765 43215",
+    email: "ananya@example.com",
+    planName: "Premium Plan",
+    planType: "Monthly",
+    monthlyFee: 2500,
+    payments: allMonths.map((month, index) => ({
+      month,
+      status: index < 7 ? "paid" : "pending",
+      paymentDate:
+        index < 7 ? new Date(2025, 9 - index, 8).toISOString() : undefined,
+      amount: 2500,
+    })),
   },
   {
-    id: "7",
-    memberName: "David Martinez",
-    memberEmail: "david.m@email.com",
-    memberPhone: "+91 98765 43216",
-    amount: 6400,
-    dueDate: "2025-10-19",
-    status: "pending",
-    planType: "Basic Monthly",
-    remindersCount: 1,
+    id: "M007",
+    name: "Vikram Choudhary",
+    phone: "+91 98765 43216",
+    email: "vikram@example.com",
+    planName: "Elite Plan",
+    planType: "Yearly",
+    monthlyFee: 2000,
+    payments: allMonths.map((month, index) => ({
+      month,
+      status: index < 12 ? "paid" : "pending",
+      paymentDate:
+        index < 12 ? new Date(2025, 9 - index, 1).toISOString() : undefined,
+      amount: 2000,
+    })),
   },
   {
-    id: "8",
-    memberName: "Jessica Taylor",
-    memberEmail: "jessica.t@email.com",
-    memberPhone: "+91 98765 43217",
-    amount: 12000,
-    dueDate: "2025-10-07",
-    status: "paid",
-    planType: "Premium Monthly",
-    paymentMethod: "Card",
-    paidDate: "2025-10-06",
-    remindersCount: 0,
+    id: "M008",
+    name: "Meera Iyer",
+    phone: "+91 98765 43217",
+    email: "meera@example.com",
+    planName: "Basic Plan",
+    planType: "Monthly",
+    monthlyFee: 1500,
+    payments: allMonths.map((month, index) => ({
+      month,
+      status: index < 6 ? "paid" : "pending",
+      paymentDate:
+        index < 6 ? new Date(2025, 9 - index, 12).toISOString() : undefined,
+      amount: 1500,
+    })),
   },
 ];
 
 function PaymentManagement() {
-  const [payments, setPayments] = useState<Payment[]>(initialPayments);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [selectedPayments, setSelectedPayments] = useState<string[]>([]);
+  const [members, setMembers] = useState<Member[]>(mockMembers);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "paid" | "pending">(
+    "all"
+  );
+  const [selectedMonth, setSelectedMonth] = useState<string>(
+    allMonths[allMonths.length - 1]
+  ); // Current month
+  const [selectedMember, setSelectedMember] = useState<Member | null>(null);
+  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
+  const [sendReminderDialogOpen, setSendReminderDialogOpen] = useState(false);
+  const [bulkReminderDialogOpen, setBulkReminderDialogOpen] = useState(false);
 
-  const filteredPayments = payments.filter((payment) => {
-    const matchesSearch =
-      payment.memberName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      payment.memberEmail.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus =
-      statusFilter === "all" || payment.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
-
-  const stats = {
-    total: payments.length,
-    paid: payments.filter((p) => p.status === "paid").length,
-    pending: payments.filter((p) => p.status === "pending").length,
-    totalAmount: payments.reduce((sum, p) => sum + p.amount, 0),
-    paidAmount: payments
-      .filter((p) => p.status === "paid")
-      .reduce((sum, p) => sum + p.amount, 0),
-    pendingAmount: payments
-      .filter((p) => p.status === "pending")
-      .reduce((sum, p) => sum + p.amount, 0),
-  };
-
-  const getStatusBadge = (status: Payment["status"]) => {
-    switch (status) {
-      case "paid":
-        return (
-          <Badge className="bg-neon-green/20 text-neon-green border-neon-green/30">
-            Paid
-          </Badge>
-        );
-      case "pending":
-        return (
-          <Badge className="bg-yellow-500/20 text-yellow-500 border-yellow-500/30">
-            Pending
-          </Badge>
-        );
-    }
-  };
-
-  const handleSelectPayment = (paymentId: string) => {
-    setSelectedPayments((prev) =>
-      prev.includes(paymentId)
-        ? prev.filter((id) => id !== paymentId)
-        : [...prev, paymentId]
+  // Get current month status for each member
+  const getMemberCurrentStatus = (member: Member): "paid" | "pending" => {
+    const currentMonthPayment = member.payments.find(
+      (p) => p.month === selectedMonth
     );
+    return currentMonthPayment?.status || "pending";
   };
 
-  const handleSelectAll = () => {
-    if (selectedPayments.length === filteredPayments.length) {
-      setSelectedPayments([]);
-    } else {
-      setSelectedPayments(filteredPayments.map((p) => p.id));
-    }
-  };
+  // Filter members
+  const filteredMembers = useMemo(() => {
+    return members.filter((member) => {
+      const matchesSearch =
+        member.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        member.phone.includes(searchQuery) ||
+        member.email.toLowerCase().includes(searchQuery.toLowerCase());
 
-  const handleSendReminder = (
-    payment: Payment,
-    method: "email" | "whatsapp"
-  ) => {
-    // Increment reminder count
-    setPayments((prevPayments) =>
-      prevPayments.map((p) =>
-        p.id === payment.id ? { ...p, remindersCount: p.remindersCount + 1 } : p
-      )
-    );
+      const currentStatus = getMemberCurrentStatus(member);
+      const matchesStatus =
+        statusFilter === "all" || currentStatus === statusFilter;
 
-    const methodName = method === "email" ? "Email" : "WhatsApp";
-    toast.success(`${methodName} reminder sent to ${payment.memberName}`, {
-      description: `Payment reminder for ₹${payment.amount.toLocaleString()} sent successfully`,
+      return matchesSearch && matchesStatus;
     });
+  }, [members, searchQuery, statusFilter, selectedMonth]);
+
+  // Calculate metrics for selected month
+  const metrics = useMemo(() => {
+    const totalMembers = members.length;
+
+    const paidMembers = members.filter(
+      (m) => getMemberCurrentStatus(m) === "paid"
+    ).length;
+
+    const pendingMembers = members.filter(
+      (m) => getMemberCurrentStatus(m) === "pending"
+    ).length;
+
+    const totalCollected = members
+      .filter((m) => getMemberCurrentStatus(m) === "paid")
+      .reduce((sum, m) => {
+        const payment = m.payments.find((p) => p.month === selectedMonth);
+        return sum + (payment?.amount || 0);
+      }, 0);
+
+    const totalPending = members
+      .filter((m) => getMemberCurrentStatus(m) === "pending")
+      .reduce((sum, m) => {
+        const payment = m.payments.find((p) => p.month === selectedMonth);
+        return sum + (payment?.amount || 0);
+      }, 0);
+
+    return {
+      totalMembers,
+      paidMembers,
+      pendingMembers,
+      totalCollected,
+      totalPending,
+    };
+  }, [members, selectedMonth]);
+
+  const formatCurrency = (amount: number) => {
+    return `₹${amount.toLocaleString("en-IN")}`;
   };
 
-  const handleSendBulkReminders = (method: "email" | "whatsapp") => {
-    if (selectedPayments.length === 0) {
-      toast.error("No payments selected", {
-        description: "Please select at least one payment to send reminders",
-      });
-      return;
-    }
-
-    // Increment reminder count for selected payments
-    setPayments((prevPayments) =>
-      prevPayments.map((p) =>
-        selectedPayments.includes(p.id)
-          ? { ...p, remindersCount: p.remindersCount + 1 }
-          : p
-      )
-    );
-
-    const methodName = method === "email" ? "Email" : "WhatsApp";
-    toast.success(`${methodName} reminders sent`, {
-      description: `Sent ${selectedPayments.length} payment reminder(s) successfully`,
-    });
-    setSelectedPayments([]);
+  const handleViewPayments = (member: Member) => {
+    setSelectedMember(member);
+    setPaymentDialogOpen(true);
   };
 
-  const handleSendReminderToAll = (method: "email" | "whatsapp") => {
-    const pendingPayments = payments.filter((p) => p.status === "pending");
+  const handleUpdatePayment = (month: string, status: "paid" | "pending") => {
+    if (!selectedMember) return;
 
-    // Increment reminder count for all pending payments
-    setPayments((prevPayments) =>
-      prevPayments.map((p) =>
-        p.status === "pending"
-          ? { ...p, remindersCount: p.remindersCount + 1 }
-          : p
-      )
-    );
-
-    const methodName = method === "email" ? "Email" : "WhatsApp";
-    toast.success(`${methodName} reminders sent to all pending`, {
-      description: `Sent reminders to ${pendingPayments.length} member(s) successfully`,
-    });
-  };
-
-  const handleMarkAsPaid = (
-    payment: Payment,
-    paymentMethod: string = "Cash"
-  ) => {
-    setPayments((prevPayments) =>
-      prevPayments.map((p) =>
-        p.id === payment.id
+    setMembers((prev) =>
+      prev.map((m) =>
+        m.id === selectedMember.id
           ? {
-              ...p,
-              status: "paid" as const,
-              paidDate: new Date().toISOString().split("T")[0],
-              paymentMethod: paymentMethod,
+              ...m,
+              payments: m.payments.map((p) =>
+                p.month === month
+                  ? {
+                      ...p,
+                      status,
+                      paymentDate:
+                        status === "paid"
+                          ? new Date().toISOString()
+                          : undefined,
+                    }
+                  : p
+              ),
             }
-          : p
+          : m
       )
     );
 
-    toast.success(`Payment marked as paid`, {
-      description: `${
-        payment.memberName
-      }'s payment of ₹${payment.amount.toLocaleString()} has been recorded`,
-    });
+    // Update selected member to reflect changes
+    setSelectedMember((prev) =>
+      prev
+        ? {
+            ...prev,
+            payments: prev.payments.map((p) =>
+              p.month === month
+                ? {
+                    ...p,
+                    status,
+                    paymentDate:
+                      status === "paid" ? new Date().toISOString() : undefined,
+                  }
+                : p
+            ),
+          }
+        : null
+    );
+  };
+
+  const handleExport = () => {
+    // Mock export functionality
+    const data = filteredMembers.map((m) => ({
+      Name: m.name,
+      Phone: m.phone,
+      Email: m.email,
+      Plan: `${m.planName} (${m.planType})`,
+      MonthlyFee: formatCurrency(m.monthlyFee),
+      Status: getMemberCurrentStatus(m),
+    }));
+
+    console.log("Exporting data:", data);
+    alert("Export feature coming soon!");
+  };
+
+  const handleSendReminder = (member: Member) => {
+    setSelectedMember(member);
+    setSendReminderDialogOpen(true);
+  };
+
+  const handleBulkReminders = () => {
+    setBulkReminderDialogOpen(true);
   };
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl mb-2">Payment Management</h1>
-          <p className="text-muted-foreground">
-            Track and manage membership payments
+          <h1 className="text-2xl sm:text-3xl">Monthly Payment Tracking</h1>
+          <p className="text-muted-foreground mt-1">
+            Track and manage monthly member payments
           </p>
+        </div>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            className="gap-2"
+            onClick={handleBulkReminders}
+            disabled={metrics.pendingMembers === 0}
+          >
+            <Send className="w-4 h-4" />
+            <span className="hidden sm:inline">Bulk Reminders</span>
+            <span className="sm:hidden">Bulk</span>
+          </Button>
+          <Button variant="outline" className="gap-2" onClick={handleExport}>
+            <Download className="w-4 h-4" />
+            <span className="hidden sm:inline">Export</span>
+          </Button>
         </div>
       </div>
 
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="border-border/50">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm">Total Payments</CardTitle>
-            <CreditCard className="h-4 w-4 text-muted-foreground" />
+      {/* Metrics Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card className="border-neon-blue/20 bg-card">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm text-muted-foreground flex items-center gap-2">
+              <Users className="w-4 h-4 text-neon-blue" />
+              Total Members
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl">
-              ₹{stats.totalAmount.toLocaleString()}
+            <div className="space-y-1">
+              <p className="text-2xl">{metrics.totalMembers}</p>
+              <p className="text-xs text-muted-foreground">Active members</p>
             </div>
-            <p className="text-xs text-muted-foreground">
-              {stats.total} payment entries
-            </p>
           </CardContent>
         </Card>
 
-        <Card className="border-border/50">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm">Paid</CardTitle>
-            <CheckCircle className="h-4 w-4 text-neon-green" />
+        <Card className="border-green-500/20 bg-card">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm text-muted-foreground flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-green-500" />
+              Paid This Month
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl text-neon-green">
-              ₹{stats.paidAmount.toLocaleString()}
+            <div className="space-y-1">
+              <p className="text-2xl">{metrics.paidMembers}</p>
+              <p className="text-xs text-muted-foreground">
+                {formatCurrency(metrics.totalCollected)}
+              </p>
             </div>
-            <p className="text-xs text-muted-foreground">
-              {stats.paid} payments received
-            </p>
           </CardContent>
         </Card>
 
-        <Card className="border-border/50">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm">Pending</CardTitle>
-            <Clock className="h-4 w-4 text-yellow-500" />
+        <Card className="border-red-500/20 bg-card">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm text-muted-foreground flex items-center gap-2">
+              <XCircle className="w-4 h-4 text-red-500" />
+              Pending This Month
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl text-yellow-500">
-              ₹{stats.pendingAmount.toLocaleString()}
+            <div className="space-y-1">
+              <p className="text-2xl">{metrics.pendingMembers}</p>
+              <p className="text-xs text-muted-foreground">
+                {formatCurrency(metrics.totalPending)}
+              </p>
             </div>
-            <p className="text-xs text-muted-foreground">
-              {stats.pending} pending payments
-            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-neon-green/20 bg-card">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm text-muted-foreground flex items-center gap-2">
+              <TrendingUp className="w-4 h-4 text-neon-green" />
+              Collection Rate
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-1">
+              <p className="text-2xl">
+                {metrics.totalMembers > 0
+                  ? Math.round(
+                      (metrics.paidMembers / metrics.totalMembers) * 100
+                    )
+                  : 0}
+                %
+              </p>
+              <p className="text-xs text-muted-foreground">
+                For {selectedMonth}
+              </p>
+            </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Filters and Actions */}
-      <Card className="border-border/50">
-        <CardHeader>
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-            <div className="flex-1">
-              <CardTitle>Payment Records</CardTitle>
-              <CardDescription>
-                View and manage all payment transactions
-              </CardDescription>
+      {/* Filters */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by name, phone, or email..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-2">
-              <div className="relative flex-1 sm:w-64">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                <Input
-                  placeholder="Search members..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-full sm:w-[180px]">
-                  <SelectValue placeholder="Filter by status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="paid">Paid</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {/* Bulk Action Buttons */}
-          <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-border">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleSendReminderToAll("whatsapp")}
-              className="gap-2"
+            <Select
+              value={statusFilter}
+              onValueChange={(value) =>
+                setStatusFilter(value as "all" | "paid" | "pending")
+              }
             >
-              <MessageCircle className="w-4 h-4" />
-              Send WhatsApp to All Pending
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleSendReminderToAll("email")}
-              className="gap-2"
-            >
-              <Mail className="w-4 h-4" />
-              Send Email to All Pending
-            </Button>
+              <SelectTrigger className="w-full sm:w-[160px]">
+                <SelectValue placeholder="Filter status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Members</SelectItem>
+                <SelectItem value="paid">Paid</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
+              </SelectContent>
+            </Select>
 
-            {selectedPayments.length > 0 && (
-              <>
-                <div className="hidden sm:block h-8 w-px bg-border mx-2" />
-                <Badge variant="secondary" className="px-3 py-1.5">
-                  {selectedPayments.length} Selected
-                </Badge>
-                <Button
-                  variant="default"
-                  size="sm"
-                  onClick={() => handleSendBulkReminders("whatsapp")}
-                  className="gap-2 bg-neon-green hover:bg-neon-green/90"
-                >
-                  <MessageCircle className="w-4 h-4" />
-                  WhatsApp Selected
-                </Button>
-                <Button
-                  variant="default"
-                  size="sm"
-                  onClick={() => handleSendBulkReminders("email")}
-                  className="gap-2 bg-neon-blue hover:bg-neon-blue/90"
-                >
-                  <Mail className="w-4 h-4" />
-                  Email Selected
-                </Button>
-              </>
-            )}
-          </div>
-        </CardHeader>
-
-        <CardContent>
-          <div className="rounded-md border border-border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[50px]">
-                    <Checkbox
-                      checked={
-                        selectedPayments.length === filteredPayments.length &&
-                        filteredPayments.length > 0
-                      }
-                      onCheckedChange={handleSelectAll}
-                    />
-                  </TableHead>
-                  <TableHead>Member</TableHead>
-                  <TableHead className="hidden md:table-cell">Plan</TableHead>
-                  <TableHead>Amount</TableHead>
-                  <TableHead className="hidden lg:table-cell">
-                    Due Date
-                  </TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredPayments.length === 0 ? (
-                  <TableRow>
-                    <TableCell
-                      colSpan={7}
-                      className="text-center py-8 text-muted-foreground"
-                    >
-                      No payments found
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredPayments.map((payment) => {
-                    const isSelected = selectedPayments.includes(payment.id);
-
-                    return (
-                      <TableRow
-                        key={payment.id}
-                        className={isSelected ? "bg-muted/50" : ""}
-                      >
-                        <TableCell>
-                          <Checkbox
-                            checked={isSelected}
-                            onCheckedChange={() =>
-                              handleSelectPayment(payment.id)
-                            }
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <div>
-                            <div className="font-medium">
-                              {payment.memberName}
-                            </div>
-                            <div className="text-sm text-muted-foreground hidden sm:block">
-                              {payment.memberEmail}
-                            </div>
-                            <div className="text-sm text-muted-foreground">
-                              {payment.memberPhone}
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell className="hidden md:table-cell">
-                          <Badge variant="outline">{payment.planType}</Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div>
-                            <div className="font-medium">
-                              ₹{payment.amount.toLocaleString()}
-                            </div>
-                            {payment.paymentMethod && (
-                              <div className="text-sm text-muted-foreground">
-                                via {payment.paymentMethod}
-                              </div>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell className="hidden lg:table-cell">
-                          <div className="text-sm">
-                            {new Date(payment.dueDate).toLocaleDateString()}
-                            {payment.status === "paid" && payment.paidDate && (
-                              <div className="text-xs text-neon-green">
-                                Paid on{" "}
-                                {new Date(
-                                  payment.paidDate
-                                ).toLocaleDateString()}
-                              </div>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell>{getStatusBadge(payment.status)}</TableCell>
-                        <TableCell className="text-right">
-                          {payment.status === "pending" ? (
-                            <div className="flex flex-col items-end gap-2">
-                              {payment.remindersCount > 0 && (
-                                <div className="text-xs text-muted-foreground">
-                                  Reminded {payment.remindersCount}{" "}
-                                  {payment.remindersCount === 1
-                                    ? "time"
-                                    : "times"}
-                                </div>
-                              )}
-                              <Button
-                                variant="default"
-                                size="sm"
-                                onClick={() => handleMarkAsPaid(payment)}
-                                className="bg-gradient-to-r from-neon-green to-neon-blue text-white hover:opacity-90"
-                              >
-                                <CheckCircle className="w-4 h-4 mr-2" />
-                                Mark as Paid
-                              </Button>
-                              <div className="flex justify-end gap-1">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() =>
-                                    handleSendReminder(payment, "whatsapp")
-                                  }
-                                  title="Send WhatsApp Reminder"
-                                  className="hover:bg-neon-green/10 hover:text-neon-green"
-                                >
-                                  <MessageCircle className="w-4 h-4" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() =>
-                                    handleSendReminder(payment, "email")
-                                  }
-                                  title="Send Email Reminder"
-                                  className="hover:bg-neon-blue/10 hover:text-neon-blue"
-                                >
-                                  <Mail className="w-4 h-4" />
-                                </Button>
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="text-xs text-muted-foreground">
-                              Payment completed
-                            </div>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })
-                )}
-              </TableBody>
-            </Table>
+            <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+              <SelectTrigger className="w-full sm:w-[160px]">
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-4 h-4" />
+                  <SelectValue />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                {allMonths.map((month) => (
+                  <SelectItem key={month} value={month}>
+                    {month}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </CardContent>
       </Card>
+
+      {/* Desktop Table View */}
+      <Card className="hidden md:block">
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Member Name</TableHead>
+                <TableHead>Plan</TableHead>
+                <TableHead>Monthly Fee</TableHead>
+                <TableHead>Status ({selectedMonth})</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredMembers.length === 0 ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={5}
+                    className="text-center py-8 text-muted-foreground"
+                  >
+                    No members found
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredMembers.map((member) => {
+                  const currentStatus = getMemberCurrentStatus(member);
+                  return (
+                    <TableRow key={member.id}>
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <Avatar>
+                            <AvatarImage src={member.avatar} />
+                            <AvatarFallback className="bg-gradient-to-br from-neon-green to-neon-blue text-white">
+                              {member.name
+                                .split(" ")
+                                .map((n) => n[0])
+                                .join("")}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="font-medium">{member.name}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {member.phone}
+                            </p>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div>
+                          <p className="font-medium">{member.planName}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {member.planType}
+                          </p>
+                        </div>
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        {formatCurrency(member.monthlyFee)}
+                      </TableCell>
+                      <TableCell>
+                        {currentStatus === "paid" ? (
+                          <Badge className="gap-1 bg-green-500/10 text-green-500 border-green-500/20">
+                            <CheckCircle2 className="w-3 h-3" />
+                            Paid
+                          </Badge>
+                        ) : (
+                          <Badge className="gap-1 bg-red-500/10 text-red-500 border-red-500/20">
+                            <XCircle className="w-3 h-3" />
+                            Pending
+                          </Badge>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          {currentStatus === "pending" && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="gap-2 border-green-600/20 text-green-600 hover:bg-green-600/10"
+                              onClick={() => handleSendReminder(member)}
+                            >
+                              <MessageSquare className="w-4 h-4" />
+                              Remind
+                            </Button>
+                          )}
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="gap-2 border-neon-blue/20 text-neon-blue hover:bg-neon-blue/10"
+                            onClick={() => handleViewPayments(member)}
+                          >
+                            <Eye className="w-4 h-4" />
+                            View
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      {/* Mobile Card View */}
+      <div className="md:hidden space-y-4">
+        {filteredMembers.length === 0 ? (
+          <Card>
+            <CardContent className="py-8 text-center text-muted-foreground">
+              No members found
+            </CardContent>
+          </Card>
+        ) : (
+          filteredMembers.map((member) => {
+            const currentStatus = getMemberCurrentStatus(member);
+            return (
+              <Card key={member.id}>
+                <CardContent className="p-4 space-y-4">
+                  {/* Member Info */}
+                  <div className="flex items-start gap-3">
+                    <Avatar>
+                      <AvatarImage src={member.avatar} />
+                      <AvatarFallback className="bg-gradient-to-br from-neon-green to-neon-blue text-white">
+                        {member.name
+                          .split(" ")
+                          .map((n) => n[0])
+                          .join("")}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1">
+                      <p className="font-medium">{member.name}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {member.phone}
+                      </p>
+                    </div>
+                    {currentStatus === "paid" ? (
+                      <Badge className="gap-1 bg-green-500/10 text-green-500 border-green-500/20 text-xs">
+                        <CheckCircle2 className="w-3 h-3" />
+                        Paid
+                      </Badge>
+                    ) : (
+                      <Badge className="gap-1 bg-red-500/10 text-red-500 border-red-500/20 text-xs">
+                        <XCircle className="w-3 h-3" />
+                        Pending
+                      </Badge>
+                    )}
+                  </div>
+
+                  {/* Plan and Fee */}
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <p className="text-muted-foreground text-xs">Plan</p>
+                      <p className="font-medium">{member.planName}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {member.planType}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground text-xs">
+                        Monthly Fee
+                      </p>
+                      <p className="font-medium">
+                        {formatCurrency(member.monthlyFee)}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex gap-2">
+                    {currentStatus === "pending" && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1 gap-2 border-green-600/20 text-green-600 hover:bg-green-600/10"
+                        onClick={() => handleSendReminder(member)}
+                      >
+                        <MessageSquare className="w-4 h-4" />
+                        Send Reminder
+                      </Button>
+                    )}
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className={`${
+                        currentStatus === "pending" ? "flex-1" : "w-full"
+                      } gap-2 border-neon-blue/20 text-neon-blue hover:bg-neon-blue/10`}
+                      onClick={() => handleViewPayments(member)}
+                    >
+                      <Eye className="w-4 h-4" />
+                      View Payments
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })
+        )}
+      </div>
+
+      {/* Payment History Dialog */}
+      {selectedMember && (
+        <MonthlyPaymentDialog
+          open={paymentDialogOpen}
+          onOpenChange={setPaymentDialogOpen}
+          memberName={selectedMember.name}
+          planType={selectedMember.planType}
+          monthlyFee={selectedMember.monthlyFee}
+          payments={selectedMember.payments}
+          onUpdatePayment={handleUpdatePayment}
+        />
+      )}
+
+      {/* Send Reminder Dialog */}
+      {selectedMember && (
+        <MonthlySendReminderDialog
+          open={sendReminderDialogOpen}
+          onOpenChange={setSendReminderDialogOpen}
+          memberName={selectedMember.name}
+          memberPhone={selectedMember.phone}
+          memberEmail={selectedMember.email}
+          planName={selectedMember.planName}
+          planType={selectedMember.planType}
+          monthlyFee={selectedMember.monthlyFee}
+          month={selectedMonth}
+        />
+      )}
+
+      {/* Bulk Reminders Dialog */}
+      <MonthlyBulkReminderDialog
+        open={bulkReminderDialogOpen}
+        onOpenChange={setBulkReminderDialogOpen}
+        pendingMembers={members
+          .filter((m) => getMemberCurrentStatus(m) === "pending")
+          .map((m) => ({
+            id: m.id,
+            name: m.name,
+            phone: m.phone,
+            email: m.email,
+            avatar: m.avatar,
+            planName: m.planName,
+            planType: m.planType,
+            monthlyFee: m.monthlyFee,
+            month: selectedMonth,
+          }))}
+        selectedMonth={selectedMonth}
+      />
     </div>
   );
 }

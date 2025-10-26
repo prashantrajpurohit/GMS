@@ -90,6 +90,7 @@ export type GridSpan = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
 export interface Staff {
   _id: string;
   fullName: string;
+  password: string;
   role: Role;
   email: string;
   phone: string;

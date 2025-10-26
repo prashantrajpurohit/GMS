@@ -7,11 +7,8 @@ export default class PlansController {
     const data = await httpRequest.post(ApiUrl.PLAN, payload);
     return data?.data;
   }
-  async editPlan(payload: PlanInterface & { _id: string }) {
-    const data = await httpRequest.patch(
-      `${ApiUrl.PLAN}/${payload._id}`,
-      payload
-    );
+  async editPlan({ _id, payload }: { _id: string; payload: PlanInterface }) {
+    const data = await httpRequest.patch(`${ApiUrl.PLAN}/${_id}`, payload);
     return data?.data;
   }
 
