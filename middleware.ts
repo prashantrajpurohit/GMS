@@ -8,7 +8,6 @@ export function middleware(req: NextRequest) {
   let parsed;
   try {
     parsed = roleData ? JSON.parse(roleData) : {};
-
   } catch (error) {
     console.error("Error parsing role cookie:", error);
     parsed = {};
@@ -36,7 +35,8 @@ export function middleware(req: NextRequest) {
   }
 
   if (token && !isPublicPath && pathname !== "/") {
-    const isAccessible = parsed?.role == "owner" ? true : parsed?.options?.includes(path);
+    const isAccessible =
+      parsed?.role == "owner" ? true : parsed?.options?.includes(path);
 
     if (!isAccessible) {
       console.log(`Access denied to ${path}. Redirecting to /401`);
@@ -48,5 +48,5 @@ export function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|.*\\..*).*)"],
+  matcher: ["/((?!api|_next/static|_next/image|icon|favicon.ico|.*\\..*).*)"],
 };

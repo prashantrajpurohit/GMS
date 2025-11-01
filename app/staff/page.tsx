@@ -41,6 +41,7 @@ import {
   Award,
   Clock,
   Loader,
+  Search,
 } from "lucide-react";
 import { FormProvider, useForm, useWatch } from "react-hook-form";
 import CustomField from "@/components/reusableComponents/customField";
@@ -57,9 +58,11 @@ import {
   StatsCardShimmer,
 } from "@/components/reusableComponents/shimmer";
 import { toast } from "sonner";
+import NoData from "@/components/reusableComponents/no-data";
 
 function StaffManagement() {
   const dispatch = useDispatch();
+  const [searchTerm, setSearchTerm] = useState<string>("");
   const staffEditData = useSelector(
     (state: StoreRootState) => state.data.editData as Staff | null
   );
@@ -354,104 +357,128 @@ function StaffManagement() {
       </div>
 
       {/* Filter */}
-      <div className="flex items-center gap-4">
-        <Label>Filter by Role:</Label>
-        <Select value={filterRole} onValueChange={setFilterRole}>
-          <SelectTrigger className="w-[200px]">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Roles</SelectItem>
-            <SelectItem value="head-coach">Head Coach</SelectItem>
-            <SelectItem value="personal-trainer">Personal Trainer</SelectItem>
-            <SelectItem value="nutritionist">Nutritionist</SelectItem>
-            <SelectItem value="receptionist">Receptionist</SelectItem>
-          </SelectContent>
-        </Select>
+      <div className="flex flex-col sm:flex-row gap-4">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+          <Input
+            placeholder="Search members by name or email..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+        <div className="flex gap-2">
+          <Label>Filter by Role:</Label>
+          <Select value={filterRole} onValueChange={setFilterRole}>
+            <SelectTrigger className="w-[200px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Roles</SelectItem>
+              <SelectItem value="head-coach">Head Coach</SelectItem>
+              <SelectItem value="personal-trainer">Personal Trainer</SelectItem>
+              <SelectItem value="nutritionist">Nutritionist</SelectItem>
+              <SelectItem value="receptionist">Receptionist</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* Staff Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {isLoadingStaffList ? (
           <>
-            <ShimmerCard />
-            <ShimmerCard />
-            <ShimmerCard />
-            <ShimmerCard />
-            <ShimmerCard />
-            <ShimmerCard />
+            {Array(4).map((item) => (
+              <ShimmerCard />
+            ))}
           </>
         ) : (
           <>
-            {filteredStaff.map((staffMember: Staff) => (
-              <Card
-                key={staffMember._id}
-                className="border-border/50 hover:border-border transition-colors"
-              >
-                <CardHeader className="pb-4">
-                  <div className="flex items-start justify-between mb-3">
-                    <Avatar className="h-16 w-16">
-                      <AvatarImage src={""} alt={staffMember.fullName} />
-                      <AvatarFallback className="bg-gradient-to-br from-neon-green/20 to-neon-blue/20 text-lg">
-                        {getInitials(staffMember.fullName)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex gap-2">
-                      {getRoleBadge(staffMember.role)}
-                    </div>
-                  </div>
-                  <CardTitle className="text-xl">
-                    {staffMember.fullName}
-                  </CardTitle>
-                  <div className="flex items-center gap-2 mt-1">
-                    {getStatusBadge(staffMember.isActive)}
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="space-y-2 text-sm">
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <Mail className="w-4 h-4" />
-                      <span className="truncate">{staffMember.email}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <Phone className="w-4 h-4" />
-                      <span>{staffMember.phone}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <Calendar className="w-4 h-4" />
-                      <span>
-                        Joined{" "}
-                        {new Date(staffMember.createdAt).toLocaleDateString()}
-                      </span>
-                    </div>
-                  </div>
-
-                  {staffMember.specialization && (
-                    <div className="pt-3 border-t border-border">
-                      <h4 className="text-sm mb-2 flex items-center gap-1">
-                        <Award className="w-4 h-4" />
-                        Specialization
-                      </h4>
-                      <p className="text-sm text-muted-foreground">
-                        {staffMember.specialization}
-                      </p>
-                    </div>
-                  )}
-
-                  <div className="flex gap-2 pt-3 border-t border-border">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="flex-1"
-                      onClick={() => openEditDialog(staffMember)}
-                    >
-                      <Edit className="w-4 h-4 mr-1" />
-                      Edit
+            {Array.isArray(filteredStaff) && filteredStaff.length == 0 ? (
+              <div className="col-span-full flex justify-center items-center min-h-[400px]">
+                <NoData
+                  actionButton={
+                    <Button onClick={() => setIsCreateOpen(true)}>
+                      Add First Staff
                     </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                  }
+                />
+              </div>
+            ) : (
+              <>
+                {filteredStaff.map((staffMember: Staff) => (
+                  <Card
+                    key={staffMember._id}
+                    className="border-border/50 hover:border-border transition-colors"
+                  >
+                    <CardHeader className="pb-4">
+                      <div className="flex items-start justify-between mb-3">
+                        <Avatar className="h-16 w-16">
+                          <AvatarImage src={""} alt={staffMember.fullName} />
+                          <AvatarFallback className="bg-gradient-to-br from-neon-green/20 to-neon-blue/20 text-lg">
+                            {getInitials(staffMember.fullName)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex gap-2">
+                          {getRoleBadge(staffMember.role)}
+                        </div>
+                      </div>
+                      <CardTitle className="text-xl">
+                        {staffMember.fullName}
+                      </CardTitle>
+                      <div className="flex items-center gap-2 mt-1">
+                        {getStatusBadge(staffMember.isActive)}
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="space-y-2 text-sm">
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <Mail className="w-4 h-4" />
+                          <span className="truncate">{staffMember.email}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <Phone className="w-4 h-4" />
+                          <span>{staffMember.phone}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <Calendar className="w-4 h-4" />
+                          <span>
+                            Joined{" "}
+                            {new Date(
+                              staffMember.createdAt
+                            ).toLocaleDateString()}
+                          </span>
+                        </div>
+                      </div>
+
+                      {staffMember.specialization && (
+                        <div className="pt-3 border-t border-border">
+                          <h4 className="text-sm mb-2 flex items-center gap-1">
+                            <Award className="w-4 h-4" />
+                            Specialization
+                          </h4>
+                          <p className="text-sm text-muted-foreground">
+                            {staffMember.specialization}
+                          </p>
+                        </div>
+                      )}
+
+                      <div className="flex gap-2 pt-3 border-t border-border">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex-1"
+                          onClick={() => openEditDialog(staffMember)}
+                        >
+                          <Edit className="w-4 h-4 mr-1" />
+                          Edit
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </>
+            )}
           </>
         )}
       </div>

@@ -5,7 +5,8 @@ import CustomField from "../reusableComponents/customField";
 
 import PlansController from "@/app/plans/controller";
 import { useQuery } from "@tanstack/react-query";
-import { MemberInterface } from "@/lib/validation-schemas";
+import { useSelector } from "react-redux";
+import { StoreRootState } from "@/reduxstore/reduxStore";
 
 export default function AddEditMember({
   isEditingMember,
@@ -13,7 +14,6 @@ export default function AddEditMember({
   isEditingMember: Record<string, any> | null;
 }) {
   const planController = new PlansController();
-
   const { data, isLoading } = useQuery({
     queryKey: ["plans"],
     queryFn: planController.getPlans,
@@ -31,58 +31,9 @@ export default function AddEditMember({
         </DialogDescription>
       </DialogHeader>
       <div className="grid gap-3 sm:gap-4 py-3 sm:py-4 px-1 sm:px-0">
-        <div className="grid gap-2">
-          {/* <Label htmlFor="photo" className="text-sm sm:text-base">
-            Member Photo
-          </Label> */}
-          {/* <div className="flex justify-center"> */}
-          {/* <div className="relative">
-              <div className="w-32 h-32 rounded-full overflow-hidden border-2 border-border bg-muted flex items-center justify-center">
-                {photoWatch ? (
-                  <Avatar src={ApiUrl. photoWatch} alt="Member photo" />
-                ) : (
-                  <User className="h-16 w-16 text-muted-foreground" />
-                )}
-              </div>
-
-              <input
-                id="photo"
-                type="file"
-                accept="image/*"
-                ref={profileRef}
-                className="hidden"
-              />
-
-              <Button
-                type="button"
-                size="icon"
-                className="absolute bottom-0 right-0 h-10 w-10 rounded-full border-2 border-background bg-neon-green hover:bg-neon-green/90"
-                onClick={() => profileRef.current?.click()}
-              >
-                <Camera className="h-5 w-5 text-black" />
-              </Button>
-
-              <Button
-                type="button"
-                size="icon"
-                variant="destructive"
-                className="absolute top-0 right-0 h-8 w-8 rounded-full"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div> */}
-          {/* </div> */}
-        </div>
+        <div className="grid gap-2"></div>
         <div className="grid  gap-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-            <div>
-              <CustomField
-                name="memberCode"
-                label="Member Code"
-                isLoading={false}
-                placeholder="Enter member's code"
-              />
-            </div>
+          <div className="grid grid-cols-1  gap-3 sm:gap-4">
             <div>
               <CustomField
                 name="fullName"
@@ -208,7 +159,7 @@ export default function AddEditMember({
               isLoading={false}
               placeholder="Select status"
               select
-              options={["active", "expired", "suspended", "guest", "inactive"]}
+              options={["active", "expired", "inactive"]}
             />
           </div>
         </div>

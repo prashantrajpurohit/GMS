@@ -15,7 +15,6 @@ httpRequest.interceptors.response.use(
       response.status === ApiStatus.STATUS_200 ||
       response.status === ApiStatus.STATUS_201
     ) {
-      
       return response;
     } else if (response.status === ApiStatus.STATUS_403) {
       toast.error("Access forbidden");

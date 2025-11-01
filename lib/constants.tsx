@@ -1,3 +1,6 @@
+import { Badge } from "@/components/ui/badge";
+import { MemberInterface } from "./validation-schemas";
+
 export const DASHBOARD_DUMMY = [
   {
     id: 1,
@@ -612,3 +615,56 @@ export const DASHBOARD_DUMMY = [
     reviewer: "Assign reviewer",
   },
 ];
+export const initialFormValues: MemberInterface = {
+  fullName: "",
+  email: "",
+  phone: "",
+  weight: 0,
+  height: 0,
+  currentPlanId: "",
+  startDate: "",
+  photo: "",
+  dateOfBirth: "",
+  gender: "male",
+  address: "",
+  emergencyContact: "8989898989",
+  status: "active",
+  notes: "",
+  batch: "",
+};
+export const getStatusBadge = (status: string) => {
+  switch (status) {
+    case "guest":
+      return (
+        <Badge className="bg-purple-500/10 text-purple-500 border-purple-500/20">
+          Guest
+        </Badge>
+      );
+    case "active":
+      return (
+        <Badge className="bg-green-500/10 text-green-500 border-green-500/20">
+          Active
+        </Badge>
+      );
+    case "inactive":
+      return (
+        <Badge className="bg-gray-500/10 text-gray-500 border-gray-500/20">
+          In-Active
+        </Badge>
+      );
+    case "expired":
+      return (
+        <Badge className="bg-red-500/10 text-red-500 border-red-500/20">
+          Expired
+        </Badge>
+      );
+    case "suspended":
+      return (
+        <Badge className="bg-yellow-500/10 text-yellow-500 border-yellow-500/20">
+          Pending
+        </Badge>
+      );
+    default:
+      return <Badge variant="outline">Unknown</Badge>;
+  }
+};

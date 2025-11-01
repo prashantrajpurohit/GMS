@@ -20,7 +20,7 @@ type CommonProps = {
   name: string;
   label: string;
   placeholder: string;
-  isLoading: boolean;
+  isLoading?: boolean;
   type?: React.HTMLInputTypeAttribute;
   disabled?: boolean;
   hidden?: boolean;
@@ -47,7 +47,7 @@ const CustomField = ({
   select,
   options,
   placeholder,
-  isLoading,
+  isLoading = false,
   hidden,
   type,
   disabled,

@@ -1,5 +1,6 @@
 export const ApiUrl = {
   LOGIN_URL: `/auth/login`,
+  REGISTER: `/auth/register`,
   AUTH_LOGOUT: `/auth/logout`,
   PLAN: `/plans`,
   STAFF: `/staff`,

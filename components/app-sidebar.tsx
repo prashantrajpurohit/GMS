@@ -30,13 +30,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              className="data-[slot=sidebar-menu-button]:!p-1.5"
-            >
-              <span>
-                <Image src="/images/logo.png" alt="" width={100} height={80} />
-              </span>
+            <SidebarMenuButton size="lg" className="!p-2">
+              <div className="flex items-center justify-center w-full">
+                <Image
+                  src="/images/gym-logo.png"
+                  alt="Gym Logo"
+                  width={100}
+                  height={80}
+                  className="object-contain"
+                  priority
+                />
+              </div>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

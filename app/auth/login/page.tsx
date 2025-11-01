@@ -1,9 +1,11 @@
-import { LoginForm } from "@/components/login-form";
-import { GradientCardClass } from "@/helper/helper";
+import LeftWrapper from "@/components/leftWrapper";
+import LoginForm from "@/components/login-form";
+
 export default function Page() {
   return (
-    <div className="w-full max-w-sm">
-      <LoginForm className={GradientCardClass} />
+    <div className="min-h-screen bg-background flex">
+      <LeftWrapper />
+      <LoginForm />
     </div>
   );
 }

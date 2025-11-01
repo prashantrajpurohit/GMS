@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Card,
   CardContent,
@@ -9,7 +9,6 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -21,13 +20,9 @@ import {
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
-  DialogHeader,
-  DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -39,39 +34,42 @@ import {
   Search,
   Plus,
   Filter,
-  Calendar,
   Phone,
   Mail,
-  User,
-  CreditCard,
-  X,
-  Camera,
-  Image,
   Loader,
+  Edit,
+  User,
 } from "lucide-react";
 import { toast } from "sonner";
-import { FormProvider, useForm, useWatch } from "react-hook-form";
-import CustomField from "@/components/reusableComponents/customField";
+import { FormProvider, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { MemberInterface, memberSchema } from "@/lib/validation-schemas";
 import MembersController from "./controller";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ImportMembersDialog } from "@/components/ImportMembersDialog";
-import PlansController from "../plans/controller";
 import AddEditMember from "@/components/forms/addEditMember";
+import { getStatusBadge, initialFormValues } from "@/lib/constants";
+import { useDispatch, useSelector } from "react-redux";
+import { addEditData } from "@/reduxstore/editIDataSlice";
+import { StoreRootState } from "@/reduxstore/reduxStore";
+import NoData from "@/components/reusableComponents/no-data";
 
-interface extendedMemberInterface extends MemberInterface {
+interface extendedMemberInterface
+  extends Omit<MemberInterface, "currentPlanId"> {
   _id: string;
   currentPlanId: {
-    _id: string;
+    _id?: string;
     name: string;
   };
   amount?: number;
 }
 function MembershipManagement() {
+  const dispatch = useDispatch();
   const [isEditingMember, setIsEditingMember] =
     useState<extendedMemberInterface | null>(null);
   const queryClient = useQueryClient();
+  const editData = useSelector((state: StoreRootState) => state.data.editData);
+
   const memberController = new MembersController();
   const { mutate, isPending } = useMutation({
     mutationFn: (data: any) =>
@@ -99,12 +97,6 @@ function MembershipManagement() {
   const [selectedFilter, setSelectedFilter] = useState("all");
   const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
 
-  const [isBillingOpen, setIsBillingOpen] = useState(false);
-  const [billingMember, setBillingMember] = useState<Record<
-    string,
-    any
-  > | null>(null);
-
   const filteredMembers = members?.filter((member) => {
     const matchesSearch =
       member?.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -114,82 +106,9 @@ function MembershipManagement() {
     return matchesSearch && matchesFilter;
   });
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "guest":
-        return (
-          <Badge className="bg-purple-500/10 text-purple-500 border-purple-500/20">
-            Guest
-          </Badge>
-        );
-      case "active":
-        return (
-          <Badge className="bg-green-500/10 text-green-500 border-green-500/20">
-            Active
-          </Badge>
-        );
-      case "inactive":
-        return (
-          <Badge className="bg-gray-500/10 text-gray-500 border-gray-500/20">
-            In-Active
-          </Badge>
-        );
-      case "expired":
-        return (
-          <Badge className="bg-red-500/10 text-red-500 border-red-500/20">
-            Expired
-          </Badge>
-        );
-      case "suspended":
-        return (
-          <Badge className="bg-yellow-500/10 text-yellow-500 border-yellow-500/20">
-            Pending
-          </Badge>
-        );
-      default:
-        return <Badge variant="outline">Unknown</Badge>;
-    }
-  };
-
   const handleViewProfile = (member: extendedMemberInterface) => {
-    setIsEditingMember(member);
+    dispatch(addEditData(member));
     setIsAddMemberOpen(true);
-    form.reset({
-      fullName: member?.fullName,
-      email: member?.email || "",
-      phone: member?.phone || "",
-      weight: (member?.weight && +member?.weight) || 0,
-      height: (member?.height && +member?.height) || 0,
-      currentPlanId: member?.currentPlanId?._id || "",
-      startDate: member?.startDate?.split("T")?.[0] || "",
-      photo: member?.photo || "",
-      dateOfBirth: member?.dateOfBirth?.split("T")?.[0] || "",
-      gender: member?.gender || "male",
-      address: member?.address || "",
-      emergencyContact: member?.emergencyContact || "8989898989",
-      memberCode: member?.memberCode || "",
-      status: member?.status || "active",
-      notes: member?.notes || "",
-      batch: member?.batch || "",
-    });
-  };
-
-  const handleViewBilling = (member: extendedMemberInterface) => {
-    setBillingMember(member);
-    setIsBillingOpen(true);
-  };
-
-  const handleUpdatePayment = () => {
-    // In a real app, this would process payment
-    // console.log("Processing payment for:", billingMember?.name);
-    // setIsBillingOpen(false);
-    // if (billingMember) {
-    //   const updatedMember = { ...billingMember, status: "active" };
-    //   setMembers(
-    //     members.map((m) => (m.id === updatedMember.id ? updatedMember : m))
-    //   );
-    //   toast.success("Payment processed successfully!");
-    // }
   };
 
   const handleImportComplete = (importedMembers: any[]) => {
@@ -208,33 +127,18 @@ function MembershipManagement() {
     active: members?.filter((m) => m.status === "active").length,
     inactive: members?.filter((m) => m.status === "inactive").length,
     expired: members?.filter((m) => m.status === "expired").length,
-    suspended: members?.filter((m) => m.status === "suspended").length,
-    guest: members?.filter((m) => m.status === "guest").length,
   };
 
   const onSubmit = (data: MemberInterface) => {
     mutate(data);
   };
-  const initialFormValues: MemberInterface = {
-    fullName: "",
-    email: "",
-    phone: "",
-    weight: 0,
-    height: 0,
-    currentPlanId: "",
-    startDate: "",
-    photo: "",
-    dateOfBirth: "",
-    gender: "male",
-    address: "",
-    emergencyContact: "8989898989",
-    memberCode: "",
-    status: "active",
-    notes: "",
-    batch: "",
-  };
+  function handleOpen(open: boolean) {
+    setIsAddMemberOpen(open);
+    dispatch(addEditData(null));
+  }
+
   const form = useForm<MemberInterface>({
-    defaultValues: { ...initialFormValues },
+    values: editData ?? { ...initialFormValues },
     resolver: zodResolver(memberSchema),
   });
   useEffect(() => {
@@ -253,7 +157,7 @@ function MembershipManagement() {
         <div className="flex gap-2 w-full sm:w-auto">
           <ImportMembersDialog onImportComplete={handleImportComplete} />
 
-          <Dialog open={isAddMemberOpen} onOpenChange={setIsAddMemberOpen}>
+          <Dialog open={isAddMemberOpen} onOpenChange={handleOpen}>
             <DialogTrigger asChild>
               <Button
                 onClick={() => {
@@ -293,132 +197,6 @@ function MembershipManagement() {
         </div>
       </div>
 
-      {/* Billing Management Dialog */}
-      <Dialog open={isBillingOpen} onOpenChange={setIsBillingOpen}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>Billing Management</DialogTitle>
-            <DialogDescription>
-              Manage payment and billing information for{" "}
-              {billingMember?.fullName}
-            </DialogDescription>
-          </DialogHeader>
-
-          {billingMember && (
-            <div className="grid gap-6 py-4">
-              {/* Member Info */}
-              <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-lg">
-                <div className="w-12 h-12 bg-gradient-to-r from-neon-green to-neon-blue rounded-full flex items-center justify-center text-white">
-                  {billingMember.fullName.charAt(0)}
-                </div>
-                <div>
-                  <h4 className="font-medium">{billingMember.fullName}</h4>
-                  <p className="text-sm text-muted-foreground">
-                    {billingMember?.currentPlanId?.name}
-                  </p>
-                </div>
-              </div>
-
-              {/* Payment Information */}
-              <div className="space-y-4">
-                <h4 className="font-medium">Payment Information</h4>
-                <div className="grid sm:grid-cols-2 gap-4">
-                  <div>
-                    <Label>Current Plan</Label>
-                    <p className="text-sm text-muted-foreground">
-                      {billingMember.currentPlanId?.name}
-                    </p>
-                  </div>
-                  <div>
-                    <Label>Amount</Label>
-                    <p className="text-sm text-neon-green font-medium">
-                      ₹{billingMember?.amount ?? 0}
-                    </p>
-                  </div>
-
-                  <div>
-                    <Label>Next Billing</Label>
-                    <p className="text-sm text-muted-foreground">
-                      {billingMember.startDate
-                        ? new Date(billingMember.startDate).toLocaleDateString()
-                        : "N/A"}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Payment Status */}
-              <div className="space-y-3">
-                <h4 className="font-medium">Payment Status</h4>
-                <div className="flex items-center justify-between p-3 border rounded-lg">
-                  <div className="flex items-center gap-2">
-                    {getStatusBadge(billingMember.status)}
-                    <span className="text-sm">
-                      {billingMember.status === "ACTIVE" &&
-                        "Payment up to date"}
-                      {billingMember.status === "INACTIVE" &&
-                        "Payment required - membership expired"}
-                      {billingMember.status === "SUSPENDED" &&
-                        "Payment pending verification"}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Quick Actions */}
-              <div className="space-y-3">
-                <h4 className="font-medium">Quick Actions</h4>
-                <div className="grid gap-2">
-                  <Button
-                    variant="outline"
-                    className="justify-start"
-                    onClick={() =>
-                      console.log(
-                        "Processing payment for:",
-                        billingMember.fullName
-                      )
-                    }
-                  >
-                    <CreditCard className="w-4 h-4 mr-2" />
-                    Process Payment
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="justify-start"
-                    onClick={() =>
-                      console.log(
-                        "Sending payment reminder to:",
-                        billingMember.email
-                      )
-                    }
-                  >
-                    <Mail className="w-4 h-4 mr-2" />
-                    Send Payment Reminder
-                  </Button>
-                  <Button variant="outline" className="justify-start">
-                    <Calendar className="w-4 h-4 mr-2" />
-                    Update Billing Date
-                  </Button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsBillingOpen(false)}>
-              Close
-            </Button>
-            <Button
-              onClick={handleUpdatePayment}
-              className="bg-gradient-to-r from-neon-green to-neon-blue text-white"
-            >
-              Update Payment
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Search and Filter */}
       <Card className="border-border/50">
         <CardContent className="p-6">
           <div className="flex flex-col sm:flex-row gap-4">
@@ -447,14 +225,9 @@ function MembershipManagement() {
                   <SelectItem value="expired">
                     Expired ({memberCounts.expired})
                   </SelectItem>
-                  <SelectItem value="suspended">
-                    Pending ({memberCounts.suspended})
-                  </SelectItem>
+
                   <SelectItem value="inactive">
                     InActive ({memberCounts.inactive})
-                  </SelectItem>
-                  <SelectItem value="guest">
-                    Guest ({memberCounts.guest})
                   </SelectItem>
                 </SelectContent>
               </Select>
@@ -462,144 +235,114 @@ function MembershipManagement() {
           </div>
         </CardContent>
       </Card>
-
-      {/* Members Table */}
-      <Card className="border-border/50">
-        <CardHeader>
-          <CardTitle>Members ({filteredMembers?.length})</CardTitle>
-          <CardDescription>
-            {selectedFilter === "all"
-              ? "All registered members"
-              : `Members with ${selectedFilter} status`}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="rounded-md border border-border overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Member</TableHead>
-                  <TableHead className="hidden sm:table-cell">
-                    Contact
-                  </TableHead>
-                  <TableHead>Plan</TableHead>
-                  <TableHead className="hidden md:table-cell">Period</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredMembers?.map((member) => (
-                  <TableRow key={member._id}>
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-gradient-to-r from-neon-green to-neon-blue rounded-full flex items-center justify-center text-white text-sm">
-                          {member.fullName.charAt(0)}
-                        </div>
-                        <div>
-                          <div className="font-medium">{member.fullName}</div>
-                          <div className="text-sm text-muted-foreground sm:hidden">
-                            {member.email}
+      {filteredMembers.length == 0 ? (
+        <NoData
+          logo={User}
+          title="No member found !!"
+          {...(searchTerm && {
+            subtitle: "Try adjusting your filter or search",
+          })}
+          {...(searchTerm === "" && {
+            actionButton: (
+              <Button onClick={() => setIsAddMemberOpen(true)}>
+                Add first Member
+              </Button>
+            ),
+          })}
+        />
+      ) : (
+        <Card className="border-border/50">
+          <CardHeader>
+            <CardTitle>Members ({filteredMembers?.length})</CardTitle>
+            <CardDescription>
+              {selectedFilter === "all"
+                ? "All registered members"
+                : `Members with ${selectedFilter} status`}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="rounded-md border border-border overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Member</TableHead>
+                    <TableHead className="hidden sm:table-cell">
+                      Contact
+                    </TableHead>
+                    <TableHead>Plan</TableHead>
+                    <TableHead className="hidden md:table-cell">
+                      Period
+                    </TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredMembers?.map((member) => (
+                    <TableRow key={member._id}>
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-gradient-to-r from-neon-green to-neon-blue rounded-full flex items-center justify-center text-white text-sm">
+                            {member.fullName.charAt(0)}
+                          </div>
+                          <div>
+                            <div className="font-medium">{member.fullName}</div>
+                            <div className="text-sm text-muted-foreground sm:hidden">
+                              {member.email}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="hidden sm:table-cell">
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2 text-sm">
-                          <Mail className="w-3 h-3" />
-                          {member.email}
+                      </TableCell>
+                      <TableCell className="hidden sm:table-cell">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2 text-sm">
+                            <Mail className="w-3 h-3" />
+                            {member.email}
+                          </div>
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <Phone className="w-3 h-3" />
+                            {member.phone}
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Phone className="w-3 h-3" />
-                          {member.phone}
+                      </TableCell>
+                      <TableCell>
+                        <div>
+                          <div className="font-medium">
+                            {member?.currentPlanId?.name}
+                          </div>
+                          <div className="text-sm text-muted-foreground">
+                            ₹{member?.amount ?? 0}
+                          </div>
                         </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div>
-                        <div className="font-medium">
-                          {member?.currentPlanId?.name}
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell">
+                        <div className="space-y-1">
+                          <div className="text-sm">
+                            {new Date(member.startDate).toLocaleDateString()}
+                          </div>
                         </div>
-                        <div className="text-sm text-muted-foreground">
-                          ₹{member?.amount ?? 0}
+                      </TableCell>
+                      <TableCell>{getStatusBadge(member.status)}</TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleViewProfile(member)}
+                            className="hover:bg-neon-green/10 hover:text-neon-green"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
                         </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell">
-                      <div className="space-y-1">
-                        <div className="text-sm">
-                          {new Date(member.startDate).toLocaleDateString()}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>{getStatusBadge(member.status)}</TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleViewProfile(member)}
-                          className="hover:bg-neon-green/10 hover:text-neon-green"
-                        >
-                          <User className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleViewBilling(member)}
-                          className="hover:bg-neon-blue/10 hover:text-neon-blue"
-                        >
-                          <CreditCard className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="border-border/50">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Renewal This Week</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl text-neon-green">23 members</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Estimated revenue: ₹2,76,000
-            </p>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           </CardContent>
         </Card>
-
-        <Card className="border-border/50">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">New Members (30 days)</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl text-neon-blue">18 members</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              +15% from last month
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-border/50">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Retention Rate</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl text-purple-400">87%</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Above industry average
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+      )}
     </div>
   );
 }

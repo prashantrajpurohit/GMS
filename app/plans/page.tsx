@@ -52,6 +52,7 @@ import { addEditData } from "@/reduxstore/editIDataSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { StoreRootState } from "@/reduxstore/reduxStore";
 import { toast } from "sonner";
+import NoData from "@/components/reusableComponents/no-data";
 
 // Helper function to format duration display
 const formatDuration = (value: number, unit: "days" | "months" | "years") => {
@@ -101,13 +102,6 @@ function WorkoutPlans() {
   const [mockMembershipPlans, setMockMembershipPlans] =
     useState<extendedPlanInterface[]>();
   const [open, setOpen] = useState(false);
-  // Helper function to check if plan qualifies for freeze days (>= 6 months)
-  // const qualifiesForFreeze = (durationValue: number, durationUnit: string) => {
-  //   const value = durationValue || 0;
-  //   if (durationUnit === "years") return value >= 1;
-  //   if (durationUnit === "months") return value >= 6;
-  //   return false; // Days don't qualify
-  // };
 
   const openEditDialog = (plan: extendedPlanInterface) => {
     dispatch(addEditData(plan));
@@ -227,7 +221,9 @@ function WorkoutPlans() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl text-purple-400">156</div>
+            <div className="text-2xl text-purple-400">
+              {mockMembershipPlans?.length ?? 0}
+            </div>
             <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
               <Users className="w-3 h-3" />
               Across all plans
@@ -237,76 +233,88 @@ function WorkoutPlans() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {mockMembershipPlans?.map((plan) => (
-          <Card
-            key={plan._id}
-            className="border-neon-green/20 bg-muted/30 dark:bg-slate-800/50 hover:border-neon-green/50 dark:hover:border-neon-green/60 transition-all hover:shadow-lg hover:shadow-neon-green/10 dark:hover:shadow-neon-green/20 hover:bg-muted/40 dark:hover:bg-slate-800/70"
-          >
-            <CardHeader className="pb-4">
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-2">
-                  <CreditCard className="w-5 h-5 text-neon-green" />
-                  <Badge
-                    className={
-                      plan.unit === "months"
-                        ? "bg-neon-blue/10 text-neon-blue border-neon-blue/20"
-                        : "bg-purple-500/10 text-purple-500 border-purple-500/20"
-                    }
-                  >
-                    {formatDuration(plan.duration, plan.unit)}
-                  </Badge>
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => openEditDialog(plan)}
-                  >
-                    <Edit className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-              <CardTitle className="text-xl">{plan.name}</CardTitle>
-              <div className="text-3xl text-neon-green">
-                ₹{plan.price.toLocaleString("en-IN")}
-                <span className="text-sm text-muted-foreground">
-                  /{getDurationUnit(plan.duration, plan.unit)}
-                </span>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-sm text-muted-foreground">
-                {plan.description}
-              </p>
-              <div>
-                <h4 className="text-sm font-medium mb-2">Features</h4>
-                <ul className="space-y-1">
-                  {plan.features.map((feature, index) => (
-                    <li
-                      key={index}
-                      className="text-sm text-muted-foreground flex items-start gap-2"
+        {mockMembershipPlans?.length == 0 ? (
+          <div className="col-span-full flex justify-center items-center min-h-[400px]">
+            <NoData
+              actionButton={
+                <Button onClick={() => setOpen(true)}>Add First Plan</Button>
+              }
+            />
+          </div>
+        ) : (
+          <>
+            {mockMembershipPlans?.map((plan) => (
+              <Card
+                key={plan._id}
+                className="border-neon-green/20 bg-muted/30 dark:bg-slate-800/50 hover:border-neon-green/50 dark:hover:border-neon-green/60 transition-all hover:shadow-lg hover:shadow-neon-green/10 dark:hover:shadow-neon-green/20 hover:bg-muted/40 dark:hover:bg-slate-800/70"
+              >
+                <CardHeader className="pb-4">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-2">
+                      <CreditCard className="w-5 h-5 text-neon-green" />
+                      <Badge
+                        className={
+                          plan.unit === "months"
+                            ? "bg-neon-blue/10 text-neon-blue border-neon-blue/20"
+                            : "bg-purple-500/10 text-purple-500 border-purple-500/20"
+                        }
+                      >
+                        {formatDuration(plan.duration, plan.unit)}
+                      </Badge>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => openEditDialog(plan)}
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                  <CardTitle className="text-xl">{plan.name}</CardTitle>
+                  <div className="text-3xl text-neon-green">
+                    ₹{plan.price.toLocaleString("en-IN")}
+                    <span className="text-sm text-muted-foreground">
+                      /{getDurationUnit(plan.duration, plan.unit)}
+                    </span>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <p className="text-sm text-muted-foreground">
+                    {plan.description}
+                  </p>
+                  <div>
+                    <h4 className="text-sm font-medium mb-2">Features</h4>
+                    <ul className="space-y-1">
+                      {plan.features.map((feature, index) => (
+                        <li
+                          key={index}
+                          className="text-sm text-muted-foreground flex items-start gap-2"
+                        >
+                          <span className="text-neon-green mt-1">✓</span>
+                          <span>{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div className="pt-2">
+                    <Badge
+                      variant={plan.isActive ? "default" : "secondary"}
+                      className={
+                        plan.isActive
+                          ? "bg-neon-green/10 text-neon-green border-neon-green/20"
+                          : ""
+                      }
                     >
-                      <span className="text-neon-green mt-1">✓</span>
-                      <span>{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <div className="pt-2">
-                <Badge
-                  variant={plan.isActive ? "default" : "secondary"}
-                  className={
-                    plan.isActive
-                      ? "bg-neon-green/10 text-neon-green border-neon-green/20"
-                      : ""
-                  }
-                >
-                  {plan.isActive ? "Active" : "Inactive"}
-                </Badge>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+                      {plan.isActive ? "Active" : "Inactive"}
+                    </Badge>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </>
+        )}
       </div>
     </div>
   );

@@ -1,11 +1,6 @@
 "use client";
 import { login, logout } from "@/reduxstore/authSlice";
-import {
-  AuthValuesType,
-  LoginParams,
-  RegisterParams,
-  UserDataType,
-} from "@/types/types";
+import { AuthValuesType, LoginParams, UserDataType } from "@/types/types";
 import { useRouter } from "next/navigation";
 import { createContext, useState, ReactNode } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -13,6 +8,7 @@ import { ApiStatus } from "@/helper/helper";
 import { toast } from "sonner";
 import { ApiUrl } from "../api/apiUrls";
 import httpRequest from "../api/AxiosInterseptor";
+import { RegistrationFormData } from "@/lib/validation-schemas";
 
 const defaultProvider: AuthValuesType = {
   user: null,
@@ -47,7 +43,8 @@ const AuthProvider = ({ children }: Props) => {
         password: params.password,
       });
       if (response.status === ApiStatus.STATUS_200) {
-        let authdata = response.data.data;
+        let authdata = response.data.data?.user;
+
         toast.success("Login Successfully");
         setUser(authdata);
         dispatch(login(authdata));
@@ -79,8 +76,28 @@ const AuthProvider = ({ children }: Props) => {
     authCheck();
   };
 
-  const handleRegister = (params: RegisterParams) => {
-    console.log(params);
+  const handleRegister = async (params: RegistrationFormData) => {
+    setAuthLoading(true);
+    try {
+      let response = await httpRequest.post(`${ApiUrl.REGISTER}`, {
+        ...params,
+      });
+      if (
+        response.status === ApiStatus.STATUS_200 ||
+        response.status === ApiStatus.STATUS_201
+      ) {
+        let authdata = response.data.data?.user;
+
+        toast.success("Registered Successfully");
+        setUser(authdata);
+        dispatch(login(authdata));
+        router.replace("/" as string);
+        router.refresh();
+        setAuthLoading(false);
+      }
+    } catch {
+      setAuthLoading(false);
+    }
   };
 
   const values = {

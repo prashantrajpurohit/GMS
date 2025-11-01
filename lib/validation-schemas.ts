@@ -15,10 +15,45 @@ export const staffSchema = z.object({
   email: emailSchema,
   phone: phoneSchema,
   role: requiredString("Role"),
-  password: requiredString("password").min(8, "Password must be at least 8 characters"),
+  password: requiredString("password").min(
+    8,
+    "Password must be at least 8 characters"
+  ),
   specialization: z.string().optional(),
   isActive: z.boolean(),
 });
+export const registrationSchema = z
+  .object({
+    gymName: z
+      .string({ required_error: "Gym name is required" })
+      .min(3, { message: "Gym name must be at least 3 characters" })
+      .trim(),
+    email: z
+      .string({ required_error: "Email is required" })
+      .email({ message: "Please enter a valid email address" })
+      .trim(),
+    password: z
+      .string({ required_error: "Password is required" })
+      .min(8, { message: "Password must be at least 8 characters" })
+      .regex(/[A-Z]/, {
+        message: "Password must contain at least one uppercase letter",
+      })
+      .regex(/[a-z]/, {
+        message: "Password must contain at least one lowercase letter",
+      })
+      .regex(/[0-9]/, { message: "Password must contain at least one number" }),
+    confirmPassword: z.string({
+      required_error: "Please confirm your password",
+    }),
+    referralCode: z
+      .string()
+      .optional()
+      .transform((val) => val?.toUpperCase()),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
 
 export const planSchema = z.object({
   code: z.string().min(1, "Plan code is required"),
@@ -37,7 +72,6 @@ export const planSchema = z.object({
 // Type inference
 
 export const memberSchema = z.object({
-  memberCode: z.string().min(1, "Member code is required"),
   fullName: z.string().min(1, "Full name is required"),
   phone: z.string().min(1, "Phone number is required"),
   email: z.string().email("Invalid email address"),
@@ -50,7 +84,7 @@ export const memberSchema = z.object({
   address: z.string().min(1, "Address is required"),
   emergencyContact: z.string().optional(),
   photo: z.string().optional(),
-  status: z.enum(["active", "inactive", "suspended", "guest", 'expired']),
+  status: z.enum(["active", "inactive", "suspended", "guest", "expired"]),
   startDate: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be in YYYY-MM-DD format"),
@@ -58,6 +92,7 @@ export const memberSchema = z.object({
   notes: z.string().optional(),
   batch: z.string().optional(),
 });
+export type RegistrationFormData = z.infer<typeof registrationSchema>;
 
 export type StaffFormData = z.infer<typeof staffSchema>;
 export type PlanInterface = z.infer<typeof planSchema>;

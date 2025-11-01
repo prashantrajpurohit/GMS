@@ -5,6 +5,7 @@ import { ActiveThemeProvider } from "@/components/active-theme";
 import { cn } from "@/lib/utils";
 import ClientLayoutSwitcher from "@/components/client-layout-switcher";
 import Providers from "./providers";
+import { Dumbbell } from "lucide-react";
 
 const META_THEME_COLORS = {
   light: "#fffff",
@@ -12,7 +13,7 @@ const META_THEME_COLORS = {
 };
 
 export const metadata: Metadata = {
-  title: "Loop | Store Admin",
+  title: "Freaky | Admin",
   description: "Generated Loopos",
 };
 

@@ -1,5 +1,6 @@
 // ===============================next APP props types ========================//
 
+import { RegistrationFormData } from "@/lib/validation-schemas";
 import { AnyMongoAbility } from "@casl/ability";
 import { NextComponentType, NextPageContext } from "next";
 import { ReactElement, ReactNode } from "react";
@@ -36,12 +37,6 @@ export type LoginParams = {
   password: string;
 };
 
-export type RegisterParams = {
-  email: string;
-  username: string;
-  password: string;
-};
-
 interface Option {
   id: string;
   name: string;
@@ -64,6 +59,7 @@ export type UserDataType = {
   email: string;
   name?: string;
   createdAt: string;
+  gymName?: string;
   updatedAt: string;
   phone?: string;
 };
@@ -73,7 +69,10 @@ export type AuthValuesType = {
   user: UserDataType | null;
   setUser: (value: UserDataType | null) => void;
   login: (params: LoginParams, errorCallback?: ErrCallbackType) => void;
-  register: (params: RegisterParams, errorCallback?: ErrCallbackType) => void;
+  register: (
+    params: RegistrationFormData,
+    errorCallback?: ErrCallbackType
+  ) => void;
   authLoading: boolean;
   setAuthLoading: (value: boolean) => void;
 };
