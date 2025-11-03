@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/sidebar";
 import { routeConfig } from "@/navigation/navigation";
 import Image from "next/image";
+import { useTheme } from "next-themes";
 
 const data = {
   user: {
@@ -25,22 +26,29 @@ const data = {
   navMain: routeConfig,
 };
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const theme = useTheme().theme;
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" className="!p-2">
-              <div className="flex items-center justify-center w-full">
+            <SidebarMenuButton
+              asChild
+              className="data-[slot=sidebar-menu-button]:!p-1.5 h-10"
+            >
+              <span>
                 <Image
-                  src="/images/gym-logo.png"
-                  alt="Gym Logo"
-                  width={100}
+                  src={`/images/logo/${
+                    theme == "dark"
+                      ? "gms_logo_white.png"
+                      : "gms_logo_black.png"
+                  }`}
+                  alt=""
+                  width={50}
                   height={80}
-                  className="object-contain"
-                  priority
                 />
-              </div>
+                <span className="text-xl font-bold">GYM FREAKY</span>
+              </span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

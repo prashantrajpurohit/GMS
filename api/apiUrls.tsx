@@ -6,4 +6,6 @@ export const ApiUrl = {
   STAFF: `/staff`,
   Member: `/members`,
   ROLES: `roles`,
+  PAYMENTS: `payments`,
+  GYMS: `gyms`,
 };

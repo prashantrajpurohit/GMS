@@ -39,8 +39,23 @@ import CustomField from "@/components/reusableComponents/customField";
 import GymInfoForm from "@/components/settings/gymInfoForm";
 import UserProfileForm from "@/components/settings/userProfileForm";
 import GymTimingForm from "@/components/settings/gymTimingForm";
+import SettingsController from "./controller";
+import { useQuery } from "@tanstack/react-query";
+import { useSelector } from "react-redux";
+import { StoreRootState } from "@/reduxstore/reduxStore";
 
 function Settings() {
+  const reduxUserData = useSelector(
+    (state: StoreRootState) =>
+      state?.data?.userdata?.user as Record<string, any> | null
+  );
+
+  const settingsController = new SettingsController();
+  const { data, isLoading } = useQuery({
+    queryKey: ["settingsData"],
+    queryFn: () => settingsController.getAllSettings(reduxUserData?.gymId),
+  });
+  const settingsData = data?.data;
   return (
     <div className="space-y-6">
       <div>
@@ -92,7 +107,11 @@ function Settings() {
               </div>
             </CardHeader>
             <CardContent className="space-y-6">
-              <GymInfoForm />
+              <GymInfoForm
+                reduxUserData={reduxUserData}
+                settingsData={settingsData}
+                isLoading={isLoading}
+              />
             </CardContent>
           </Card>
         </TabsContent>

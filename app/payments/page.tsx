@@ -39,6 +39,8 @@ import {
 } from "@/components/payments/MonthlyPaymentDialog";
 import { MonthlySendReminderDialog } from "@/components/payments/MonthlySendReminderDialog";
 import { MonthlyBulkReminderDialog } from "@/components/payments/MonthlyBulkReminderDialog";
+import PaymentController from "./controller";
+import { useQuery } from "@tanstack/react-query";
 
 interface Member {
   id: string;
@@ -208,6 +210,13 @@ const mockMembers: Member[] = [
 ];
 
 function PaymentManagement() {
+  const paymentController = new PaymentController();
+  const { data } = useQuery({
+    queryKey: ["allPayments"],
+    queryFn: paymentController.getAllPayments,
+  });
+  console.log(data, "data");
+
   const [members, setMembers] = useState<Member[]>(mockMembers);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "paid" | "pending">(

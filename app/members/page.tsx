@@ -41,7 +41,7 @@ import {
   User,
 } from "lucide-react";
 import { toast } from "sonner";
-import { FormProvider, useForm } from "react-hook-form";
+import { FormProvider, useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { MemberInterface, memberSchema } from "@/lib/validation-schemas";
 import MembersController from "./controller";
@@ -65,26 +65,24 @@ interface extendedMemberInterface
 }
 function MembershipManagement() {
   const dispatch = useDispatch();
-  const [isEditingMember, setIsEditingMember] =
-    useState<extendedMemberInterface | null>(null);
   const queryClient = useQueryClient();
-  const editData = useSelector((state: StoreRootState) => state.data.editData);
+  const editData = useSelector(
+    (state: StoreRootState) => state.data.editData as Record<string, any> | null
+  );
 
   const memberController = new MembersController();
   const { mutate, isPending } = useMutation({
     mutationFn: (data: any) =>
-      isEditingMember
+      editData
         ? memberController.updateMember({
-            id: isEditingMember._id,
+            id: editData?._id,
             payload: data,
           })
         : memberController.addMember(data),
     onSuccess: () => {
       setIsAddMemberOpen(false);
       queryClient.invalidateQueries({ queryKey: ["members-list"] });
-      toast.success(
-        `Member ${isEditingMember ? "updated" : "added"} successfully!`
-      );
+      toast.success(`Member ${editData ? "updated" : "added"} successfully!`);
     },
   });
   const { data } = useQuery({
@@ -124,21 +122,37 @@ function MembershipManagement() {
 
   const memberCounts = {
     all: members?.length,
-    active: members?.filter((m) => m.status === "active").length,
-    inactive: members?.filter((m) => m.status === "inactive").length,
-    expired: members?.filter((m) => m.status === "expired").length,
+    active: members?.filter((m) => m.status === "active")?.length,
+    inactive: members?.filter((m) => m.status === "inactive")?.length,
+    expired: members?.filter((m) => m.status === "expired")?.length,
   };
 
-  const onSubmit = (data: MemberInterface) => {
+  const onSubmit: SubmitHandler<MemberInterface> = (data) => {
     mutate(data);
   };
   function handleOpen(open: boolean) {
     setIsAddMemberOpen(open);
     dispatch(addEditData(null));
   }
-
+  const editDataValues = {
+    fullName: editData?.fullName,
+    email: editData?.email,
+    phone: editData?.phone,
+    weight: +(editData?.weight ?? 0),
+    height: +(editData?.height ?? 0),
+    currentPlanId: editData?.currentPlanId?._id,
+    startDate: editData?.startDate?.split("T")[0],
+    photo: editData?.photo || "",
+    dateOfBirth: editData?.dateOfBirth?.split("T")[0],
+    gender: editData?.gender,
+    address: editData?.address,
+    emergencyContact: editData?.emergencyContact || "",
+    status: editData?.status,
+    notes: editData?.notes || "",
+    batch: editData?.batch || "",
+  };
   const form = useForm<MemberInterface>({
-    values: editData ?? { ...initialFormValues },
+    values: editDataValues ?? { ...initialFormValues },
     resolver: zodResolver(memberSchema),
   });
   useEffect(() => {
@@ -162,7 +176,7 @@ function MembershipManagement() {
               <Button
                 onClick={() => {
                   form.reset({ ...initialFormValues });
-                  setIsEditingMember(null);
+                  dispatch(addEditData(null));
                 }}
                 className="bg-gradient-to-r from-neon-green to-neon-blue text-white flex-1 sm:flex-none"
               >
@@ -174,7 +188,7 @@ function MembershipManagement() {
             <DialogContent className="w-[95vw] max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl max-h-[90vh] overflow-y-auto mx-4 sm:mx-0">
               <FormProvider {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)}>
-                  <AddEditMember isEditingMember={isEditingMember} />
+                  <AddEditMember isEditingMember={editData} />
 
                   <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:gap-0 px-1 sm:px-0">
                     <Button
@@ -183,7 +197,7 @@ function MembershipManagement() {
                     >
                       {isPending ? (
                         <Loader className="animate-spin h-4 w-4" />
-                      ) : isEditingMember ? (
+                      ) : editData ? (
                         "Update Member"
                       ) : (
                         "Add Member"
@@ -235,7 +249,7 @@ function MembershipManagement() {
           </div>
         </CardContent>
       </Card>
-      {filteredMembers.length == 0 ? (
+      {filteredMembers?.length == 0 ? (
         <NoData
           logo={User}
           title="No member found !!"
@@ -244,9 +258,7 @@ function MembershipManagement() {
           })}
           {...(searchTerm === "" && {
             actionButton: (
-              <Button onClick={() => setIsAddMemberOpen(true)}>
-                Add first Member
-              </Button>
+              <Button onClick={() => handleOpen(true)}>Add first Member</Button>
             ),
           })}
         />
