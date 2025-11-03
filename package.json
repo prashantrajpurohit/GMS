@@ -7,8 +7,7 @@
     "dev:lan": "next dev -H 192.168.29.65 -p 5000",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "export": "next build && next export"
+    "lint": "next lint"
   },
   "dependencies": {
     "@casl/ability": "^6.7.3",
