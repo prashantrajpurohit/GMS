@@ -20,4 +20,45 @@ export default class MembersController {
     const data = await httpRequest.patch(`${ApiUrl.Member}/${id}`, payload);
     return data?.data;
   }
+
+  async uploadMedia(file: File, onUploadProgress?: (progress: number) => void) {
+    const formData = new FormData();
+    formData.append("file", file);
+    const response = await httpRequest.post(
+      `${ApiUrl.MEDIA_URL}/member`,
+      formData,
+      {
+        headers: { "Content-Type": "multipart/form-data" },
+        onUploadProgress: (e) => {
+          if (onUploadProgress && e.total) {
+            onUploadProgress(Math.round((e.loaded * 100) / e.total));
+          }
+        },
+      }
+    );
+    return response?.data?.data?.url;
+  }
+  async uploadFile(file: File, onUploadProgress?: (progress: number) => void) {
+    const formData = new FormData();
+    formData.append("file", file);
+    const response = await httpRequest.post(
+      `${ApiUrl.MEDIA_URL}`,
+      formData,
+      {
+        headers: { "Content-Type": "multipart/form-data" },
+        onUploadProgress: (e) => {
+          if (onUploadProgress && e.total) {
+            onUploadProgress(Math.round((e.loaded * 100) / e.total));
+          }
+        },
+      }
+    );
+    return response?.data?.data?.url;
+  }
+  async deleteMedia(url: string) {
+    const response = await httpRequest.delete(
+      `${ApiUrl.MEDIA_URL}/?url=${url}`
+    );
+    return response?.data?.url;
+  }
 }
