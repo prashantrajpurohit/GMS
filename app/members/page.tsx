@@ -61,6 +61,7 @@ interface extendedMemberInterface
   currentPlanId: {
     _id?: string;
     name: string;
+    price: number;
   };
   amount?: number;
 }
@@ -336,7 +337,7 @@ function MembershipManagement() {
                             {member?.currentPlanId?.name}
                           </div>
                           <div className="text-sm text-muted-foreground">
-                            ₹{member?.amount ?? 0}
+                            ₹{member?.currentPlanId?.price ?? 0}
                           </div>
                         </div>
                       </TableCell>

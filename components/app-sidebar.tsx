@@ -32,7 +32,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const userData = useSelector(
     (state: StoreRootState) => state?.data?.userdata?.user
   );
-  console.log(userData, "userData");
 
   return (
     <Sidebar collapsible="offcanvas" {...props}>
