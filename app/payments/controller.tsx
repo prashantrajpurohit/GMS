@@ -6,6 +6,16 @@ export default class PaymentController {
     const res = await httpRequest.get(ApiUrl.PAYMENTS);
     return res?.data?.data;
   }
+  async getPaymentsStats() {
+    const res = await httpRequest.get(`${ApiUrl.PAYMENTS}/stats`);
+    return res?.data?.data;
+  }
+  async getPaymentHistoryById(id: string) {
+    const res = await httpRequest.get(
+      `${ApiUrl.PAYMENTS}/member/${id}/history`
+    );
+    return res?.data?.data;
+  }
   async updatePaymentById({
     id,
     payload,

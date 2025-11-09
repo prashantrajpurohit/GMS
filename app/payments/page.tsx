@@ -227,6 +227,7 @@ const mockMembers: Member[] = [
 function PaymentManagement() {
   const paymentController = new PaymentController();
   const queryClient = useQueryClient();
+
   const { mutate, isPending: statusChangeLoading } = useMutation({
     mutationFn: paymentController.updatePaymentById,
     onSuccess: () => {
@@ -234,10 +235,17 @@ function PaymentManagement() {
       toast.success("Payment updated Successfully!!");
     },
   });
+
   const { data = [] } = useQuery({
     queryKey: ["allPayments"],
     queryFn: paymentController.getAllPayments,
   });
+  const { data: paymentsStatsData = [] } = useQuery({
+    queryKey: ["getPaymentsStats"],
+    queryFn: paymentController.getPaymentsStats,
+  });
+  console.log(paymentsStatsData, "paymentsStatsData");
+
   const paymentsList = data?.payments || [];
   const [members, setMembers] = useState<Member[]>(mockMembers);
   const [searchQuery, setSearchQuery] = useState("");
@@ -278,9 +286,7 @@ function PaymentManagement() {
       return matchesSearch && matchesStatus;
     });
   }, [paymentsList, searchQuery, statusFilter, selectedMonth]);
-  console.log(filteredMembers, paymentsList, "filteredMembers");
 
-  // Calculate metrics for selected month
   const metrics = useMemo(() => {
     const totalMembers = members.length;
 
@@ -325,48 +331,7 @@ function PaymentManagement() {
   };
 
   const handleUpdatePayment = (month: string, status: "paid" | "pending") => {
-    if (!selectedMember) return;
-
-    setMembers((prev) =>
-      prev.map((m) =>
-        m.id === selectedMember.id
-          ? {
-              ...m,
-              payments: m.payments.map((p) =>
-                p.month === month
-                  ? {
-                      ...p,
-                      status,
-                      paymentDate:
-                        status === "paid"
-                          ? new Date().toISOString()
-                          : undefined,
-                    }
-                  : p
-              ),
-            }
-          : m
-      )
-    );
-
-    // Update selected member to reflect changes
-    setSelectedMember((prev) =>
-      prev
-        ? {
-            ...prev,
-            payments: prev.payments.map((p: any) =>
-              p.month === month
-                ? {
-                    ...p,
-                    status,
-                    paymentDate:
-                      status === "paid" ? new Date().toISOString() : undefined,
-                  }
-                : p
-            ),
-          }
-        : null
-    );
+    // mutate({});
   };
 
   const handleExport = () => {
@@ -404,7 +369,7 @@ function PaymentManagement() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button
+          {/* <Button
             variant="outline"
             className="gap-2"
             onClick={handleBulkReminders}
@@ -413,7 +378,7 @@ function PaymentManagement() {
             <Send className="w-4 h-4" />
             <span className="hidden sm:inline">Bulk Reminders</span>
             <span className="sm:hidden">Bulk</span>
-          </Button>
+          </Button> */}
           <Button variant="outline" className="gap-2" onClick={handleExport}>
             <Download className="w-4 h-4" />
             <span className="hidden sm:inline">Export</span>
@@ -778,17 +743,17 @@ function PaymentManagement() {
       </div>
 
       {/* Payment History Dialog */}
-      {/* {selectedMember && (
+      {selectedMember && (
         <MonthlyPaymentDialog
           open={paymentDialogOpen}
+          selectedTrans={selectedMember}
           onOpenChange={setPaymentDialogOpen}
-          memberName={selectedMember.name}
-          planType={selectedMember.planType}
-          monthlyFee={selectedMember.monthlyFee}
-          payments={selectedMember.payments}
+          memberName={selectedMember.fullName}
+          planType={selectedMember.currentPlanId?.name}
+          monthlyFee={selectedMember.currentPlanId?.price}
           onUpdatePayment={handleUpdatePayment}
         />
-      )} */}
+      )}
 
       {/* Send Reminder Dialog */}
       {/* {selectedMember && (

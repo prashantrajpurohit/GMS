@@ -10,4 +10,5 @@ export const ApiUrl = {
   PAYMENTS: `payments`,
   GYMS: `gyms`,
   MEDIA_URL: `media`,
+  AUTH: `auth`,
 };

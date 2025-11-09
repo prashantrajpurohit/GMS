@@ -6,6 +6,10 @@ export default class SettingsController {
     const data = await httpRequest.get(`${ApiUrl.GYMS}/${gymId}/settings`);
     return data?.data;
   }
+  async getUserProfile() {
+    const data = await httpRequest.get(`${ApiUrl.AUTH}/me`);
+    return data?.data;
+  }
   async updateSettings({
     gymId,
     payload,
@@ -17,6 +21,10 @@ export default class SettingsController {
       `${ApiUrl.GYMS}/${gymId}/settings`,
       payload
     );
+    return data?.data;
+  }
+  async updateUserProfile(payload: Record<string, any>) {
+    const data = await httpRequest.patch(`${ApiUrl.AUTH}/me`, payload);
     return data?.data;
   }
 }
