@@ -76,11 +76,11 @@ export function MonthlyPaymentDialog({
   };
 
   const paidCount = payments?.filter(
-    (p) => p.status?.toLowerCase() === "paid"
+    (p: Record<string, any>) => p.status?.toLowerCase() === "paid"
   ).length;
   const totalPaid = payments
-    ?.filter((p) => p.status?.toLowerCase() === "paid")
-    ?.reduce((sum, p) => sum + p.amount, 0);
+    ?.filter((p: Record<string, any>) => p.status?.toLowerCase() === "paid")
+    ?.reduce((sum: any, p: any) => sum + p.amount, 0);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -186,7 +186,7 @@ export function MonthlyPaymentDialog({
 
         {/* Mobile Card View */}
         <div className="sm:hidden space-y-3">
-          {payments.map((payment) => (
+          {payments.map((payment:Record<string,any>) => (
             <div
               key={payment.month}
               className="p-4 border rounded-lg bg-card space-y-3"

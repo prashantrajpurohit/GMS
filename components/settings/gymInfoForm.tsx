@@ -20,7 +20,7 @@ interface props {
   isLoading: boolean;
 }
 const GymInfoForm = ({ reduxUserData, settingsData, isLoading }: props) => {
-  const logoInputRef = useRef(null);
+  const logoInputRef = useRef<null | any>(null);
   const queryClient = useQueryClient();
   const settingsController = new SettingsController();
   const memberController = new MembersController();
@@ -50,7 +50,7 @@ const GymInfoForm = ({ reduxUserData, settingsData, isLoading }: props) => {
     );
     form.setValue("branding.logo", url);
     setUploadingLogo(false);
-    logoInputRef.current!.value = "";
+    logoInputRef.current.value = "";
     setUploadProgress(0);
   }
   async function handleDelete() {

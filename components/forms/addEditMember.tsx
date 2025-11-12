@@ -19,7 +19,7 @@ export default function AddEditMember({
 }: {
   isEditingMember: Record<string, any> | null;
 }) {
-  const logoInputRef = useRef(null);
+  const logoInputRef = useRef<HTMLInputElement | null>(null);
   const memberController = new MembersController();
   const planController = new PlansController();
   const [uploadingLogo, setUploadingLogo] = useState(false);
@@ -49,7 +49,9 @@ export default function AddEditMember({
 
     form.setValue("photo", url);
     setUploadingLogo(false);
-    logoInputRef.current!.value = "";
+    if (logoInputRef.current) {
+      logoInputRef.current.value = "";
+    }
     setUploadProgress(0);
   }
   async function handleDelete() {
