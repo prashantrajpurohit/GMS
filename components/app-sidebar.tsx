@@ -15,6 +15,8 @@ import {
 import { routeConfig } from "@/navigation/navigation";
 import Image from "next/image";
 import { useTheme } from "next-themes";
+import { useSelector } from "react-redux";
+import { StoreRootState } from "@/reduxstore/reduxStore";
 
 const data = {
   user: {
@@ -27,6 +29,10 @@ const data = {
 };
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const theme = useTheme().theme;
+  const userData = useSelector(
+    (state: StoreRootState) => state?.data?.userdata?.user
+  );
+
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>

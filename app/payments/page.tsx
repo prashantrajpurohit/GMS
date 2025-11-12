@@ -32,6 +32,7 @@ import {
   Eye,
   Send,
   MessageSquare,
+  Loader2,
 } from "lucide-react";
 import {
   MonthlyPayment,
@@ -40,10 +41,24 @@ import {
 import { MonthlySendReminderDialog } from "@/components/payments/MonthlySendReminderDialog";
 import { MonthlyBulkReminderDialog } from "@/components/payments/MonthlyBulkReminderDialog";
 import PaymentController from "./controller";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { ApiUrl } from "@/api/apiUrls";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
 
 interface Member {
   id: string;
+  _id?: string;
   name: string;
   phone: string;
   email: string;
@@ -211,12 +226,27 @@ const mockMembers: Member[] = [
 
 function PaymentManagement() {
   const paymentController = new PaymentController();
-  const { data } = useQuery({
+  const queryClient = useQueryClient();
+
+  const { mutate, isPending: statusChangeLoading } = useMutation({
+    mutationFn: paymentController.updatePaymentById,
+    onSuccess: () => {
+      queryClient?.invalidateQueries({ queryKey: ["allPayments"] });
+      toast.success("Payment updated Successfully!!");
+    },
+  });
+
+  const { data = [] } = useQuery({
     queryKey: ["allPayments"],
     queryFn: paymentController.getAllPayments,
   });
-  console.log(data, "data");
+  const { data: paymentsStatsData = [] } = useQuery({
+    queryKey: ["getPaymentsStats"],
+    queryFn: paymentController.getPaymentsStats,
+  });
+  console.log(paymentsStatsData, "paymentsStatsData");
 
+  const paymentsList = data?.payments || [];
   const [members, setMembers] = useState<Member[]>(mockMembers);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "paid" | "pending">(
@@ -225,7 +255,11 @@ function PaymentManagement() {
   const [selectedMonth, setSelectedMonth] = useState<string>(
     allMonths[allMonths.length - 1]
   ); // Current month
-  const [selectedMember, setSelectedMember] = useState<Member | null>(null);
+  const [selectedMember, setSelectedMember] = useState<Record<
+    string,
+    any
+  > | null>(null);
+  const [alertDialogOpen, setAlertDialogOpen] = useState(false);
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [sendReminderDialogOpen, setSendReminderDialogOpen] = useState(false);
   const [bulkReminderDialogOpen, setBulkReminderDialogOpen] = useState(false);
@@ -240,21 +274,19 @@ function PaymentManagement() {
 
   // Filter members
   const filteredMembers = useMemo(() => {
-    return members.filter((member) => {
+    return paymentsList?.filter((trans: Record<string, any>) => {
+      const memberObj = trans?.memberId;
       const matchesSearch =
-        member.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        member.phone.includes(searchQuery) ||
-        member.email.toLowerCase().includes(searchQuery.toLowerCase());
+        memberObj.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        memberObj.phone.includes(searchQuery);
 
-      const currentStatus = getMemberCurrentStatus(member);
       const matchesStatus =
-        statusFilter === "all" || currentStatus === statusFilter;
+        statusFilter === "all" || trans?.status?.toLowerCase() === statusFilter;
 
       return matchesSearch && matchesStatus;
     });
-  }, [members, searchQuery, statusFilter, selectedMonth]);
+  }, [paymentsList, searchQuery, statusFilter, selectedMonth]);
 
-  // Calculate metrics for selected month
   const metrics = useMemo(() => {
     const totalMembers = members.length;
 
@@ -299,59 +331,18 @@ function PaymentManagement() {
   };
 
   const handleUpdatePayment = (month: string, status: "paid" | "pending") => {
-    if (!selectedMember) return;
-
-    setMembers((prev) =>
-      prev.map((m) =>
-        m.id === selectedMember.id
-          ? {
-              ...m,
-              payments: m.payments.map((p) =>
-                p.month === month
-                  ? {
-                      ...p,
-                      status,
-                      paymentDate:
-                        status === "paid"
-                          ? new Date().toISOString()
-                          : undefined,
-                    }
-                  : p
-              ),
-            }
-          : m
-      )
-    );
-
-    // Update selected member to reflect changes
-    setSelectedMember((prev) =>
-      prev
-        ? {
-            ...prev,
-            payments: prev.payments.map((p) =>
-              p.month === month
-                ? {
-                    ...p,
-                    status,
-                    paymentDate:
-                      status === "paid" ? new Date().toISOString() : undefined,
-                  }
-                : p
-            ),
-          }
-        : null
-    );
+    // mutate({});
   };
 
   const handleExport = () => {
     // Mock export functionality
-    const data = filteredMembers.map((m) => ({
-      Name: m.name,
+    const data = filteredMembers?.map((m: Record<string, any>) => ({
+      Name: m.memberId?.name,
       Phone: m.phone,
       Email: m.email,
       Plan: `${m.planName} (${m.planType})`,
       MonthlyFee: formatCurrency(m.monthlyFee),
-      Status: getMemberCurrentStatus(m),
+      Status: m?.status?.toLowerCase(),
     }));
 
     console.log("Exporting data:", data);
@@ -378,7 +369,7 @@ function PaymentManagement() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button
+          {/* <Button
             variant="outline"
             className="gap-2"
             onClick={handleBulkReminders}
@@ -387,7 +378,7 @@ function PaymentManagement() {
             <Send className="w-4 h-4" />
             <span className="hidden sm:inline">Bulk Reminders</span>
             <span className="sm:hidden">Bulk</span>
-          </Button>
+          </Button> */}
           <Button variant="outline" className="gap-2" onClick={handleExport}>
             <Download className="w-4 h-4" />
             <span className="hidden sm:inline">Export</span>
@@ -423,7 +414,7 @@ function PaymentManagement() {
             <div className="space-y-1">
               <p className="text-2xl">{metrics.paidMembers}</p>
               <p className="text-xs text-muted-foreground">
-                {formatCurrency(metrics.totalCollected)}
+                {/* {formatCurrency(metrics.totalCollected)} */}
               </p>
             </div>
           </CardContent>
@@ -440,7 +431,7 @@ function PaymentManagement() {
             <div className="space-y-1">
               <p className="text-2xl">{metrics.pendingMembers}</p>
               <p className="text-xs text-muted-foreground">
-                {formatCurrency(metrics.totalPending)}
+                {/* {formatCurrency(metrics.totalPending)} */}
               </p>
             </div>
           </CardContent>
@@ -528,13 +519,14 @@ function PaymentManagement() {
               <TableRow>
                 <TableHead>Member Name</TableHead>
                 <TableHead>Plan</TableHead>
-                <TableHead>Monthly Fee</TableHead>
+                <TableHead>Plan Fee</TableHead>
+                <TableHead>Start Date</TableHead>
                 <TableHead>Status ({selectedMonth})</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredMembers.length === 0 ? (
+              {filteredMembers?.length === 0 ? (
                 <TableRow>
                   <TableCell
                     colSpan={5}
@@ -544,23 +536,27 @@ function PaymentManagement() {
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredMembers.map((member) => {
-                  const currentStatus = getMemberCurrentStatus(member);
+                filteredMembers?.map((transaction: Record<string, any>) => {
+                  const currentStatus = transaction?.status;
+                  const member = transaction?.memberId;
+                  console.log(filteredMembers, transaction, "transaction");
                   return (
                     <TableRow key={member.id}>
                       <TableCell>
                         <div className="flex items-center gap-3">
                           <Avatar>
-                            <AvatarImage src={member.avatar} />
+                            <AvatarImage
+                              src={ApiUrl.IMAGE_BASE_URL + member.photo}
+                            />
                             <AvatarFallback className="bg-gradient-to-br from-neon-green to-neon-blue text-white">
-                              {member.name
+                              {member.fullName
                                 .split(" ")
-                                .map((n) => n[0])
+                                .map((n: string) => n[0])
                                 .join("")}
                             </AvatarFallback>
                           </Avatar>
                           <div>
-                            <p className="font-medium">{member.name}</p>
+                            <p className="font-medium">{member.fullName}</p>
                             <p className="text-xs text-muted-foreground">
                               {member.phone}
                             </p>
@@ -569,17 +565,23 @@ function PaymentManagement() {
                       </TableCell>
                       <TableCell>
                         <div>
-                          <p className="font-medium">{member.planName}</p>
+                          <p className="font-medium">
+                            {member.currentPlanId?.name}
+                          </p>
                           <p className="text-xs text-muted-foreground">
-                            {member.planType}
+                            {member.currentPlanId?.duration}{" "}
+                            {member.currentPlanId?.unit}
                           </p>
                         </div>
                       </TableCell>
                       <TableCell className="font-medium">
-                        {formatCurrency(member.monthlyFee)}
+                        ₹{member.currentPlanId?.price}
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        {member?.startDate?.split("T")[0]}
                       </TableCell>
                       <TableCell>
-                        {currentStatus === "paid" ? (
+                        {transaction?.status?.toLowerCase() === "paid" ? (
                           <Badge className="gap-1 bg-green-500/10 text-green-500 border-green-500/20">
                             <CheckCircle2 className="w-3 h-3" />
                             Paid
@@ -604,15 +606,35 @@ function PaymentManagement() {
                               Remind
                             </Button>
                           )}
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="gap-2 border-neon-blue/20 text-neon-blue hover:bg-neon-blue/10"
-                            onClick={() => handleViewPayments(member)}
-                          >
-                            <Eye className="w-4 h-4" />
-                            View
-                          </Button>
+                          {transaction?.status?.toLowerCase() == "paid" ? (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="gap-2 border-neon-blue/20 text-neon-blue hover:bg-neon-blue/10"
+                              onClick={() => handleViewPayments(member)}
+                            >
+                              <Eye className="w-4 h-4" />
+                              View
+                            </Button>
+                          ) : (
+                            <Button
+                              size="sm"
+                              onClick={() => {
+                                setAlertDialogOpen(true);
+                                setSelectedMember(transaction);
+                              }}
+                              disabled={statusChangeLoading}
+                              className={
+                                "bg-neon-green hover:bg-neon-green/90 text-black"
+                              }
+                            >
+                              {statusChangeLoading ? (
+                                <Loader2 className="animate-spin" />
+                              ) : (
+                                "Mark Paid"
+                              )}
+                            </Button>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>
@@ -633,8 +655,11 @@ function PaymentManagement() {
             </CardContent>
           </Card>
         ) : (
-          filteredMembers.map((member) => {
-            const currentStatus = getMemberCurrentStatus(member);
+          filteredMembers.map((transaction: Record<string, any>) => {
+            const currentStatus = transaction?.status;
+            const member = transaction?.memberId;
+            console.log(filteredMembers, transaction, "transaction");
+
             return (
               <Card key={member.id}>
                 <CardContent className="p-4 space-y-4">
@@ -643,14 +668,14 @@ function PaymentManagement() {
                     <Avatar>
                       <AvatarImage src={member.avatar} />
                       <AvatarFallback className="bg-gradient-to-br from-neon-green to-neon-blue text-white">
-                        {member.name
+                        {member.fullName
                           .split(" ")
-                          .map((n) => n[0])
+                          .map((n: string) => n[0])
                           .join("")}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1">
-                      <p className="font-medium">{member.name}</p>
+                      <p className="font-medium">{member.fullName}</p>
                       <p className="text-sm text-muted-foreground">
                         {member.phone}
                       </p>
@@ -678,11 +703,9 @@ function PaymentManagement() {
                       </p>
                     </div>
                     <div>
-                      <p className="text-muted-foreground text-xs">
-                        Monthly Fee
-                      </p>
+                      <p className="text-muted-foreground text-xs">Plan Fee</p>
                       <p className="font-medium">
-                        {formatCurrency(member.monthlyFee)}
+                        {/* {formatCurrency(member.monthlyFee)} */}
                       </p>
                     </div>
                   </div>
@@ -723,17 +746,17 @@ function PaymentManagement() {
       {selectedMember && (
         <MonthlyPaymentDialog
           open={paymentDialogOpen}
+          selectedTrans={selectedMember}
           onOpenChange={setPaymentDialogOpen}
-          memberName={selectedMember.name}
-          planType={selectedMember.planType}
-          monthlyFee={selectedMember.monthlyFee}
-          payments={selectedMember.payments}
+          memberName={selectedMember.fullName}
+          planType={selectedMember.currentPlanId?.name}
+          monthlyFee={selectedMember.currentPlanId?.price}
           onUpdatePayment={handleUpdatePayment}
         />
       )}
 
       {/* Send Reminder Dialog */}
-      {selectedMember && (
+      {/* {selectedMember && (
         <MonthlySendReminderDialog
           open={sendReminderDialogOpen}
           onOpenChange={setSendReminderDialogOpen}
@@ -745,10 +768,10 @@ function PaymentManagement() {
           monthlyFee={selectedMember.monthlyFee}
           month={selectedMonth}
         />
-      )}
+      )} */}
 
       {/* Bulk Reminders Dialog */}
-      <MonthlyBulkReminderDialog
+      {/* <MonthlyBulkReminderDialog
         open={bulkReminderDialogOpen}
         onOpenChange={setBulkReminderDialogOpen}
         pendingMembers={members
@@ -765,7 +788,41 @@ function PaymentManagement() {
             month: selectedMonth,
           }))}
         selectedMonth={selectedMonth}
-      />
+      /> */}
+
+      {/* Alert Dialog */}
+      <AlertDialog open={alertDialogOpen} onOpenChange={setAlertDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Are you sure, want to mark as paid ?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will mark as paid to the
+              selected payment.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-neon-green hover:bg-neon-green/90 text-black"
+              disabled={statusChangeLoading}
+              onClick={() =>
+                mutate({
+                  id: selectedMember?._id as string,
+                  payload: { status: "PAID" },
+                })
+              }
+            >
+              {statusChangeLoading ? (
+                <Loader2 className="animate-spin" />
+              ) : (
+                "Continue"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

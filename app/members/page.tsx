@@ -53,6 +53,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { addEditData } from "@/reduxstore/editIDataSlice";
 import { StoreRootState } from "@/reduxstore/reduxStore";
 import NoData from "@/components/reusableComponents/no-data";
+import { ApiUrl } from "@/api/apiUrls";
 
 interface extendedMemberInterface
   extends Omit<MemberInterface, "currentPlanId"> {
@@ -60,6 +61,7 @@ interface extendedMemberInterface
   currentPlanId: {
     _id?: string;
     name: string;
+    price: number;
   };
   amount?: number;
 }
@@ -155,6 +157,8 @@ function MembershipManagement() {
     values: editDataValues ?? { ...initialFormValues },
     resolver: zodResolver(memberSchema),
   });
+  console.log(form.watch(), "values");
+
   useEffect(() => {
     setMembers(data);
   }, [data]);
@@ -294,9 +298,19 @@ function MembershipManagement() {
                     <TableRow key={member._id}>
                       <TableCell>
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 bg-gradient-to-r from-neon-green to-neon-blue rounded-full flex items-center justify-center text-white text-sm">
-                            {member.fullName.charAt(0)}
-                          </div>
+                          {member?.photo ? (
+                            <div className="w-10 h-10">
+                              <img
+                                src={ApiUrl.IMAGE_BASE_URL + member?.photo}
+                                alt={member?.fullName}
+                                className="w-full h-full object-cover rounded-full border-2 border-muted"
+                              />
+                            </div>
+                          ) : (
+                            <div className="w-10 h-10 bg-gradient-to-r from-neon-green to-neon-blue rounded-full flex items-center justify-center text-white text-sm">
+                              {member.fullName.charAt(0)}
+                            </div>
+                          )}
                           <div>
                             <div className="font-medium">{member.fullName}</div>
                             <div className="text-sm text-muted-foreground sm:hidden">
@@ -323,7 +337,7 @@ function MembershipManagement() {
                             {member?.currentPlanId?.name}
                           </div>
                           <div className="text-sm text-muted-foreground">
-                            ₹{member?.amount ?? 0}
+                            ₹{member?.currentPlanId?.price ?? 0}
                           </div>
                         </div>
                       </TableCell>

@@ -1,23 +1,61 @@
-import React from "react";
+import React, { useRef, useState } from "react";
 import { DialogDescription, DialogHeader, DialogTitle } from "../ui/dialog";
 
 import CustomField from "../reusableComponents/customField";
 
 import PlansController from "@/app/plans/controller";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useSelector } from "react-redux";
 import { StoreRootState } from "@/reduxstore/reduxStore";
+import { Button } from "../ui/button";
+import { Camera, Loader2, Trash } from "lucide-react";
+import MembersController from "@/app/members/controller";
+import { Progress } from "../ui/progress";
+import { ApiUrl } from "@/api/apiUrls";
+import { useFormContext } from "react-hook-form";
 
 export default function AddEditMember({
   isEditingMember,
 }: {
   isEditingMember: Record<string, any> | null;
 }) {
+  const logoInputRef = useRef(null);
+  const memberController = new MembersController();
   const planController = new PlansController();
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const { data, isLoading } = useQuery({
     queryKey: ["plans"],
     queryFn: planController.getPlans,
   });
+
+  const { mutate: deleteMedia, isPending } = useMutation({
+    mutationFn: memberController.deleteMedia,
+    onSuccess: () => {
+      form.setValue("photo", "");
+    },
+  });
+  const form = useFormContext();
+  const values = form.watch();
+  async function handleUploadLogo(e: React.ChangeEvent<HTMLInputElement>) {
+    let file = e.target.files?.[0];
+    if (!file) return;
+    let url = null;
+    setUploadingLogo(true);
+    url = await memberController.uploadMedia(file, (p: number) =>
+      setUploadProgress(p)
+    );
+    console.log(url, "url");
+
+    form.setValue("photo", url);
+    setUploadingLogo(false);
+    logoInputRef.current!.value = "";
+    setUploadProgress(0);
+  }
+  async function handleDelete() {
+    deleteMedia(values?.photo);
+  }
+
   return (
     <div>
       <DialogHeader className="px-1 sm:px-0">
@@ -31,9 +69,72 @@ export default function AddEditMember({
         </DialogDescription>
       </DialogHeader>
       <div className="grid gap-3 sm:gap-4 py-3 sm:py-4 px-1 sm:px-0">
-        <div className="grid gap-2"></div>
-        <div className="grid  gap-4">
-          <div className="grid grid-cols-1  gap-3 sm:gap-4">
+        {/* Image Upload Section */}
+        <div className="relative w-32 h-32 mx-auto">
+          {values?.photo ? (
+            <img
+              src={ApiUrl.IMAGE_BASE_URL + values.photo}
+              alt="Member photo"
+              className="w-full h-full object-cover rounded-full border-2 border-muted"
+            />
+          ) : (
+            <div
+              onClick={() => logoInputRef?.current?.click()}
+              className="w-full cursor-pointer h-full bg-muted rounded-full border-2 border-dashed border-muted-foreground/25 flex items-center justify-center"
+            >
+              <Camera className="h-8 w-8 text-muted-foreground/50" />
+            </div>
+          )}
+
+          {/* Upload Progress */}
+          {uploadingLogo && (
+            <div className="absolute inset-0 bg-background/95 backdrop-blur rounded-lg flex flex-col items-center justify-center">
+              <Progress value={uploadProgress} className="h-2 w-20 mb-2" />
+              <p className="text-xs text-muted-foreground">{uploadProgress}%</p>
+            </div>
+          )}
+
+          {/* Upload/Delete Button */}
+          {!values?.photo ? (
+            <Button
+              type="button"
+              variant="secondary"
+              size="icon"
+              onClick={() => logoInputRef.current?.click()}
+              disabled={uploadingLogo}
+              className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full shadow-lg"
+            >
+              <Camera className="h-4 w-4" />
+            </Button>
+          ) : (
+            <Button
+              type="button"
+              variant="destructive"
+              size="icon"
+              onClick={handleDelete}
+              disabled={isPending}
+              className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full shadow-lg"
+            >
+              {isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Trash className="h-4 w-4" />
+              )}
+            </Button>
+          )}
+
+          <input
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="hidden"
+            onChange={handleUploadLogo}
+            ref={logoInputRef}
+          />
+        </div>
+
+        <div className="grid gap-4">
+          <div className="grid grid-cols-1 gap-3 sm:gap-4">
             <div>
               <CustomField
                 name="fullName"
@@ -151,7 +252,7 @@ export default function AddEditMember({
               placeholder="Select workout batch"
               type="date"
             />
-          </div>{" "}
+          </div>
           <div>
             <CustomField
               name="status"

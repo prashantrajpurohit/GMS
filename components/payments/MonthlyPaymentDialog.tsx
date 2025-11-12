@@ -18,6 +18,8 @@ import {
 } from "@/components/ui/table";
 import { CheckCircle2, XCircle, Calendar } from "lucide-react";
 import { toast } from "sonner";
+import PaymentController from "@/app/payments/controller";
+import { useQuery } from "@tanstack/react-query";
 
 export interface MonthlyPayment {
   month: string;
@@ -32,7 +34,7 @@ interface MonthlyPaymentDialogProps {
   memberName: string;
   planType: string;
   monthlyFee: number;
-  payments: MonthlyPayment[];
+  selectedTrans: Record<string, any>;
   onUpdatePayment: (month: string, status: "paid" | "pending") => void;
 }
 
@@ -42,13 +44,19 @@ export function MonthlyPaymentDialog({
   memberName,
   planType,
   monthlyFee,
-  payments,
+  selectedTrans,
   onUpdatePayment,
 }: MonthlyPaymentDialogProps) {
-  const formatCurrency = (amount: number) => {
-    return `₹${amount.toLocaleString("en-IN")}`;
-  };
+  const paymentController = new PaymentController();
+  const { data: paymentHistory } = useQuery({
+    queryFn: () => paymentController.getPaymentHistoryById(selectedTrans?._id),
+    queryKey: ["memberPaymentsHistory", selectedTrans?._id],
+  });
 
+  const formatCurrency = (amount: number) => {
+    return `₹${amount?.toLocaleString("en-IN")}`;
+  };
+  const payments = paymentHistory?.payments || [];
   const formatDate = (dateString?: string) => {
     if (!dateString) return "-";
     const date = new Date(dateString);
@@ -65,22 +73,14 @@ export function MonthlyPaymentDialog({
   ) => {
     const newStatus = currentStatus === "paid" ? "pending" : "paid";
     onUpdatePayment(month, newStatus);
-
-    if (newStatus === "paid") {
-      toast.success("Payment marked as paid", {
-        description: `${memberName} - ${month}`,
-      });
-    } else {
-      toast.info("Payment marked as pending", {
-        description: `${memberName} - ${month}`,
-      });
-    }
   };
 
-  const paidCount = payments.filter((p) => p.status === "paid").length;
+  const paidCount = payments?.filter(
+    (p) => p.status?.toLowerCase() === "paid"
+  ).length;
   const totalPaid = payments
-    .filter((p) => p.status === "paid")
-    .reduce((sum, p) => sum + p.amount, 0);
+    ?.filter((p) => p.status?.toLowerCase() === "paid")
+    ?.reduce((sum, p) => sum + p.amount, 0);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -99,7 +99,7 @@ export function MonthlyPaymentDialog({
           <div>
             <p className="text-xs text-muted-foreground">Total Months</p>
             <p className="text-lg sm:text-xl font-semibold">
-              {payments.length}
+              {payments?.length}
             </p>
           </div>
           <div>
@@ -129,17 +129,19 @@ export function MonthlyPaymentDialog({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {payments.map((payment) => (
+              {payments.map((payment: Record<string, any>) => (
                 <TableRow key={payment.month}>
                   <TableCell>
                     <div className="flex items-center gap-2">
                       <Calendar className="w-4 h-4 text-muted-foreground" />
-                      <span className="font-medium">{payment.month}</span>
+                      <span className="font-medium">
+                        {formatDate(payment.dueDate?.split("T")[0])}
+                      </span>
                     </div>
                   </TableCell>
                   <TableCell>{formatCurrency(payment.amount)}</TableCell>
                   <TableCell>
-                    {payment.status === "paid" ? (
+                    {payment.status?.toLowerCase() === "paid" ? (
                       <Badge className="gap-1 bg-green-500/10 text-green-500 border-green-500/20">
                         <CheckCircle2 className="w-3 h-3" />
                         Paid
@@ -152,24 +154,28 @@ export function MonthlyPaymentDialog({
                     )}
                   </TableCell>
                   <TableCell className="text-muted-foreground">
-                    {formatDate(payment.paymentDate)}
+                    {formatDate(payment.updatedAt?.split("T")[0])}
                   </TableCell>
                   <TableCell className="text-right">
                     <Button
                       size="sm"
                       variant={
-                        payment.status === "paid" ? "outline" : "default"
+                        payment.status?.toLowerCase() === "paid"
+                          ? "outline"
+                          : "default"
                       }
                       onClick={() =>
                         handleTogglePayment(payment.month, payment.status)
                       }
                       className={
-                        payment.status === "paid"
+                        payment.status?.toLowerCase() === "paid"
                           ? "text-red-500 hover:text-red-600 hover:bg-red-500/10"
                           : "bg-neon-green hover:bg-neon-green/90 text-black"
                       }
                     >
-                      {payment.status === "paid" ? "Mark Pending" : "Mark Paid"}
+                      {payment.status?.toLowerCase() === "paid"
+                        ? "Mark Pending"
+                        : "Mark Paid"}
                     </Button>
                   </TableCell>
                 </TableRow>
