@@ -18,20 +18,21 @@ import { useTheme } from "next-themes";
 import { useSelector } from "react-redux";
 import { StoreRootState } from "@/reduxstore/reduxStore";
 
-const data = {
-  user: {
-    name: "aakash",
-    email: "aakash@example.com",
-    avatar: "",
-  },
-  versions: ["1.0.1", "1.1.0-alpha", "2.0.0-beta1"],
-  navMain: routeConfig,
-};
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const theme = useTheme().theme;
   const userData = useSelector(
     (state: StoreRootState) => state?.data?.userdata?.user
   );
+
+  const data = {
+    user: {
+      name: userData?.gymName,
+      email: userData?.email,
+      avatar: "",
+    },
+    versions: ["1.0.1", "1.1.0-alpha", "2.0.0-beta1"],
+    navMain: routeConfig,
+  };
 
   return (
     <Sidebar collapsible="offcanvas" {...props}>

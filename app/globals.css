@@ -49,103 +49,115 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
+/* ===================================
+   LIGHT THEME (RED-ACCENT)
+=================================== */
 :root {
   --font-size: 16px;
-  --background: #ffffff;
-  --foreground: oklch(0.145 0 0);
-  --card: #ffffff;
-  --card-foreground: oklch(0.145 0 0);
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.15 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.15 0 0);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: #030213;
+  --popover-foreground: oklch(0.15 0 0);
+  --primary: oklch(0.55 0.25 24.8); /* Deep red */
   --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.95 0.0058 264.53);
-  --secondary-foreground: #030213;
-  --muted: #f8f9fa;
-  --muted-foreground: #6c757d;
-  --accent: #f1f3f5;
-  --accent-foreground: #030213;
-  --destructive: #d4183d;
-  --destructive-foreground: #ffffff;
-  --border: rgba(0, 0, 0, 0.08);
+  --secondary: oklch(0.95 0.006 264.53);
+  --secondary-foreground: oklch(0.15 0.015 270);
+  --muted: oklch(0.93 0.01 260);
+  --muted-foreground: oklch(0.55 0.02 270);
+  --accent: oklch(0.94 0.008 260);
+  --accent-foreground: oklch(0.15 0.015 270);
+  --destructive: oklch(0.55 0.25 24.8);
+  --destructive-foreground: oklch(1 0 0);
+  --border: oklch(0.92 0 0 / 0.1);
   --input: transparent;
-  --input-background: #f8f9fa;
-  --switch-background: #cbced4;
+  --input-background: oklch(0.96 0.004 270);
+  --switch-background: oklch(0.84 0.005 270);
+  --ring: oklch(0.65 0.25 24.8); /* glowing red ring */
   --font-weight-medium: 500;
   --font-weight-normal: 400;
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.55 0.2 140); /* Green for light theme */
-  --chart-2: oklch(0.55 0.2 240); /* Blue for light theme */
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
+
+  /* Charts / accents */
+  --chart-1: oklch(0.65 0.25 25);
+  --chart-2: oklch(0.58 0.23 15);
+  --chart-3: oklch(0.65 0.2 40);
+  --chart-4: oklch(0.55 0.22 350);
+  --chart-5: oklch(0.62 0.24 15);
+
   --radius: 0.625rem;
 
-  /* Custom fitness theme colors for light mode */
-  --neon-green: oklch(0.55 0.2 140);
-  --neon-blue: oklch(0.55 0.2 240);
-  --success: oklch(0.55 0.2 140);
-  --warning: oklch(0.65 0.15 85);
-  --info: oklch(0.55 0.2 240);
+  /* Red theme variables (reusing neon variable names for compatibility) */
+  --neon-green: oklch(0.55 0.25 24.8); /* Primary red */
+  --neon-blue: oklch(0.62 0.22 25); /* Slightly brighter red */
+  --success: oklch(0.6 0.18 135);
+  --warning: oklch(0.7 0.2 85);
+  --info: oklch(0.62 0.22 25);
 
-  --sidebar: #ffffff;
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: #030213;
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: #f8f9fa;
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.15 0 0);
+  --sidebar-primary: oklch(0.55 0.25 24.8);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
   --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: rgba(0, 0, 0, 0.08);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.65 0.25 24.8);
 }
 
+/* ===================================
+   DARK THEME (RED-DARK VARIANT)
+=================================== */
 .dark {
-  --background: oklch(0.08 0 0);
-  --foreground: oklch(0.98 0 0);
-  --card: oklch(0.12 0 0);
-  --card-foreground: oklch(0.98 0 0);
-  --popover: oklch(0.12 0 0);
-  --popover-foreground: oklch(0.98 0 0);
-  --primary: oklch(0.98 0 0);
-  --primary-foreground: oklch(0.08 0 0);
-  --secondary: oklch(0.18 0 0);
-  --secondary-foreground: oklch(0.98 0 0);
-  --muted: oklch(0.15 0 0);
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.145 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.145 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.55 0.25 24.8);
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.2 0 0);
   --muted-foreground: oklch(0.75 0 0);
-  --accent: oklch(0.18 0 0);
-  --accent-foreground: oklch(0.98 0 0);
-  --destructive: oklch(0.6 0.15 25);
-  --destructive-foreground: oklch(0.98 0 0);
-  --border: oklch(0.2 0 0);
-  --input: oklch(0.15 0 0);
-  --input-background: oklch(0.15 0 0);
-  --ring: oklch(0.7 0.25 135);
+  --accent: oklch(0.25 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.6 0.2 25);
+  --destructive-foreground: oklch(1 0 0);
+  --border: oklch(0.22 0 0);
+  --input: oklch(0.18 0 0);
+  --input-background: oklch(0.18 0 0);
+  --ring: oklch(0.55 0.25 24.8);
   --font-weight-medium: 500;
   --font-weight-normal: 400;
 
-  /* Enhanced chart colors for better visibility */
-  --chart-1: oklch(0.75 0.25 135); /* Brighter Neon Green */
-  --chart-2: oklch(0.7 0.25 220); /* Brighter Neon Blue */
-  --chart-3: oklch(0.8 0.2 70); /* Orange/Yellow */
-  --chart-4: oklch(0.7 0.25 300); /* Purple */
-  --chart-5: oklch(0.75 0.25 15); /* Red/Pink */
+  /* Charts */
+  --chart-1: oklch(0.65 0.25 25);
+  --chart-2: oklch(0.6 0.23 15);
+  --chart-3: oklch(0.55 0.2 350);
+  --chart-4: oklch(0.65 0.25 40);
+  --chart-5: oklch(0.6 0.25 10);
 
-  /* Custom fitness theme colors - enhanced for dark mode */
-  --neon-green: oklch(0.75 0.25 135);
-  --neon-blue: oklch(0.7 0.25 220);
+  /* Recolored red variants replacing neon shades */
+  --neon-green: oklch(0.65 0.25 25); /* main glowing red */
+  --neon-blue: oklch(0.62 0.25 15); /* secondary deep red */
   --success: oklch(0.75 0.25 135);
   --warning: oklch(0.8 0.2 85);
-  --info: oklch(0.7 0.25 220);
+  --info: oklch(0.65 0.25 25);
 
   --sidebar: oklch(0.1 0 0);
-  --sidebar-foreground: oklch(0.98 0 0);
-  --sidebar-primary: oklch(0.75 0.25 135);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.55 0.25 24.8);
   --sidebar-primary-foreground: oklch(0.08 0 0);
   --sidebar-accent: oklch(0.15 0 0);
-  --sidebar-accent-foreground: oklch(0.98 0 0);
-  --sidebar-border: oklch(0.2 0 0);
-  --sidebar-ring: oklch(0.7 0.25 135);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(0.22 0 0);
+  --sidebar-ring: oklch(0.55 0.25 24.8);
 }
 
+/* ===================================
+   BASE STYLES
+=================================== */
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -180,83 +192,5 @@ body {
   [data-slot="select-trigger"],
   [data-slot="toggle-group-item"] {
     --spacing: 0.222222rem;
-  }
-}
-
-.theme-default,
-.theme-default-scaled {
-  --primary: var(--color-neutral-600);
-  --primary-foreground: var(--color-neutral-50);
-
-  @variant dark {
-    --primary: var(--color-neutral-500);
-    --primary-foreground: var(--color-neutral-50);
-  }
-}
-
-.theme-blue,
-.theme-blue-scaled {
-  --primary: var(--color-blue-600);
-  --primary-foreground: var(--color-blue-50);
-
-  @variant dark {
-    --primary: var(--color-blue-500);
-    --primary-foreground: var(--color-blue-50);
-  }
-}
-
-.theme-green,
-.theme-green-scaled {
-  --primary: var(--color-lime-600);
-  --primary-foreground: var(--color-lime-50);
-
-  @variant dark {
-    --primary: var(--color-lime-600);
-    --primary-foreground: var(--color-lime-50);
-  }
-}
-
-.theme-amber,
-.theme-amber-scaled {
-  --primary: var(--color-amber-600);
-  --primary-foreground: var(--color-amber-50);
-
-  @variant dark {
-    --primary: var(--color-amber-500);
-    --primary-foreground: var(--color-amber-50);
-  }
-}
-
-.theme-mono,
-.theme-mono-scaled {
-  --font-sans: var(--font-mono);
-  --primary: var(--color-neutral-600);
-  --primary-foreground: var(--color-neutral-50);
-
-  @variant dark {
-    --primary: var(--color-neutral-500);
-    --primary-foreground: var(--color-neutral-50);
-  }
-
-  .rounded-xs,
-  .rounded-sm,
-  .rounded-md,
-  .rounded-lg,
-  .rounded-xl {
-    @apply !rounded-none;
-    border-radius: 0;
-  }
-
-  .shadow-xs,
-  .shadow-sm,
-  .shadow-md,
-  .shadow-lg,
-  .shadow-xl {
-    @apply !shadow-none;
-  }
-
-  [data-slot="toggle-group"],
-  [data-slot="toggle-group-item"] {
-    @apply !rounded-none !shadow-none;
   }
 }

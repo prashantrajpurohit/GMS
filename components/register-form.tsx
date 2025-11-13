@@ -33,6 +33,7 @@ function Registration() {
     defaultValues: {
       gymName: "",
       email: "",
+      phone: "",
       password: "",
       confirmPassword: "",
       referralCode: "",
@@ -95,6 +96,15 @@ function Registration() {
                   label="Email Address"
                   name="email"
                   placeholder="owner@example.com"
+                />
+              </div>
+
+              {/* Phone */}
+              <div className="space-y-2">
+                <CustomField
+                  label="Phone"
+                  name="phone"
+                  placeholder="+1234567890"
                 />
               </div>
 

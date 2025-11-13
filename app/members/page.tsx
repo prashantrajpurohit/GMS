@@ -100,7 +100,8 @@ function MembershipManagement() {
   const filteredMembers = members?.filter((member) => {
     const matchesSearch =
       member?.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      member?.email.toLowerCase().includes(searchTerm.toLowerCase());
+      member?.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      member?.phone.includes(searchTerm);
     const matchesFilter =
       selectedFilter === "all" || member.status === selectedFilter;
     return matchesSearch && matchesFilter;
@@ -323,11 +324,11 @@ function MembershipManagement() {
                         <div className="space-y-1">
                           <div className="flex items-center gap-2 text-sm">
                             <Mail className="w-3 h-3" />
-                            {member.email}
+                            {member.email || "N/A"}
                           </div>
                           <div className="flex items-center gap-2 text-sm text-muted-foreground">
                             <Phone className="w-3 h-3" />
-                            {member.phone}
+                            {member.phone || "N/A"}
                           </div>
                         </div>
                       </TableCell>

@@ -28,10 +28,8 @@ export const registrationSchema = z
       .string({ required_error: "Gym name is required" })
       .min(3, { message: "Gym name must be at least 3 characters" })
       .trim(),
-    email: z
-      .string({ required_error: "Email is required" })
-      .email({ message: "Please enter a valid email address" })
-      .trim(),
+    email: emailSchema,
+    phone: phoneSchema,
     password: z
       .string({ required_error: "Password is required" })
       .min(8, { message: "Password must be at least 8 characters" })
@@ -74,14 +72,13 @@ export const planSchema = z.object({
 export const memberSchema = z.object({
   fullName: z.string().min(1, "Full name is required"),
   phone: z.string().min(1, "Phone number is required"),
-  email: z.string().email("Invalid email address"),
+  email: z.string().optional(),
   gender: z.enum(["male", "female", "other"]),
   weight: z.number().optional(),
   height: z.number().optional(),
   dateOfBirth: z
-    .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be in YYYY-MM-DD format"),
-  address: z.string().min(1, "Address is required"),
+    .string().optional(),
+  address: z.string().optional(),
   emergencyContact: z.string().optional(),
   photo: z.string().optional(),
   status: z.enum(["active", "inactive", "suspended", "guest", "expired"]),
