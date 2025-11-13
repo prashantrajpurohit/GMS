@@ -26,8 +26,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   const data = {
     user: {
-      name: userData?.gymName,
-      email: userData?.email,
+      name: userData?.gymName as string,
+      email: userData?.email as string,
       avatar: "",
     },
     versions: ["1.0.1", "1.1.0-alpha", "2.0.0-beta1"],
