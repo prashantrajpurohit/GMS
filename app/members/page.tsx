@@ -100,7 +100,9 @@ function MembershipManagement() {
   const filteredMembers = members?.filter((member) => {
     const matchesSearch =
       member?.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      member?.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (member?.email as string)
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
       member?.phone.includes(searchTerm);
     const matchesFilter =
       selectedFilter === "all" || member.status === selectedFilter;
