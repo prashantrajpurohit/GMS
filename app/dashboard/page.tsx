@@ -16,6 +16,7 @@ import {
   TabsTrigger,
 } from "@/components//ui/tabs";
 import { Progress } from "@/components//ui/progress";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Users,
   Calendar,
@@ -27,6 +28,7 @@ import {
   UserCheck,
   FileText,
   Clipboard,
+  DollarSignIcon,
 } from "lucide-react";
 import {
   BarChart,
@@ -68,11 +70,139 @@ const mockData = {
   ],
 };
 
+// Skeleton Components
+const StatCardSkeleton = () => (
+  <Card className="border-border/50">
+    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+      <Skeleton className="h-4 w-32" />
+      <Skeleton className="h-4 w-4 rounded" />
+    </CardHeader>
+    <CardContent>
+      <Skeleton className="h-8 w-20 mb-2" />
+      <Skeleton className="h-3 w-28" />
+    </CardContent>
+  </Card>
+);
+
+const CheckinsCardSkeleton = () => (
+  <Card className="border-border/50">
+    <CardHeader>
+      <Skeleton className="h-6 w-48 mb-2" />
+      <Skeleton className="h-4 w-64" />
+    </CardHeader>
+    <CardContent>
+      <div className="space-y-4">
+        <Skeleton className="h-10 w-full" />
+        <div className="flex justify-between items-center">
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-8 w-16" />
+          </div>
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-8 w-16" />
+          </div>
+        </div>
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-2 w-full" />
+        </div>
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-2 w-full" />
+        </div>
+      </div>
+    </CardContent>
+  </Card>
+);
+
+const ChartCardSkeleton = ({ height = 200 }: { height?: number }) => (
+  <Card className="border-border/50">
+    <CardHeader>
+      <Skeleton className="h-6 w-48 mb-2" />
+      <Skeleton className="h-4 w-64" />
+    </CardHeader>
+    <CardContent>
+      <Skeleton className={`h-[${height}px] w-full`} />
+    </CardContent>
+  </Card>
+);
+
+const PeakHoursCardSkeleton = () => (
+  <Card className="border-border/50">
+    <CardHeader>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="space-y-2">
+          <Skeleton className="h-6 w-48" />
+          <Skeleton className="h-4 w-64" />
+        </div>
+        <div className="flex gap-2">
+          <Skeleton className="h-9 w-24" />
+          <Skeleton className="h-9 w-24" />
+        </div>
+      </div>
+    </CardHeader>
+    <CardContent>
+      <Skeleton className="h-[300px] w-full" />
+    </CardContent>
+  </Card>
+);
+
+const QuickActionsCardSkeleton = () => (
+  <Card className="border-border/50">
+    <CardHeader>
+      <Skeleton className="h-6 w-32 mb-2" />
+      <Skeleton className="h-4 w-48" />
+    </CardHeader>
+    <CardContent>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {[...Array(3)].map((_, i) => (
+          <Skeleton key={i} className="h-24 w-full" />
+        ))}
+      </div>
+    </CardContent>
+  </Card>
+);
+
 function Dashboard() {
   const router = useRouter();
   const [peakHoursView, setPeakHoursView] = useState<"morning" | "evening">(
     "morning"
   );
+  const [isLoading, setIsLoading] = useState(false); // Add your actual loading state here
+
+  // If you're fetching data, replace false with your actual loading state
+  // const { data, isLoading } = useQuery({ ... });
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <Skeleton className="h-9 w-48 mb-2" />
+          <Skeleton className="h-5 w-72" />
+        </div>
+
+        {/* Top Stats Cards Skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[...Array(4)].map((_, i) => (
+            <StatCardSkeleton key={i} />
+          ))}
+        </div>
+
+        {/* Middle Row Skeleton */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <CheckinsCardSkeleton />
+          <ChartCardSkeleton />
+        </div>
+
+        {/* Peak Hours Skeleton */}
+        <PeakHoursCardSkeleton />
+
+        {/* Quick Actions Skeleton */}
+        <QuickActionsCardSkeleton />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -387,10 +517,10 @@ function Dashboard() {
             </Button>
             <Button
               className="h-auto p-4 flex-col gap-2 bg-gradient-to-r from-orange-500/20 to-orange-500/10 hover:from-orange-500/30 hover:to-orange-500/20 border-2 border-orange-500/40 shadow-lg shadow-orange-500/10"
-              onClick={() => router.push("/reports")}
+              onClick={() => router.push("/payments")}
             >
-              <TrendingUp className="h-6 w-6 text-orange-400" />
-              View Reports
+              <DollarSignIcon className="h-6 w-6 text-orange-400" />
+              Payments
             </Button>
           </div>
         </CardContent>

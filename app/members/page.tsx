@@ -54,6 +54,7 @@ import { addEditData } from "@/reduxstore/editIDataSlice";
 import { StoreRootState } from "@/reduxstore/reduxStore";
 import NoData from "@/components/reusableComponents/no-data";
 import { ApiUrl } from "@/api/apiUrls";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface extendedMemberInterface
   extends Omit<MemberInterface, "currentPlanId"> {
@@ -65,6 +66,71 @@ interface extendedMemberInterface
   };
   amount?: number;
 }
+
+// Skeleton Components
+const MemberTableSkeleton = () => (
+  <Card className="border-border/50">
+    <CardHeader>
+      <Skeleton className="h-6 w-32" />
+      <Skeleton className="h-4 w-48 mt-2" />
+    </CardHeader>
+    <CardContent>
+      <div className="rounded-md border border-border overflow-hidden">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Member</TableHead>
+              <TableHead className="hidden sm:table-cell">Contact</TableHead>
+              <TableHead>Plan</TableHead>
+              <TableHead className="hidden md:table-cell">Period</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {[...Array(5)].map((_, i) => (
+              <TableRow key={i}>
+                <TableCell>
+                  <div className="flex items-center gap-3">
+                    <Skeleton className="w-10 h-10 rounded-full" />
+                    <div className="space-y-2">
+                      <Skeleton className="h-4 w-32" />
+                      <Skeleton className="h-3 w-40 sm:hidden" />
+                    </div>
+                  </div>
+                </TableCell>
+                <TableCell className="hidden sm:table-cell">
+                  <div className="space-y-2">
+                    <Skeleton className="h-3 w-36" />
+                    <Skeleton className="h-3 w-28" />
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-3 w-16" />
+                  </div>
+                </TableCell>
+                <TableCell className="hidden md:table-cell">
+                  <Skeleton className="h-3 w-20" />
+                </TableCell>
+                <TableCell>
+                  <Skeleton className="h-6 w-16 rounded-full" />
+                </TableCell>
+                <TableCell className="text-right">
+                  <div className="flex justify-end">
+                    <Skeleton className="h-8 w-8 rounded" />
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    </CardContent>
+  </Card>
+);
+
 function MembershipManagement() {
   const dispatch = useDispatch();
   const queryClient = useQueryClient();
@@ -87,7 +153,7 @@ function MembershipManagement() {
       toast.success(`Member ${editData ? "updated" : "added"} successfully!`);
     },
   });
-  const { data } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ["members-list"],
     queryFn: memberController.getAllMembers,
   });
@@ -135,10 +201,12 @@ function MembershipManagement() {
   const onSubmit: SubmitHandler<MemberInterface> = (data) => {
     mutate(data);
   };
+
   function handleOpen(open: boolean) {
     setIsAddMemberOpen(open);
     dispatch(addEditData(null));
   }
+
   const editDataValues = {
     fullName: editData?.fullName,
     email: editData?.email,
@@ -156,15 +224,16 @@ function MembershipManagement() {
     notes: editData?.notes || "",
     batch: editData?.batch || "",
   };
+
   const form = useForm<MemberInterface>({
     values: editDataValues ?? { ...initialFormValues },
     resolver: zodResolver(memberSchema),
   });
-  console.log(form.watch(), "values");
 
   useEffect(() => {
     setMembers(data);
   }, [data]);
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -246,7 +315,6 @@ function MembershipManagement() {
                   <SelectItem value="expired">
                     Expired ({memberCounts.expired})
                   </SelectItem>
-
                   <SelectItem value="inactive">
                     InActive ({memberCounts.inactive})
                   </SelectItem>
@@ -256,7 +324,10 @@ function MembershipManagement() {
           </div>
         </CardContent>
       </Card>
-      {filteredMembers?.length == 0 ? (
+
+      {isLoading ? (
+        <MemberTableSkeleton />
+      ) : filteredMembers?.length === 0 ? (
         <NoData
           logo={User}
           title="No member found !!"

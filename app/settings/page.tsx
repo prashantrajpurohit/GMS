@@ -49,6 +49,7 @@ function Settings() {
     (state: StoreRootState) =>
       state?.data?.userdata?.user as Record<string, any> | null
   );
+console.log(reduxUserData,"reduxUserData");
 
   const settingsController = new SettingsController();
   const { data, isLoading } = useQuery({
