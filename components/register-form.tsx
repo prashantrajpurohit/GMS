@@ -61,10 +61,10 @@ function Registration() {
         {/* Logo and Brand - Always visible */}
         <div className="flex flex-col items-center mb-8">
           <div className="flex items-center gap-3 mb-4">
-            <div className="p-3 bg-gradient-to-r from-neon-green to-neon-blue rounded-xl shadow-lg">
-              <Dumbbell className="w-8 h-8 text-white" />
+            <div className="p-2 bg-gradient-to-r from-neon-green to-neon-blue rounded-xl shadow-lg">
+              <Dumbbell className="w-6 h-6 text-white" />
             </div>
-            <h1 className="text-3xl text-foreground">FitnessPro</h1>
+            <h1 className="text-xl font-bold">GYM FREAKY</h1>
           </div>
           <p className="text-muted-foreground text-center">
             Gym Management System
@@ -84,6 +84,7 @@ function Registration() {
               {/* Gym Name */}
               <div className="space-y-2">
                 <CustomField
+                  isLoading={false}
                   name="gymName"
                   placeholder="FitPro Fitness Center"
                   label="Gym Name"
@@ -93,6 +94,7 @@ function Registration() {
               {/* Email */}
               <div className="space-y-2">
                 <CustomField
+                  isLoading={false}
                   label="Email Address"
                   name="email"
                   placeholder="owner@example.com"
@@ -102,6 +104,7 @@ function Registration() {
               {/* Phone */}
               <div className="space-y-2">
                 <CustomField
+                  isLoading={false}
                   label="Phone"
                   name="phone"
                   placeholder="+1234567890"
@@ -262,6 +265,7 @@ function Registration() {
               {/* Referral Code (Optional) */}
               <div className="space-y-2">
                 <CustomField
+                  isLoading={false}
                   name="referralCode"
                   label="Referral Code (Optional)"
                   placeholder="Enter referral code if you have one"
