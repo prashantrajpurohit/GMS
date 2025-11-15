@@ -2,12 +2,12 @@ import { ApiUrl } from "@/api/apiUrls";
 import httpRequest from "@/api/AxiosInterseptor";
 
 export default class PaymentController {
-  async getAllPayments() {
-    const res = await httpRequest.get(ApiUrl.PAYMENTS);
+  async getAllPayments(query: Record<string, any>) {
+    const res = await httpRequest.get(ApiUrl.PAYMENTS, { params: query });
     return res?.data?.data;
   }
   async getPaymentsStats() {
-    const res = await httpRequest.get(`${ApiUrl.PAYMENTS}/stats`);
+    const res = await httpRequest.get(`${ApiUrl.DASHBOARD}/gym/payments`);
     return res?.data?.data;
   }
   async getPaymentHistoryById(id: string) {

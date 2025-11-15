@@ -28,6 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Plus,
   CreditCard,
@@ -38,6 +39,7 @@ import {
   DollarSign,
   Loader2,
   Loader,
+  IndianRupee,
 } from "lucide-react";
 import CustomField from "@/components/reusableComponents/customField";
 import { FormProvider, useForm } from "react-hook-form";
@@ -69,9 +71,53 @@ const getDurationUnit = (value: number, unit: "days" | "months" | "years") => {
   }
   return formatDuration(value, unit).toLowerCase();
 };
+
 interface extendedPlanInterface extends PlanInterface {
   _id: string;
 }
+
+// Skeleton components
+const StatCardSkeleton = () => (
+  <Card className="border-2">
+    <CardHeader className="pb-2">
+      <Skeleton className="h-4 w-24" />
+    </CardHeader>
+    <CardContent>
+      <Skeleton className="h-8 w-20 mb-2" />
+      <Skeleton className="h-3 w-32" />
+    </CardContent>
+  </Card>
+);
+
+const PlanCardSkeleton = () => (
+  <Card className="border-neon-green/20 bg-muted/30 dark:bg-slate-800/50">
+    <CardHeader className="pb-4">
+      <div className="flex items-start justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <Skeleton className="h-5 w-5 rounded" />
+          <Skeleton className="h-6 w-20 rounded-full" />
+        </div>
+        <Skeleton className="h-8 w-8 rounded" />
+      </div>
+      <Skeleton className="h-6 w-40 mb-3" />
+      <Skeleton className="h-9 w-32" />
+    </CardHeader>
+    <CardContent className="space-y-4">
+      <Skeleton className="h-4 w-full" />
+      <Skeleton className="h-4 w-3/4" />
+      <div>
+        <Skeleton className="h-4 w-20 mb-2" />
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-5/6" />
+          <Skeleton className="h-4 w-4/5" />
+        </div>
+      </div>
+      <Skeleton className="h-6 w-16 rounded-full" />
+    </CardContent>
+  </Card>
+);
+
 function WorkoutPlans() {
   const queryClient = useQueryClient();
   const dispatch = useDispatch();
@@ -84,6 +130,13 @@ function WorkoutPlans() {
     queryKey: ["plans"],
     queryFn: planController.getPlans,
   });
+  const { data: PlansStats, isLoading: isStatsLoading } = useQuery({
+    queryKey: ["getPlansStats"],
+    queryFn: planController.getPlansStats,
+  });
+
+  const PlansStatsData = PlansStats?.stats;
+
   const { mutate, isPending } = useMutation({
     mutationFn: (data: any) =>
       plansData
@@ -115,11 +168,6 @@ function WorkoutPlans() {
     mutate(data);
   };
 
-  const totalRevenue = mockMembershipPlans?.reduce(
-    (sum, plan) => sum + plan.price,
-    0
-  );
-  const activePlans = mockMembershipPlans?.filter((p) => p.isActive).length;
   const form = useForm<PlanInterface>({
     defaultValues: {
       code: "",
@@ -139,6 +187,7 @@ function WorkoutPlans() {
   useEffect(() => {
     setMockMembershipPlans(data);
   }, [data]);
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -148,92 +197,112 @@ function WorkoutPlans() {
             Manage subscription plans for your gym members
           </p>
         </div>
+        <Dialog open={open} onOpenChange={handleOpen}>
+          <DialogTrigger asChild>
+            <Button className="bg-gradient-to-r from-neon-green to-neon-blue text-white">
+              <Plus className="w-4 h-4 mr-2" />
+              {`${plansData ? "Edit" : "Add"} Membership Plan`}
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[525px]">
+            <FormProvider {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)}>
+                <AddEditPlans />
+                <DialogFooter>
+                  <Button
+                    type="submit"
+                    className="bg-gradient-to-r from-neon-green to-neon-blue text-white"
+                  >
+                    {isPending ? (
+                      <Loader className="w-4 h-4 animate-spin" />
+                    ) : (
+                      `${plansData ? "Edit" : "Add"} Plan`
+                    )}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </FormProvider>
+          </DialogContent>
+        </Dialog>
       </div>
-      <Dialog open={open} onOpenChange={handleOpen}>
-        <DialogTrigger asChild>
-          <Button className="bg-gradient-to-r from-neon-green to-neon-blue text-white">
-            <Plus className="w-4 h-4 mr-2" />
-            {`${plansData ? "Edit" : "Add"} Membership Plan`}
-          </Button>
-        </DialogTrigger>
-        <DialogContent className="sm:max-w-[525px]">
-          <FormProvider {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)}>
-              <AddEditPlans />
-              <DialogFooter>
-                <Button
-                  type="submit"
-                  className="bg-gradient-to-r from-neon-green to-neon-blue text-white"
-                >
-                  {isPending ? (
-                    <Loader className="w-4 h-4 animate-spin" />
-                  ) : (
-                    `${plansData ? "Edit" : "Add"} Plan`
-                  )}
-                </Button>
-              </DialogFooter>
-            </form>
-          </FormProvider>
-        </DialogContent>
-      </Dialog>
+
+      {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="border-2 border-neon-green/30 bg-gradient-to-br from-neon-green/10 to-neon-green/5 dark:bg-gradient-to-br dark:from-neon-green/20 dark:to-slate-800/50 hover:border-neon-green/60 hover:shadow-lg hover:shadow-neon-green/20 transition-all">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-neon-green" />
-              Total Plans
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl text-neon-green">
-              {mockMembershipPlans?.length}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-              <TrendingUp className="w-3 h-3" />
-              {activePlans} active plans
-            </p>
-          </CardContent>
-        </Card>
+        {isStatsLoading ? (
+          <>
+            <StatCardSkeleton />
+            <StatCardSkeleton />
+            <StatCardSkeleton />
+          </>
+        ) : (
+          <>
+            <Card className="border-2 border-neon-green/30 bg-gradient-to-br from-neon-green/10 to-neon-green/5 dark:bg-gradient-to-br dark:from-neon-green/20 dark:to-slate-800/50 hover:border-neon-green/60 hover:shadow-lg hover:shadow-neon-green/20 transition-all">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <TrendingUp className="w-4 h-4 text-neon-green" />
+                  Total Plans
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl text-neon-green">
+                  {PlansStatsData?.totalPlans}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                  <TrendingUp className="w-3 h-3" />
+                  {PlansStatsData?.totalPlans} active plans
+                </p>
+              </CardContent>
+            </Card>
 
-        <Card className="border-2 border-neon-blue/30 bg-gradient-to-br from-neon-blue/10 to-neon-blue/5 dark:bg-gradient-to-br dark:from-neon-blue/20 dark:to-slate-800/50 hover:border-neon-blue/60 hover:shadow-lg hover:shadow-neon-blue/20 transition-all">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm flex items-center gap-2">
-              <DollarSign className="w-4 h-4 text-neon-blue" />
-              Total Revenue Potential
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl text-neon-blue">
-              ₹{totalRevenue?.toLocaleString("en-IN")}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-              <DollarSign className="w-3 h-3" />
-              Combined plan values
-            </p>
-          </CardContent>
-        </Card>
+            <Card className="border-2 border-neon-blue/30 bg-gradient-to-br from-neon-blue/10 to-neon-blue/5 dark:bg-gradient-to-br dark:from-neon-blue/20 dark:to-slate-800/50 hover:border-neon-blue/60 hover:shadow-lg hover:shadow-neon-blue/20 transition-all">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <IndianRupee className="w-4 h-4 text-neon-blue" />
+                  Total Revenue
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl text-neon-blue">
+                  ₹{PlansStatsData?.totalRevenue?.toLocaleString("en-IN")}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                  <IndianRupee className="w-3 h-3" />
+                  Current month revenu
+                </p>
+              </CardContent>
+            </Card>
 
-        <Card className="border-2 border-purple-500/30 bg-gradient-to-br from-purple-500/10 to-purple-500/5 dark:bg-gradient-to-br dark:from-purple-500/20 dark:to-slate-800/50 hover:border-purple-500/60 hover:shadow-lg hover:shadow-purple-500/20 transition-all">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm flex items-center gap-2">
-              <Users className="w-4 h-4 text-purple-400" />
-              Active Members
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl text-purple-400">
-              {mockMembershipPlans?.length ?? 0}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-              <Users className="w-3 h-3" />
-              Across all plans
-            </p>
-          </CardContent>
-        </Card>
+            <Card className="border-2 border-purple-500/30 bg-gradient-to-br from-purple-500/10 to-purple-500/5 dark:bg-gradient-to-br dark:from-purple-500/20 dark:to-slate-800/50 hover:border-purple-500/60 hover:shadow-lg hover:shadow-purple-500/20 transition-all">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <Users className="w-4 h-4 text-purple-400" />
+                  Active Members
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl text-purple-400">
+                  {PlansStatsData?.activeMembers ?? 0}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                  <Users className="w-3 h-3" />
+                  Across all plans
+                </p>
+              </CardContent>
+            </Card>
+          </>
+        )}
       </div>
 
+      {/* Plans Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {mockMembershipPlans?.length == 0 ? (
+        {isLoading ? (
+          <>
+            <PlanCardSkeleton />
+            <PlanCardSkeleton />
+            <PlanCardSkeleton />
+            <PlanCardSkeleton />
+          </>
+        ) : mockMembershipPlans?.length == 0 ? (
           <div className="col-span-full flex justify-center items-center min-h-[400px]">
             <NoData
               actionButton={

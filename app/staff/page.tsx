@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Switch } from "@/components/ui/switch";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Plus,
   UserCog,
@@ -53,12 +54,60 @@ import { Staff } from "@/types/types";
 import { useDispatch, useSelector } from "react-redux";
 import { addEditData } from "@/reduxstore/editIDataSlice";
 import { StoreRootState } from "@/reduxstore/reduxStore";
-import {
-  ShimmerCard,
-  StatsCardShimmer,
-} from "@/components/reusableComponents/shimmer";
 import { toast } from "sonner";
 import NoData from "@/components/reusableComponents/no-data";
+
+// Skeleton Components
+const StatsCardSkeleton = () => (
+  <Card className="border-border/50">
+    <CardHeader className="pb-3">
+      <Skeleton className="h-4 w-24 mb-2" />
+      <Skeleton className="h-9 w-16" />
+    </CardHeader>
+    <CardContent>
+      <div className="flex items-center gap-2">
+        <Skeleton className="h-4 w-4 rounded" />
+        <Skeleton className="h-4 w-32" />
+      </div>
+    </CardContent>
+  </Card>
+);
+
+const StaffCardSkeleton = () => (
+  <Card className="border-border/50">
+    <CardHeader className="pb-4">
+      <div className="flex items-start justify-between mb-3">
+        <Skeleton className="h-16 w-16 rounded-full" />
+        <Skeleton className="h-6 w-24 rounded-full" />
+      </div>
+      <Skeleton className="h-6 w-40 mb-2" />
+      <Skeleton className="h-6 w-20 rounded-full" />
+    </CardHeader>
+    <CardContent className="space-y-3">
+      <div className="space-y-2">
+        <div className="flex items-center gap-2">
+          <Skeleton className="h-4 w-4 rounded" />
+          <Skeleton className="h-4 w-full" />
+        </div>
+        <div className="flex items-center gap-2">
+          <Skeleton className="h-4 w-4 rounded" />
+          <Skeleton className="h-4 w-32" />
+        </div>
+        <div className="flex items-center gap-2">
+          <Skeleton className="h-4 w-4 rounded" />
+          <Skeleton className="h-4 w-28" />
+        </div>
+      </div>
+      <div className="pt-3 border-t border-border">
+        <Skeleton className="h-4 w-28 mb-2" />
+        <Skeleton className="h-4 w-full" />
+      </div>
+      <div className="flex gap-2 pt-3 border-t border-border">
+        <Skeleton className="h-9 flex-1" />
+      </div>
+    </CardContent>
+  </Card>
+);
 
 function StaffManagement() {
   const dispatch = useDispatch();
@@ -304,9 +353,9 @@ function StaffManagement() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {isLoadingStaffList ? (
           <>
-            <StatsCardShimmer />
-            <StatsCardShimmer />
-            <StatsCardShimmer />
+            <StatsCardSkeleton />
+            <StatsCardSkeleton />
+            <StatsCardSkeleton />
           </>
         ) : (
           <>
@@ -388,9 +437,12 @@ function StaffManagement() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {isLoadingStaffList ? (
           <>
-            {Array(4).map((item) => (
-              <ShimmerCard />
-            ))}
+            <StaffCardSkeleton />
+            <StaffCardSkeleton />
+            <StaffCardSkeleton />
+            <StaffCardSkeleton />
+            <StaffCardSkeleton />
+            <StaffCardSkeleton />
           </>
         ) : (
           <>

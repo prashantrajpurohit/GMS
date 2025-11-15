@@ -78,8 +78,8 @@ interface Member {
 }
 
 interface DateRange {
-  from: Date | undefined;
-  to: Date | undefined;
+  from?: Date | undefined;
+  to?: Date | undefined;
 }
 
 // Skeleton Components
@@ -177,18 +177,14 @@ function PaymentManagement() {
     },
   });
 
-  const { data = [], isLoading: paymentsLoading } = useQuery({
-    queryKey: ["allPayments"],
-    queryFn: paymentController.getAllPayments,
-  });
-
   const { data: paymentsStatsData = [], isLoading: statsLoading } = useQuery({
     queryKey: ["getPaymentsStats"],
     queryFn: paymentController.getPaymentsStats,
   });
 
-  const paymentsList = data?.payments || [];
-  const [members, setMembers] = useState<Member[]>([]);
+  const paymentsStats = paymentsStatsData?.stats;
+  const monthlyRevenue = paymentsStats;
+  console.log(paymentsStats, "paymentsStatsData");
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "paid" | "pending">(
     "all"
@@ -205,22 +201,16 @@ function PaymentManagement() {
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [sendReminderDialogOpen, setSendReminderDialogOpen] = useState(false);
   const [bulkReminderDialogOpen, setBulkReminderDialogOpen] = useState(false);
+  const { data = [], isLoading: paymentsLoading } = useQuery({
+    queryKey: ["allPayments", dateRange],
+    queryFn: () =>
+      paymentController.getAllPayments({
+        startDate: dateRange.from,
+        endDate: dateRange.to,
+      }),
+  });
 
-  // Check if a payment date is within the selected date range
-  const isDateInRange = (dateString: string): boolean => {
-    if (!dateRange.from || !dateRange.to) return true;
-
-    const paymentDate = new Date(dateString);
-    const fromDate = new Date(dateRange.from);
-    const toDate = new Date(dateRange.to);
-
-    // Reset time to compare only dates
-    fromDate.setHours(0, 0, 0, 0);
-    toDate.setHours(23, 59, 59, 999);
-    paymentDate.setHours(0, 0, 0, 0);
-
-    return paymentDate >= fromDate && paymentDate <= toDate;
-  };
+  const paymentsList = data?.payments || [];
 
   // Filter members
   const filteredMembers = useMemo(() => {
@@ -229,15 +219,11 @@ function PaymentManagement() {
       const matchesSearch =
         memberObj.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
         memberObj.phone.includes(searchQuery);
-
       const matchesStatus =
         statusFilter === "all" || trans?.status?.toLowerCase() === statusFilter;
-
-      const matchesDateRange = isDateInRange(trans?.createdAt || trans?.date);
-
-      return matchesSearch && matchesStatus && matchesDateRange;
+      return matchesSearch && matchesStatus;
     });
-  }, [paymentsList, searchQuery, statusFilter, dateRange]);
+  }, [paymentsList, searchQuery, statusFilter]);
 
   const metrics = useMemo(() => {
     const totalMembers = filteredMembers.length;
@@ -302,8 +288,6 @@ function PaymentManagement() {
       MonthlyFee: formatCurrency(m.monthlyFee),
       Status: m?.status?.toLowerCase(),
     }));
-
-    console.log("Exporting data:", data);
     alert("Export feature coming soon!");
   };
 
@@ -345,7 +329,7 @@ function PaymentManagement() {
       </div>
 
       {/* Metrics Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {statsLoading ? (
           <>
             <MetricCardSkeleton />
@@ -364,7 +348,7 @@ function PaymentManagement() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-1">
-                  <p className="text-2xl">{metrics.totalMembers}</p>
+                  <p className="text-2xl">{paymentsStats?.totalMembers}</p>
                   <p className="text-xs text-muted-foreground">
                     Active members
                   </p>
@@ -381,9 +365,11 @@ function PaymentManagement() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-1">
-                  <p className="text-2xl">{metrics.paidMembers}</p>
+                  <p className="text-2xl">
+                    {paymentsStats?.paidThisMonth?.count}
+                  </p>
                   <p className="text-xs text-muted-foreground">
-                    {formatCurrency(metrics.totalCollected)}
+                    {formatCurrency(paymentsStats?.paidThisMonth?.amount)}
                   </p>
                 </div>
               </CardContent>
@@ -398,15 +384,17 @@ function PaymentManagement() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-1">
-                  <p className="text-2xl">{metrics.pendingMembers}</p>
+                  <p className="text-2xl">
+                    {paymentsStats?.pendingThisMonth?.count}
+                  </p>
                   <p className="text-xs text-muted-foreground">
-                    {formatCurrency(metrics.totalPending)}
+                    {formatCurrency(paymentsStats?.pendingThisMonth?.amount)}
                   </p>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="border-neon-green/20 bg-card">
+            {/* <Card className="border-neon-green/20 bg-card">
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm text-muted-foreground flex items-center gap-2">
                   <TrendingUp className="w-4 h-4 text-neon-green" />
@@ -433,7 +421,7 @@ function PaymentManagement() {
                   </p>
                 </div>
               </CardContent>
-            </Card>
+            </Card> */}
           </>
         )}
       </div>
@@ -531,7 +519,7 @@ function PaymentManagement() {
                 <TableHead>Plan</TableHead>
                 <TableHead>Plan Fee</TableHead>
                 <TableHead>Start Date</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead className="text-center">Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -545,7 +533,7 @@ function PaymentManagement() {
                   <TableRowSkeleton />
                 </>
               ) : filteredMembers?.length === 0 ? (
-                <TableRow>
+                <TableRow key={"6"}>
                   <TableCell
                     colSpan={6}
                     className="text-center py-8 text-muted-foreground"
@@ -597,7 +585,7 @@ function PaymentManagement() {
                       <TableCell className="font-medium">
                         {member?.startDate?.split("T")[0]}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="text-center">
                         {transaction?.status?.toLowerCase() === "paid" ? (
                           <Badge className="gap-1 bg-green-500/10 text-green-500 border-green-500/20">
                             <CheckCircle2 className="w-3 h-3" />
@@ -612,7 +600,7 @@ function PaymentManagement() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
-                          {currentStatus === "pending" && (
+                          {/* {currentStatus === "pending" && (
                             <Button
                               size="sm"
                               variant="outline"
@@ -622,7 +610,7 @@ function PaymentManagement() {
                               <MessageSquare className="w-4 h-4" />
                               Remind
                             </Button>
-                          )}
+                          )} */}
                           {transaction?.status?.toLowerCase() == "paid" ? (
                             <Button
                               size="sm"

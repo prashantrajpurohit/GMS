@@ -42,6 +42,8 @@ import {
   Line,
 } from "recharts";
 import { useRouter } from "next/navigation";
+import DashboardController from "./controller";
+import { useQuery } from "@tanstack/react-query";
 
 const mockData = {
   activeMembers: 245,
@@ -165,11 +167,20 @@ const QuickActionsCardSkeleton = () => (
 );
 
 function Dashboard() {
+  const dashboardController = new DashboardController();
+  const { data, isLoading } = useQuery({
+    queryKey: ["gym-dahsboard"],
+    queryFn: dashboardController.getGymDashboard,
+  });
+  const dahsboardData = data?.data;
+  const dashboardStats = dahsboardData?.stats;
+  const revenueOverview = dahsboardData?.revenueOverview;
+  const memberRegistrationOverview = dahsboardData?.memberRegistrationOverview;
+
   const router = useRouter();
   const [peakHoursView, setPeakHoursView] = useState<"morning" | "evening">(
     "morning"
   );
-  const [isLoading, setIsLoading] = useState(false); // Add your actual loading state here
 
   // If you're fetching data, replace false with your actual loading state
   // const { data, isLoading } = useQuery({ ... });
@@ -222,11 +233,11 @@ function Dashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl text-neon-green">
-              {mockData.activeMembers}
+              {dashboardStats?.activeMembers}
             </div>
-            <p className="text-xs text-muted-foreground">
+            {/* <p className="text-xs text-muted-foreground">
               <span className="text-neon-green">+12%</span> from last month
-            </p>
+            </p> */}
           </CardContent>
         </Card>
 
@@ -237,9 +248,9 @@ function Dashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl text-neon-blue">
-              {mockData.upcomingRenewals}
+              {dashboardStats?.upcomingRenewals}
             </div>
-            <p className="text-xs text-muted-foreground">Next 7 days</p>
+            {/* <p className="text-xs text-muted-foreground">Next 7 days</p> */}
           </CardContent>
         </Card>
 
@@ -250,12 +261,12 @@ function Dashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl text-orange-500">
-              ₹{mockData.pendingDues.toLocaleString()}
+              ₹{dashboardStats?.pendingDues?.amount}
             </div>
-            <p className="text-xs text-muted-foreground">
+            {/* <p className="text-xs text-muted-foreground">
               Late fees:{" "}
               <span className="text-orange-500">₹{mockData.lateFeesTotal}</span>
-            </p>
+            </p> */}
           </CardContent>
         </Card>
 
@@ -266,18 +277,18 @@ function Dashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl text-purple-400">
-              ₹{mockData.monthlyRevenue.toLocaleString()}
+              ₹{dashboardStats?.monthlyRevenue?.amount}
             </div>
-            <p className="text-xs text-muted-foreground">
+            {/* <p className="text-xs text-muted-foreground">
               <span className="text-neon-green">+8.2%</span> from last month
-            </p>
+            </p> */}
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1  gap-6">
         {/* Today's Check-ins */}
-        <Card className="border-neon-blue/20 bg-muted/30 dark:bg-slate-800/50 hover:border-neon-blue/50 dark:hover:border-neon-blue/60 transition-all">
+        {/* <Card className="border-neon-blue/20 bg-muted/30 dark:bg-slate-800/50 hover:border-neon-blue/50 dark:hover:border-neon-blue/60 transition-all">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <UserCheck className="h-5 w-5 text-neon-blue" />
@@ -356,7 +367,7 @@ function Dashboard() {
               </TabsContent>
             </Tabs>
           </CardContent>
-        </Card>
+        </Card> */}
 
         {/* Revenue vs Pending */}
         <Card className="border-neon-green/20 bg-muted/30 dark:bg-slate-800/50 hover:border-neon-green/50 dark:hover:border-neon-green/60 transition-all">
@@ -365,24 +376,24 @@ function Dashboard() {
               <TrendingUp className="h-5 w-5 text-neon-green" />
               Revenue Overview
             </CardTitle>
-            <CardDescription>
-              Monthly revenue vs pending amounts
-            </CardDescription>
+            <CardDescription>Monthly revenue</CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={mockData.revenueData}>
+              <BarChart data={revenueOverview?.[0]?.months}>
                 <CartesianGrid
                   strokeDasharray="3 3"
                   className="stroke-border"
                 />
                 <XAxis
-                  dataKey="month"
+                  dataKey="monthLabel"
                   className="text-xs"
                   tick={{ fill: "currentColor", fontSize: 12 }}
                   stroke="var(--muted-foreground)"
                 />
                 <YAxis
+                  tickFormatter={(value) => `₹${value}`}
+                  dataKey={"revenue"}
                   className="text-xs"
                   tick={{ fill: "currentColor", fontSize: 12 }}
                   stroke="var(--muted-foreground)"
@@ -397,9 +408,11 @@ function Dashboard() {
                       "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
                   }}
                   labelStyle={{ color: "var(--card-foreground)" }}
+                  formatter={(value) => [`₹${value}`, "Revenue"]}
+                  labelFormatter={(label) => `${label}`}
                 />
                 <Bar dataKey="revenue" fill="var(--chart-1)" radius={4} />
-                <Bar dataKey="pending" fill="var(--chart-2)" radius={4} />
+                {/* <Bar dataKey="pending" fill="var(--chart-2)" radius={4} /> */}
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -413,42 +426,20 @@ function Dashboard() {
             <div>
               <CardTitle className="flex items-center gap-2">
                 <Clock className="h-5 w-5 text-neon-blue" />
-                Peak Hours Analysis
+                Peak Months Analysis
               </CardTitle>
               <CardDescription>
-                Member check-in patterns throughout the day
+                Member register patterns throughout the year
               </CardDescription>
-            </div>
-            <div className="flex gap-2">
-              <Button
-                variant={peakHoursView === "morning" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setPeakHoursView("morning")}
-                className={
-                  peakHoursView === "morning" ? "bg-neon-green text-white" : ""
-                }
-              >
-                Morning
-              </Button>
-              <Button
-                variant={peakHoursView === "evening" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setPeakHoursView("evening")}
-                className={
-                  peakHoursView === "evening" ? "bg-neon-blue text-white" : ""
-                }
-              >
-                Evening
-              </Button>
             </div>
           </div>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={mockData.peakHoursData}>
+            <LineChart data={memberRegistrationOverview?.[0]?.months}>
               <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
               <XAxis
-                dataKey="time"
+                dataKey="monthLabel"
                 className="text-xs"
                 tick={{ fill: "currentColor", fontSize: 12 }}
                 stroke="var(--muted-foreground)"
@@ -471,18 +462,11 @@ function Dashboard() {
               />
               <Line
                 type="monotone"
-                dataKey={peakHoursView}
-                stroke={
-                  peakHoursView === "morning"
-                    ? "var(--neon-green)"
-                    : "var(--neon-blue)"
-                }
+                dataKey={"registrations"}
+                stroke={"var(--neon-green)"}
                 strokeWidth={3}
                 dot={{
-                  fill:
-                    peakHoursView === "morning"
-                      ? "var(--neon-green)"
-                      : "var(--neon-blue)",
+                  fill: "var(--neon-green)",
                   strokeWidth: 2,
                   r: 6,
                 }}

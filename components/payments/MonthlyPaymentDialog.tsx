@@ -157,26 +157,26 @@ export function MonthlyPaymentDialog({
                     {formatDate(payment.updatedAt?.split("T")[0])}
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button
-                      size="sm"
-                      variant={
-                        payment.status?.toLowerCase() === "paid"
-                          ? "outline"
-                          : "default"
-                      }
-                      onClick={() =>
-                        handleTogglePayment(payment.month, payment.status)
-                      }
-                      className={
-                        payment.status?.toLowerCase() === "paid"
-                          ? "text-red-500 hover:text-red-600 hover:bg-red-500/10"
-                          : "bg-neon-green hover:bg-neon-green/90 text-black"
-                      }
-                    >
-                      {payment.status?.toLowerCase() === "paid"
-                        ? "Mark Pending"
-                        : "Mark Paid"}
-                    </Button>
+                    {payment.status?.toLowerCase() === "pending" && (
+                      <Button
+                        size="sm"
+                        variant={
+                          payment.status?.toLowerCase() === "paid"
+                            ? "outline"
+                            : "default"
+                        }
+                        onClick={() =>
+                          handleTogglePayment(payment.month, payment.status)
+                        }
+                        className={
+                          payment.status?.toLowerCase() === "paid"
+                            ? "text-green-500 hover:text-green-600 hover:bg-red-500/10"
+                            : "bg-neon-green hover:bg-neon-green/90 text-black"
+                        }
+                      >
+                        Mark Paid
+                      </Button>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}
@@ -186,7 +186,7 @@ export function MonthlyPaymentDialog({
 
         {/* Mobile Card View */}
         <div className="sm:hidden space-y-3">
-          {payments.map((payment:Record<string,any>) => (
+          {payments.map((payment: Record<string, any>) => (
             <div
               key={payment.month}
               className="p-4 border rounded-lg bg-card space-y-3"

@@ -16,4 +16,8 @@ export default class PlansController {
     const data = await httpRequest.get(ApiUrl.PLAN);
     return data?.data?.data;
   }
+  async getPlansStats() {
+    const data = await httpRequest.get(`${ApiUrl.DASHBOARD}/gym/plans`);
+    return data?.data?.data;
+  }
 }
