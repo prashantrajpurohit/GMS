@@ -1,9 +1,8 @@
-import { ApiUrl } from "@/api/apiUrls";
 import httpRequest from "@/api/AxiosInterseptor";
 
-export default class DashboardController{
-    async getGymDashboard(){
-        const res=await httpRequest.get(`${ApiUrl.DASHBOARD}/gym`);
-        return res?.data
-    }
+export class DashboardController {
+  async fetchDashboardData() {
+    const response = await httpRequest.get("/dashboard/gym"); // Implementation to fetch dashboard data
+    return response?.data?.data;
+  }
 }

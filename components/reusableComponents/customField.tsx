@@ -1,26 +1,27 @@
+import React from "react";
+
+import { useFormContext } from "react-hook-form";
 import {
   FormControl,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
-import React from "react";
+} from "../ui/form";
+import { Skeleton } from "../ui/skeleton";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { useFormContext } from "react-hook-form";
+} from "../ui/select";
+import { Input } from "../ui/input";
 type CommonProps = {
   name: string;
   label: string;
   placeholder: string;
-  isLoading?: boolean;
+  isLoading: boolean;
   type?: React.HTMLInputTypeAttribute;
   disabled?: boolean;
   hidden?: boolean;
@@ -28,7 +29,6 @@ type CommonProps = {
   onClick?: React.MouseEventHandler<HTMLInputElement>;
   onChangeFun?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   defaultValue?: string;
-  step?: string;
 };
 
 type SelectFieldProps = CommonProps & {
@@ -47,7 +47,7 @@ const CustomField = ({
   select,
   options,
   placeholder,
-  isLoading = false,
+  isLoading,
   hidden,
   type,
   disabled,
@@ -55,7 +55,6 @@ const CustomField = ({
   onClick,
   onChangeFun,
   defaultValue,
-  step,
 }: CustomFieldProps) => {
   const { control } = useFormContext();
 
@@ -72,12 +71,12 @@ const CustomField = ({
           )}
           {select ? (
             <Select
-              value={field?.value?.toString() || ""}
+              value={field.value || ""}
               onValueChange={field.onChange}
               disabled={disabled || isLoading}
             >
               <FormControl>
-                <SelectTrigger className="w-full">
+                <SelectTrigger className="w-full border-border focus:ring-2 focus:ring-primary/20 focus:border-primary">
                   <SelectValue placeholder={placeholder} />
                 </SelectTrigger>
               </FormControl>
@@ -109,7 +108,9 @@ const CustomField = ({
               ) : (
                 <Input
                   {...field}
-                  className={`w-full ${hidden ? "hidden" : "block"}`}
+                  className={`w-full border-border focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:border-primary ${
+                    hidden ? "hidden" : "block"
+                  }`}
                   disabled={disabled || false}
                   placeholder={placeholder}
                   onChange={(e) => {
@@ -126,7 +127,6 @@ const CustomField = ({
                   {...(defaultValue ? { defaultValue } : {})}
                   {...(onBlur ? { onBlur } : {})}
                   {...(onClick ? { onClick } : {})}
-                  {...(step ? { step } : {})}
                 />
               )}
             </FormControl>

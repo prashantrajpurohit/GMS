@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React from "react";
 import {
   Card,
   CardContent,
@@ -7,12 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components//ui/card";
-import { Button } from "@/components//ui/button";
-import { Input } from "@/components//ui/input";
-import { Label } from "@/components//ui/label";
-import { Textarea } from "@/components//ui/textarea";
-import { Separator } from "@/components//ui/separator";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components//ui/avatar";
+
 import {
   Tabs,
   TabsContent,
@@ -21,20 +16,7 @@ import {
 } from "@/components//ui/tabs";
 import { Switch } from "@/components//ui/switch";
 import { Badge } from "@/components//ui/badge";
-import {
-  Building2,
-  Clock,
-  User,
-  Mail,
-  Phone,
-  Upload,
-  MapPin,
-  Globe,
-  Save,
-  Camera,
-  Plus,
-  X,
-} from "lucide-react";
+import { Building2, Clock, User } from "lucide-react";
 import CustomField from "@/components/reusableComponents/customField";
 import GymInfoForm from "@/components/settings/gymInfoForm";
 import UserProfileForm from "@/components/settings/userProfileForm";
@@ -49,7 +31,6 @@ function Settings() {
     (state: StoreRootState) =>
       state?.data?.userdata?.user as Record<string, any> | null
   );
-console.log(reduxUserData,"reduxUserData");
 
   const settingsController = new SettingsController();
   const { data, isLoading } = useQuery({
@@ -67,7 +48,7 @@ console.log(reduxUserData,"reduxUserData");
       </div>
 
       <Tabs defaultValue="gym-info" className="w-full">
-        <TabsList className="grid w-full grid-cols-1 md:grid-cols-3 gap-3 mb-6 bg-transparent h-auto p-0">
+        <TabsList className="grid w-full grid-cols-1 md:grid-cols-2 gap-3 mb-6 bg-transparent h-auto p-0">
           <TabsTrigger
             value="gym-info"
             className="gap-2 h-auto p-4 data-[state=active]:bg-gradient-to-r data-[state=active]:from-neon-green/20 data-[state=active]:to-neon-green/10 border-2 border-transparent data-[state=active]:border-neon-green/50 data-[state=active]:shadow-lg data-[state=active]:shadow-neon-green/20 rounded-lg hover:bg-muted/50 transition-all"
@@ -76,13 +57,13 @@ console.log(reduxUserData,"reduxUserData");
             <span className="hidden sm:inline">Gym Information</span>
             <span className="sm:hidden">Gym Info</span>
           </TabsTrigger>
-          <TabsTrigger
+          {/* <TabsTrigger
             value="timings"
             className="gap-2 h-auto p-4 data-[state=active]:bg-gradient-to-r data-[state=active]:from-neon-blue/20 data-[state=active]:to-neon-blue/10 border-2 border-transparent data-[state=active]:border-neon-blue/50 data-[state=active]:shadow-lg data-[state=active]:shadow-neon-blue/20 rounded-lg hover:bg-muted/50 transition-all"
           >
             <Clock className="w-5 h-5 data-[state=active]:text-neon-blue" />
             Timings
-          </TabsTrigger>
+          </TabsTrigger> */}
           <TabsTrigger
             value="profile"
             className="gap-2 h-auto p-4 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500/20 data-[state=active]:to-purple-500/10 border-2 border-transparent data-[state=active]:border-purple-500/50 data-[state=active]:shadow-lg data-[state=active]:shadow-purple-500/20 rounded-lg hover:bg-muted/50 transition-all"
@@ -118,7 +99,7 @@ console.log(reduxUserData,"reduxUserData");
         </TabsContent>
 
         {/* Gym Timings Tab */}
-        <TabsContent value="timings">
+        {/* <TabsContent value="timings">
           <Card className="border-neon-blue/20 bg-muted/30 dark:bg-slate-800/50 hover:border-neon-blue/50 dark:hover:border-neon-blue/60 transition-all">
             <CardHeader>
               <div className="flex items-center gap-3">
@@ -132,11 +113,10 @@ console.log(reduxUserData,"reduxUserData");
               </div>
             </CardHeader>
             <CardContent className="space-y-6">
-              {/* Operating Days */}
               <GymTimingForm />
             </CardContent>
           </Card>
-        </TabsContent>
+        </TabsContent> */}
 
         {/* User Profile Tab */}
         <TabsContent value="profile">

@@ -1,226 +1,155 @@
 "use client";
-import React, { useState } from "react";
+import React from "react";
+
+import { Button } from "@/components/ui/button";
+
+import {
+  Users,
+  Calendar,
+  DollarSign,
+  TrendingUp,
+  AlertTriangle,
+  FileText,
+  Clipboard,
+  User2,
+  NotepadText,
+} from "lucide-react";
+
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components//ui/card";
-import { Button } from "@/components//ui/button";
-import { Badge } from "@/components//ui/badge";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components//ui/tabs";
-import { Progress } from "@/components//ui/progress";
+} from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Users,
-  Calendar,
-  DollarSign,
-  Clock,
-  TrendingUp,
-  AlertTriangle,
-  CheckCircle,
-  UserCheck,
-  FileText,
-  Clipboard,
-  DollarSignIcon,
-} from "lucide-react";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  LineChart,
-  Line,
-} from "recharts";
-import { useRouter } from "next/navigation";
-import DashboardController from "./controller";
+
+import RevenueChart from "@/components/reusableComponents/revenueChart";
+import MemberChart from "@/components/reusableComponents/memberChart";
 import { useQuery } from "@tanstack/react-query";
-
-const mockData = {
-  activeMembers: 245,
-  upcomingRenewals: 23,
-  pendingDues: 12450,
-  lateFeesTotal: 2100,
-  todayCheckins: { morning: 67, evening: 89 },
-  monthlyRevenue: 85600,
-  pendingAmount: 12450,
-  peakHoursData: [
-    { time: "6 AM", morning: 25, evening: 5 },
-    { time: "7 AM", morning: 45, evening: 8 },
-    { time: "8 AM", morning: 60, evening: 12 },
-    { time: "9 AM", morning: 40, evening: 15 },
-    { time: "10 AM", morning: 30, evening: 20 },
-    { time: "6 PM", morning: 10, evening: 55 },
-    { time: "7 PM", morning: 8, evening: 70 },
-    { time: "8 PM", morning: 5, evening: 85 },
-    { time: "9 PM", morning: 3, evening: 60 },
-    { time: "10 PM", morning: 2, evening: 35 },
-  ],
-  revenueData: [
-    { month: "Jan", revenue: 78000, pending: 8500 },
-    { month: "Feb", revenue: 82000, pending: 7200 },
-    { month: "Mar", revenue: 85600, pending: 12450 },
-  ],
-};
-
-// Skeleton Components
-const StatCardSkeleton = () => (
-  <Card className="border-border/50">
-    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-      <Skeleton className="h-4 w-32" />
-      <Skeleton className="h-4 w-4 rounded" />
-    </CardHeader>
-    <CardContent>
-      <Skeleton className="h-8 w-20 mb-2" />
-      <Skeleton className="h-3 w-28" />
-    </CardContent>
-  </Card>
-);
-
-const CheckinsCardSkeleton = () => (
-  <Card className="border-border/50">
-    <CardHeader>
-      <Skeleton className="h-6 w-48 mb-2" />
-      <Skeleton className="h-4 w-64" />
-    </CardHeader>
-    <CardContent>
-      <div className="space-y-4">
-        <Skeleton className="h-10 w-full" />
-        <div className="flex justify-between items-center">
-          <div className="space-y-2">
-            <Skeleton className="h-4 w-32" />
-            <Skeleton className="h-8 w-16" />
-          </div>
-          <div className="space-y-2">
-            <Skeleton className="h-4 w-32" />
-            <Skeleton className="h-8 w-16" />
-          </div>
-        </div>
-        <div className="space-y-2">
-          <Skeleton className="h-4 w-full" />
-          <Skeleton className="h-2 w-full" />
-        </div>
-        <div className="space-y-2">
-          <Skeleton className="h-4 w-full" />
-          <Skeleton className="h-2 w-full" />
-        </div>
-      </div>
-    </CardContent>
-  </Card>
-);
-
-const ChartCardSkeleton = ({ height = 200 }: { height?: number }) => (
-  <Card className="border-border/50">
-    <CardHeader>
-      <Skeleton className="h-6 w-48 mb-2" />
-      <Skeleton className="h-4 w-64" />
-    </CardHeader>
-    <CardContent>
-      <Skeleton className={`h-[${height}px] w-full`} />
-    </CardContent>
-  </Card>
-);
-
-const PeakHoursCardSkeleton = () => (
-  <Card className="border-border/50">
-    <CardHeader>
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="space-y-2">
-          <Skeleton className="h-6 w-48" />
-          <Skeleton className="h-4 w-64" />
-        </div>
-        <div className="flex gap-2">
-          <Skeleton className="h-9 w-24" />
-          <Skeleton className="h-9 w-24" />
-        </div>
-      </div>
-    </CardHeader>
-    <CardContent>
-      <Skeleton className="h-[300px] w-full" />
-    </CardContent>
-  </Card>
-);
-
-const QuickActionsCardSkeleton = () => (
-  <Card className="border-border/50">
-    <CardHeader>
-      <Skeleton className="h-6 w-32 mb-2" />
-      <Skeleton className="h-4 w-48" />
-    </CardHeader>
-    <CardContent>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {[...Array(3)].map((_, i) => (
-          <Skeleton key={i} className="h-24 w-full" />
-        ))}
-      </div>
-    </CardContent>
-  </Card>
-);
+import { DashboardController } from "./controller";
+import { useRouter } from "next/navigation";
 
 function Dashboard() {
-  const dashboardController = new DashboardController();
-  const { data, isLoading } = useQuery({
-    queryKey: ["gym-dahsboard"],
-    queryFn: dashboardController.getGymDashboard,
-  });
-  const dahsboardData = data?.data;
-  const dashboardStats = dahsboardData?.stats;
-  const revenueOverview = dahsboardData?.revenueOverview;
-  const memberRegistrationOverview = dahsboardData?.memberRegistrationOverview;
-
   const router = useRouter();
-  const [peakHoursView, setPeakHoursView] = useState<"morning" | "evening">(
-    "morning"
-  );
-
-  // If you're fetching data, replace false with your actual loading state
-  // const { data, isLoading } = useQuery({ ... });
+  const dashboardController = new DashboardController();
+  const {
+    data: dashboardData,
+    isLoading,
+    isError,
+    error,
+  } = useQuery({
+    queryKey: ["dashboardData"],
+    queryFn: dashboardController.fetchDashboardData,
+  });
 
   if (isLoading) {
     return (
       <div className="space-y-6">
         <div>
           <Skeleton className="h-9 w-48 mb-2" />
-          <Skeleton className="h-5 w-72" />
+          <Skeleton className="h-5 w-96" />
         </div>
 
-        {/* Top Stats Cards Skeleton */}
+        {/* Skeleton Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {[...Array(4)].map((_, i) => (
-            <StatCardSkeleton key={i} />
+            <Card key={i} className="border-2">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-4 w-4 rounded" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-8 w-20 mb-2" />
+                <Skeleton className="h-4 w-32" />
+              </CardContent>
+            </Card>
           ))}
         </div>
 
-        {/* Middle Row Skeleton */}
+        {/* Skeleton Charts */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <CheckinsCardSkeleton />
-          <ChartCardSkeleton />
+          {[...Array(2)].map((_, i) => (
+            <Card key={i}>
+              <CardHeader>
+                <Skeleton className="h-6 w-40 mb-2" />
+                <Skeleton className="h-4 w-56" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-[300px] w-full" />
+              </CardContent>
+            </Card>
+          ))}
         </div>
 
-        {/* Peak Hours Skeleton */}
-        <PeakHoursCardSkeleton />
-
-        {/* Quick Actions Skeleton */}
-        <QuickActionsCardSkeleton />
+        {/* Skeleton Quick Actions */}
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-6 w-32 mb-2" />
+            <Skeleton className="h-4 w-48" />
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {[...Array(4)].map((_, i) => (
+                <Skeleton key={i} className="h-24 w-full" />
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
+
+  if (isError) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Card className="max-w-md border-red-500/50">
+          <CardHeader>
+            <CardTitle className="text-red-500 flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5" />
+              Error Loading Dashboard
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground">
+              {error instanceof Error
+                ? error.message
+                : "Failed to load dashboard data"}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!dashboardData || !dashboardData.gym || !dashboardData.stats) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Card className="max-w-md">
+          <CardHeader>
+            <CardTitle>No Data Available</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground">
+              Dashboard data is not available at the moment.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  const { gym, stats, revenueOverview, memberRegistrationOverview } =
+    dashboardData;
+  const currentYearRevenue = revenueOverview?.[0];
+  const currentYearRegistrations = memberRegistrationOverview?.[0];
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl mb-2">Dashboard</h1>
         <p className="text-muted-foreground">
-          Welcome back! Here's your gym overview.
+          Welcome back to {gym?.name}! Here's your gym overview.
         </p>
       </div>
 
@@ -233,11 +162,11 @@ function Dashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl text-neon-green">
-              {dashboardStats?.activeMembers}
+              {stats?.activeMembers ?? 0}
             </div>
-            {/* <p className="text-xs text-muted-foreground">
-              <span className="text-neon-green">+12%</span> from last month
-            </p> */}
+            <p className="text-xs text-muted-foreground">
+              Currently enrolled members
+            </p>
           </CardContent>
         </Card>
 
@@ -248,7 +177,7 @@ function Dashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl text-neon-blue">
-              {dashboardStats?.upcomingRenewals}
+              {stats?.upcomingRenewals ?? 0}
             </div>
             {/* <p className="text-xs text-muted-foreground">Next 7 days</p> */}
           </CardContent>
@@ -261,12 +190,12 @@ function Dashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl text-orange-500">
-              ₹{dashboardStats?.pendingDues?.amount}
+              ₹{stats?.pendingDues?.amount?.toLocaleString() ?? 0}
             </div>
-            {/* <p className="text-xs text-muted-foreground">
-              Late fees:{" "}
-              <span className="text-orange-500">₹{mockData.lateFeesTotal}</span>
-            </p> */}
+            <p className="text-xs text-muted-foreground">
+              {stats?.pendingDues?.count ?? 0}{" "}
+              {stats?.pendingDues?.count === 1 ? "member" : "members"} with dues
+            </p>
           </CardContent>
         </Card>
 
@@ -277,204 +206,28 @@ function Dashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl text-purple-400">
-              ₹{dashboardStats?.monthlyRevenue?.amount}
+              ₹{stats?.monthlyRevenue?.amount?.toLocaleString() ?? 0}
             </div>
-            {/* <p className="text-xs text-muted-foreground">
-              <span className="text-neon-green">+8.2%</span> from last month
-            </p> */}
+            <p className="text-xs text-muted-foreground">
+              {stats?.monthlyRevenue?.transactions ?? 0}{" "}
+              {stats?.monthlyRevenue?.transactions === 1
+                ? "transaction"
+                : "transactions"}{" "}
+              in {stats?.monthlyRevenue?.monthLabel ?? ""}
+            </p>
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid grid-cols-1  gap-6">
-        {/* Today's Check-ins */}
-        {/* <Card className="border-neon-blue/20 bg-muted/30 dark:bg-slate-800/50 hover:border-neon-blue/50 dark:hover:border-neon-blue/60 transition-all">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <UserCheck className="h-5 w-5 text-neon-blue" />
-              Today's Check-ins
-            </CardTitle>
-            <CardDescription>Member activity breakdown</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Tabs defaultValue="overview" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="overview">Overview</TabsTrigger>
-                <TabsTrigger value="details">Details</TabsTrigger>
-              </TabsList>
-              <TabsContent value="overview" className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <p className="text-sm text-muted-foreground">
-                      Morning (6AM-12PM)
-                    </p>
-                    <p className="text-2xl">{mockData.todayCheckins.morning}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm text-muted-foreground">
-                      Evening (6PM-11PM)
-                    </p>
-                    <p className="text-2xl">{mockData.todayCheckins.evening}</p>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span>Morning Progress</span>
-                    <span>
-                      {Math.round((mockData.todayCheckins.morning / 100) * 100)}
-                      %
-                    </span>
-                  </div>
-                  <Progress
-                    value={(mockData.todayCheckins.morning / 100) * 100}
-                    className="h-2"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span>Evening Progress</span>
-                    <span>
-                      {Math.round((mockData.todayCheckins.evening / 100) * 100)}
-                      %
-                    </span>
-                  </div>
-                  <Progress
-                    value={(mockData.todayCheckins.evening / 100) * 100}
-                    className="h-2"
-                  />
-                </div>
-              </TabsContent>
-              <TabsContent value="details">
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm">Total Check-ins</span>
-                    <Badge variant="outline">
-                      {mockData.todayCheckins.morning +
-                        mockData.todayCheckins.evening}
-                    </Badge>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm">Peak Hour</span>
-                    <Badge className="bg-neon-green/10 text-neon-green">
-                      8 PM (85 members)
-                    </Badge>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm">Capacity Utilization</span>
-                    <Badge variant="outline">78%</Badge>
-                  </div>
-                </div>
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card> */}
-
-        {/* Revenue vs Pending */}
-        <Card className="border-neon-green/20 bg-muted/30 dark:bg-slate-800/50 hover:border-neon-green/50 dark:hover:border-neon-green/60 transition-all">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-neon-green" />
-              Revenue Overview
-            </CardTitle>
-            <CardDescription>Monthly revenue</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={revenueOverview?.[0]?.months}>
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  className="stroke-border"
-                />
-                <XAxis
-                  dataKey="monthLabel"
-                  className="text-xs"
-                  tick={{ fill: "currentColor", fontSize: 12 }}
-                  stroke="var(--muted-foreground)"
-                />
-                <YAxis
-                  tickFormatter={(value) => `₹${value}`}
-                  dataKey={"revenue"}
-                  className="text-xs"
-                  tick={{ fill: "currentColor", fontSize: 12 }}
-                  stroke="var(--muted-foreground)"
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "var(--card)",
-                    border: "1px solid var(--border)",
-                    borderRadius: "8px",
-                    color: "var(--card-foreground)",
-                    boxShadow:
-                      "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
-                  }}
-                  labelStyle={{ color: "var(--card-foreground)" }}
-                  formatter={(value) => [`₹${value}`, "Revenue"]}
-                  labelFormatter={(label) => `${label}`}
-                />
-                <Bar dataKey="revenue" fill="var(--chart-1)" radius={4} />
-                {/* <Bar dataKey="pending" fill="var(--chart-2)" radius={4} /> */}
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Peak Hours Chart */}
-      <Card className="border-neon-blue/20 bg-muted/30 dark:bg-slate-800/50 hover:border-neon-blue/50 dark:hover:border-neon-blue/60 transition-all">
-        <CardHeader>
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <Clock className="h-5 w-5 text-neon-blue" />
-                Peak Months Analysis
-              </CardTitle>
-              <CardDescription>
-                Member register patterns throughout the year
-              </CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={memberRegistrationOverview?.[0]?.months}>
-              <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-              <XAxis
-                dataKey="monthLabel"
-                className="text-xs"
-                tick={{ fill: "currentColor", fontSize: 12 }}
-                stroke="var(--muted-foreground)"
-              />
-              <YAxis
-                className="text-xs"
-                tick={{ fill: "currentColor", fontSize: 12 }}
-                stroke="var(--muted-foreground)"
-              />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: "var(--card)",
-                  border: "1px solid var(--border)",
-                  borderRadius: "8px",
-                  color: "var(--card-foreground)",
-                  boxShadow:
-                    "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
-                }}
-                labelStyle={{ color: "var(--card-foreground)" }}
-              />
-              <Line
-                type="monotone"
-                dataKey={"registrations"}
-                stroke={"var(--neon-green)"}
-                strokeWidth={3}
-                dot={{
-                  fill: "var(--neon-green)",
-                  strokeWidth: 2,
-                  r: 6,
-                }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
+      {/* Charts - Only render if data exists */}
+      {currentYearRevenue && currentYearRegistrations && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Revenue Overview Chart */}
+          <RevenueChart currentYearRevenue={currentYearRevenue} />
+          {/* Member Registration Overview Chart */}
+          <MemberChart currentYearRegistrations={currentYearRegistrations} />
+        </div>
+      )}
 
       {/* Quick Actions */}
       <Card className="border-neon-green/20 bg-muted/30 dark:bg-slate-800/50 hover:border-neon-green/50 dark:hover:border-neon-green/60 transition-all">
@@ -483,28 +236,27 @@ function Dashboard() {
           <CardDescription>Common tasks and shortcuts</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-3 gap-4">
             <Button
-              className="h-auto p-4 flex-col gap-2 bg-gradient-to-r from-neon-green/20 to-neon-green/10 hover:from-neon-green/30 hover:to-neon-green/20 border-2 border-neon-green/40 shadow-lg shadow-neon-green/10"
+              className="h-auto p-4 flex-col gap-2 bg-gradient-to-r from-neon-green/20 to-neon-green/10 hover:from-neon-green/30 hover:to-neon-green/20 border-2 border-neon-green/40 shadow-lg shadow-neon-green/10 "
               onClick={() => router.push("/members")}
             >
               <Users className="h-6 w-6 text-neon-green" />
               Add New Member
             </Button>
-
             <Button
-              className="h-auto p-4 flex-col gap-2 bg-gradient-to-r from-purple-500/20 to-purple-500/10 hover:from-purple-500/30 hover:to-purple-500/20 border-2 border-purple-500/40 shadow-lg shadow-purple-500/10"
-              onClick={() => router.push("/plans")}
+              onClick={() => router.push("/members")}
+              className="h-auto p-4 flex-col gap-2 bg-gradient-to-r from-neon-blue/20 to-neon-blue/10 hover:from-neon-blue/30 hover:to-neon-blue/20 border-2 border-neon-blue/40 shadow-lg shadow-neon-blue/10"
             >
-              <Clipboard className="h-6 w-6 text-purple-400" />
-              Create Workout Plan
+              <User2 className="h-6 w-6 text-neon-blue" />
+              Add Staff Member
             </Button>
             <Button
-              className="h-auto p-4 flex-col gap-2 bg-gradient-to-r from-orange-500/20 to-orange-500/10 hover:from-orange-500/30 hover:to-orange-500/20 border-2 border-orange-500/40 shadow-lg shadow-orange-500/10"
-              onClick={() => router.push("/payments")}
+              onClick={() => router.push("/plans")}
+              className="h-auto p-4 flex-col gap-2 bg-gradient-to-r from-purple-500/20 to-purple-500/10 hover:from-purple-500/30 hover:to-purple-500/20 border-2 border-purple-500/40 shadow-lg shadow-purple-500/10"
             >
-              <DollarSignIcon className="h-6 w-6 text-orange-400" />
-              Payments
+              <NotepadText className="h-6 w-6 text-purple-400" />
+              Add Plans
             </Button>
           </div>
         </CardContent>

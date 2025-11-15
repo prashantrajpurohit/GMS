@@ -5,6 +5,7 @@ const nextConfig: NextConfig = {
     ignoreDuringBuilds: true,
   },
   distDir: "build",
+  output: "standalone",
 };
 
 export default nextConfig;

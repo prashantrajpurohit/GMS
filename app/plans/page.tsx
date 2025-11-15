@@ -1,24 +1,12 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
-  DialogHeader,
-  DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
 import {
@@ -33,22 +21,17 @@ import {
   Plus,
   CreditCard,
   Edit,
-  Trash2,
   TrendingUp,
   Users,
   DollarSign,
-  Loader2,
   Loader,
   IndianRupee,
 } from "lucide-react";
-import CustomField from "@/components/reusableComponents/customField";
 import { FormProvider, useForm } from "react-hook-form";
-import CustomTextarea from "@/components/reusableComponents/textArea";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import PlansController from "./controller";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PlanInterface, planSchema } from "@/lib/validation-schemas";
-import Autocomplete from "@/components/reusableComponents/autocomplete";
 import AddEditPlans from "@/components/forms/addEditPlans";
 import { addEditData } from "@/reduxstore/editIDataSlice";
 import { useDispatch, useSelector } from "react-redux";
@@ -56,7 +39,6 @@ import { StoreRootState } from "@/reduxstore/reduxStore";
 import { toast } from "sonner";
 import NoData from "@/components/reusableComponents/no-data";
 
-// Helper function to format duration display
 const formatDuration = (value: number, unit: "days" | "months" | "years") => {
   if (value === 1) {
     return unit === "days" ? "Day" : unit === "months" ? "Month" : "Year";
@@ -64,7 +46,6 @@ const formatDuration = (value: number, unit: "days" | "months" | "years") => {
   return `${value} ${unit?.charAt(0)?.toUpperCase() + unit?.slice(1)}`;
 };
 
-// Helper function to get duration unit for display (e.g., /month, /year)
 const getDurationUnit = (value: number, unit: "days" | "months" | "years") => {
   if (value === 1) {
     return unit === "days" ? "day" : unit === "months" ? "month" : "year";

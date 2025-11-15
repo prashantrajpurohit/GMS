@@ -9,6 +9,7 @@ export const ApiUrl = {
   DASHBOARD: `/dashboard`,
   ROLES: `roles`,
   PAYMENTS: `payments`,
+  DASHBOARD: `dashboard`,
   GYMS: `gyms`,
   MEDIA_URL: `media`,
   AUTH: `auth`,

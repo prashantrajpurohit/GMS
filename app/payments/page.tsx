@@ -45,8 +45,7 @@ import {
   MonthlyPayment,
   MonthlyPaymentDialog,
 } from "@/components/payments/MonthlyPaymentDialog";
-import { MonthlySendReminderDialog } from "@/components/payments/MonthlySendReminderDialog";
-import { MonthlyBulkReminderDialog } from "@/components/payments/MonthlyBulkReminderDialog";
+
 import PaymentController from "./controller";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ApiUrl } from "@/api/apiUrls";
@@ -62,7 +61,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { format } from "date-fns";
+import { endOfDay, format, startOfDay } from "date-fns";
 
 interface Member {
   id: string;
@@ -78,8 +77,8 @@ interface Member {
 }
 
 interface DateRange {
-  from?: Date | undefined;
-  to?: Date | undefined;
+  from?: Date;
+  to?: Date;
 }
 
 // Skeleton Components
@@ -202,12 +201,21 @@ function PaymentManagement() {
   const [sendReminderDialogOpen, setSendReminderDialogOpen] = useState(false);
   const [bulkReminderDialogOpen, setBulkReminderDialogOpen] = useState(false);
   const { data = [], isLoading: paymentsLoading } = useQuery({
-    queryKey: ["allPayments", dateRange],
-    queryFn: () =>
-      paymentController.getAllPayments({
-        startDate: dateRange.from,
-        endDate: dateRange.to,
-      }),
+    queryKey: [
+      "allPayments",
+      dateRange?.from?.toISOString(),
+      dateRange?.to?.toISOString(),
+    ],
+    queryFn: () => {
+      const params: any = {};
+      if (dateRange.from) {
+        params.startDate = format(dateRange.from, "yyyy-MM-dd");
+      }
+      if (dateRange.to) {
+        params.endDate = format(dateRange.to, "yyyy-MM-dd");
+      }
+      return paymentController.getAllPayments(params);
+    },
   });
 
   const paymentsList = data?.payments || [];
@@ -296,13 +304,13 @@ function PaymentManagement() {
     setSendReminderDialogOpen(true);
   };
 
-  const handleBulkReminders = () => {
-    setBulkReminderDialogOpen(true);
-  };
-
   const handleDateRangeSelect = (range: DateRange | undefined) => {
     if (range) {
-      setDateRange(range);
+      setDateRange({
+        from: range.from ? startOfDay(range.from) : undefined,
+        to: range.to ? endOfDay(range.to) : undefined,
+      });
+      return;
     }
   };
 
@@ -546,7 +554,7 @@ function PaymentManagement() {
                   const currentStatus = transaction?.status;
                   const member = transaction?.memberId;
                   return (
-                    <TableRow key={member.id}>
+                    <TableRow key={transaction._id}>
                       <TableCell>
                         <div className="flex items-center gap-3">
                           <Avatar>
@@ -651,7 +659,6 @@ function PaymentManagement() {
         </CardContent>
       </Card>
 
-      {/* Mobile Card View */}
       <div className="md:hidden space-y-4">
         {paymentsLoading ? (
           <>
@@ -672,7 +679,7 @@ function PaymentManagement() {
             const member = transaction?.memberId;
 
             return (
-              <Card key={member.id}>
+              <Card key={transaction._id}>
                 <CardContent className="p-4 space-y-4">
                   <div className="flex items-start gap-3">
                     <Avatar>
@@ -748,7 +755,6 @@ function PaymentManagement() {
         )}
       </div>
 
-      {/* Payment History Dialog */}
       {selectedMember && (
         <MonthlyPaymentDialog
           open={paymentDialogOpen}
