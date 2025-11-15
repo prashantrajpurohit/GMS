@@ -4,6 +4,8 @@ interface userData {
   user: {
     gymName: String;
     email: String;
+    gymLogo?: String;
+    isTrail?: String;
   } | null
 }
 const initialState: userData = {

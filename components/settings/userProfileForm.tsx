@@ -30,7 +30,7 @@ const UserProfileForm = () => {
     mutate(data);
   };
   const form = useForm({
-    defaultValues: {
+    values: {
       name: currUserData?.name || "",
       email: currUserData?.email || "",
       phone: currUserData?.phone || "",

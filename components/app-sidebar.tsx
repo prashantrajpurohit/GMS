@@ -17,6 +17,7 @@ import Image from "next/image";
 import { useTheme } from "next-themes";
 import { useSelector } from "react-redux";
 import { StoreRootState } from "@/reduxstore/reduxStore";
+import { ApiUrl } from "@/api/apiUrls";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const theme = useTheme().theme;
@@ -28,6 +29,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     user: {
       name: userData?.gymName as string,
       email: userData?.email as string,
+      logo: userData?.gymLogo as string,
       avatar: "",
     },
     versions: ["1.0.1", "1.1.0-alpha", "2.0.0-beta1"],
@@ -43,19 +45,31 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               asChild
               className="data-[slot=sidebar-menu-button]:!p-1.5 h-10"
             >
-              <span>
-                <Image
-                  src={`/images/logo/${
-                    theme == "dark"
-                      ? "gms_logo_white.png"
-                      : "gms_logo_black.png"
-                  }`}
-                  alt=""
-                  width={50}
-                  height={80}
-                />
-                <span className="text-xl font-bold">GYM FREAKY</span>
-              </span>
+              {userData?.isTrail ? (
+                <span>
+                  <Image
+                    src={`/images/logo/${
+                      theme == "dark"
+                        ? "gms_logo_white.png"
+                        : "gms_logo_black.png"
+                    }`}
+                    alt=""
+                    width={50}
+                    height={80}
+                  />
+                  <span className="text-xl font-bold">GYM FREAKY</span>
+                </span>
+              ) : (
+                <span>
+                  <img
+                    src={`${ApiUrl.IMAGE_BASE_URL + userData?.gymLogo}`}
+                    alt=""
+                    width={50}
+                    height={80}
+                  />
+                  <span className="text-xl font-bold">{userData?.gymName}</span>
+                </span>
+              )}
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

@@ -24,10 +24,10 @@ function LoginForm() {
       <div className="w-full max-w-md">
         <div className="flex flex-col items-center mb-8">
           <div className="flex items-center gap-3 mb-4">
-            <div className="p-3 bg-gradient-to-r from-neon-green to-neon-blue rounded-xl shadow-lg">
-              <Dumbbell className="w-8 h-8 text-white" />
+            <div className="p-2 bg-gradient-to-r from-neon-green to-neon-blue rounded-xl shadow-lg">
+              <Dumbbell className="w-6 h-6 text-white" />
             </div>
-            <h1 className="text-3xl text-foreground">FitnessPro</h1>
+            <h1 className="text-xl font-bold">GYM FREAKY</h1>
           </div>
           <p className="text-muted-foreground text-center">
             Gym Management System

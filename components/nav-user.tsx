@@ -18,13 +18,8 @@ import {
 } from "@/components/ui/sidebar";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/use-auth";
-import {
-  Bell,
-  CreditCard,
-  LogOut,
-  MoreVertical,
-  UserCircle,
-} from "lucide-react";
+import { LogOut, MoreVertical, UserCircle } from "lucide-react";
+import { ApiUrl } from "@/api/apiUrls";
 
 export function NavUser({
   user,
@@ -33,6 +28,7 @@ export function NavUser({
     name: string;
     email: string;
     avatar: string;
+    logo?: string;
   };
 }) {
   const { isMobile } = useSidebar();
@@ -53,7 +49,10 @@ export function NavUser({
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
               <Avatar className="h-8 w-8 rounded-lg grayscale">
-                <AvatarImage src={user?.avatar} alt={user?.name} />
+                <AvatarImage
+                  src={ApiUrl.IMAGE_BASE_URL + user?.logo}
+                  alt={user?.name}
+                />
                 <AvatarFallback className="rounded-lg">
                   {user?.name?.[0]}
                 </AvatarFallback>

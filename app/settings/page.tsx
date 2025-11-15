@@ -38,6 +38,7 @@ function Settings() {
     queryFn: () => settingsController.getAllSettings(reduxUserData?.gymId),
   });
   const settingsData = data?.data;
+  
   return (
     <div className="space-y-6">
       <div>
