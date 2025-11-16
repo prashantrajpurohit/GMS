@@ -4,7 +4,7 @@ import { FormProvider, useForm } from "react-hook-form";
 import { Separator } from "../ui/separator";
 import CustomField from "../reusableComponents/customField";
 import { Button } from "../ui/button";
-import { Camera, Save, User } from "lucide-react";
+import { Camera, Loader, Loader2, Save, User } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Label } from "../ui/label";
 import SettingsController from "@/app/settings/controller";
@@ -14,7 +14,7 @@ import { toast } from "sonner";
 const UserProfileForm = () => {
   const settingsController = new SettingsController();
   const queryClient = useQueryClient();
-  const { mutate } = useMutation({
+  const { mutate, isPending } = useMutation({
     mutationFn: settingsController.updateUserProfile,
     onSuccess: () => {
       toast.success("User Profile updated Successfully!!");
@@ -71,10 +71,16 @@ const UserProfileForm = () => {
           </div>
         </div>
 
-        <div className="flex justify-end">
+        <div className="flex justify-end mt-2">
           <Button className="bg-gradient-to-r from-neon-green to-neon-blue text-white">
-            <Save className="w-4 h-4 mr-2" />
-            Save Profile
+            {isPending ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <>
+                <Save className="w-4 h-4 mr-2" />
+                Save Profile
+              </>
+            )}
           </Button>
         </div>
       </form>

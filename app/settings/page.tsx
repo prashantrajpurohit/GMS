@@ -38,7 +38,7 @@ function Settings() {
     queryFn: () => settingsController.getAllSettings(reduxUserData?.gymId),
   });
   const settingsData = data?.data;
-  
+
   return (
     <div className="space-y-6">
       <div>
@@ -75,7 +75,6 @@ function Settings() {
           </TabsTrigger>
         </TabsList>
 
-        {/* Gym Information Tab */}
         <TabsContent value="gym-info">
           <Card className="border-neon-green/20 bg-muted/30 dark:bg-slate-800/50 hover:border-neon-green/50 dark:hover:border-neon-green/60 transition-all">
             <CardHeader>

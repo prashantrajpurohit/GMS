@@ -8,13 +8,25 @@ export class CommonContoller {
     return data;
   }
   async sentOTPonMail(body: { email: string }) {
-    const res = await httpRequest.post(`${ApiUrl.AUTH}/verify-email/request`, body);
+    const res = await httpRequest.post(
+      `${ApiUrl.AUTH}/verify-email/request`,
+      body
+    );
     return res?.data;
   }
-  async verifyMailOtp(body: { email: string, otp: string }) {
-    const res = await httpRequest.post(`${ApiUrl.AUTH}/verify-email/confirm`, body);
+  async verifyMailOtp(body: { email: string; otp: string }) {
+    const res = await httpRequest.post(
+      `${ApiUrl.AUTH}/verify-email/confirm`,
+      body
+    );
     return res?.data;
   }
-
-
+  async forgotPassword(payload: { email: string }) {
+    const data = await httpRequest.post(`${ApiUrl.FORGOT_PASS_URL}`, payload);
+    return data.data;
+  }
+  async changePass(payload: { oldPassword: string; newPassword: string }) {
+    const data = await httpRequest.post(`${ApiUrl.CHANGE_PASS_URL}`, payload);
+    return data.data;
+  }
 }

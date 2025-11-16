@@ -11,5 +11,7 @@ export const ApiUrl = {
   PAYMENTS: `payments`,
   GYMS: `gyms`,
   MEDIA_URL: `media`,
+  FORGOT_PASS_URL: `/auth/forgot-password`,
+  CHANGE_PASS_URL: `/auth/change-password`,
   AUTH: `auth`,
 };
