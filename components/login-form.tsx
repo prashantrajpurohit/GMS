@@ -120,7 +120,7 @@ function LoginForm() {
               <Button
                 type="button"
                 variant="outline"
-                className="w-full h-11"
+                className="w-full h-11 hover:cursor-pointer"
                 onClick={() => router.push("./register")}
               >
                 Create New Account

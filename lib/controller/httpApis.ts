@@ -7,4 +7,14 @@ export class CommonContoller {
     const { data } = await httpRequest.post(ApiUrl.LOGIN_URL, body);
     return data;
   }
+  async sentOTPonMail(body: { email: string }) {
+    const res = await httpRequest.post(`${ApiUrl.AUTH}/verify-email/request`, body);
+    return res?.data;
+  }
+  async verifyMailOtp(body: { email: string, otp: string }) {
+    const res = await httpRequest.post(`${ApiUrl.AUTH}/verify-email/confirm`, body);
+    return res?.data;
+  }
+
+
 }
