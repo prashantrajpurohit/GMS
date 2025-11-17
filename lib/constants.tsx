@@ -617,6 +617,7 @@ export const DASHBOARD_DUMMY = [
 ];
 export const initialFormValues: MemberInterface = {
   fullName: "",
+  fatherName: "",
   email: "",
   phone: "",
   weight: 0,

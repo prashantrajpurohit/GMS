@@ -214,13 +214,21 @@ export default function AddEditMember({
           </div>
 
           <div className="grid gap-4">
-            <div className="grid grid-cols-1 gap-3 sm:gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
               <div>
                 <CustomField
                   name="fullName"
                   label="Full name"
                   isLoading={false}
                   placeholder="Enter member's full name"
+                />
+              </div>
+              <div>
+                <CustomField
+                  name="fatherName"
+                  label="Father name"
+                  isLoading={false}
+                  placeholder="Enter member's father name"
                 />
               </div>
             </div>

@@ -70,6 +70,7 @@ export const planSchema = z.object({
 // Type inference
 
 export const memberSchema = z.object({
+  fatherName: z.string().optional(),
   fullName: z.string().min(1, "Full name is required"),
   phone: z.string().min(1, "Phone number is required"),
   email: z.string().optional(),

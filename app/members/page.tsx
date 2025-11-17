@@ -199,7 +199,8 @@ function MembershipManagement() {
   };
 
   const onSubmit: SubmitHandler<MemberInterface> = (data) => {
-    mutate(data);
+    const { email, ...rest } = data;
+    mutate({ ...rest, ...((email as string)?.length > 0 && { email }) });
   };
 
   function handleOpen(open: boolean) {
@@ -209,6 +210,7 @@ function MembershipManagement() {
 
   const editDataValues = {
     fullName: editData?.fullName,
+    fatherName: editData?.fatherName,
     email: editData?.email,
     phone: editData?.phone,
     weight: +(editData?.weight ?? 0),
