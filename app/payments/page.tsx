@@ -283,8 +283,11 @@ function PaymentManagement() {
     setPaymentDialogOpen(true);
   };
 
-  const handleUpdatePayment = (month: string, status: "paid" | "pending") => {
-    // mutate({});
+  const handleUpdatePayment = (month: string) => {
+    mutate({
+      id: month,
+      payload: { status: "paid" },
+    });
   };
 
   const handleExport = () => {
@@ -787,7 +790,7 @@ function PaymentManagement() {
               onClick={() =>
                 mutate({
                   id: selectedMember?._id as string,
-                  payload: { status: "PAID" },
+                  payload: { status: "paid" },
                 })
               }
             >

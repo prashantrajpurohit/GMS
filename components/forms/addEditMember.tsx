@@ -118,7 +118,6 @@ export default function AddEditMember({
     url = await memberController.uploadMedia(file, (p: number) =>
       setUploadProgress(p)
     );
-    console.log(url, "url");
 
     form.setValue("photo", url);
     setUploadingLogo(false);
@@ -232,13 +231,23 @@ export default function AddEditMember({
                 />
               </div>
             </div>
-            <div>
-              <CustomField
-                name="address"
-                label="Address"
-                isLoading={false}
-                placeholder="Enter member's address"
-              />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+              <div>
+                <CustomField
+                  name="address"
+                  label="Address"
+                  isLoading={false}
+                  placeholder="Enter member's address"
+                />
+              </div>
+              <div>
+                <CustomField
+                  name="registrationNo"
+                  label="Registration No"
+                  isLoading={false}
+                  placeholder="Enter member's registration no"
+                />
+              </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>

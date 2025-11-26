@@ -74,6 +74,7 @@ export const memberSchema = z.object({
   fullName: z.string().min(1, "Full name is required"),
   phone: z.string().min(1, "Phone number is required"),
   email: z.string().optional(),
+  registrationNo: z.string().optional(),
   gender: z.enum(["male", "female", "other"]),
   weight: z.number().optional(),
   height: z.number().optional(),
