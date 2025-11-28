@@ -178,7 +178,7 @@ function MembershipManagement() {
         .toLowerCase()
         .includes(searchTerm.toLowerCase()) ||
       member?.phone.includes(searchTerm) ||
-      member?.registrationNo.includes(searchTerm);
+      member?.registrationNo?.includes(searchTerm);
     const matchesFilter =
       selectedFilter === "all" || member.status === selectedFilter;
     return matchesSearch && matchesFilter;
