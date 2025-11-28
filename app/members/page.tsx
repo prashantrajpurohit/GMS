@@ -175,8 +175,8 @@ function MembershipManagement() {
     const matchesSearch =
       member?.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (member?.email as string)
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase()) ||
+        ?.toLowerCase()
+        ?.includes(searchTerm.toLowerCase()) ||
       member?.phone.includes(searchTerm) ||
       member?.registrationNo?.includes(searchTerm);
     const matchesFilter =
