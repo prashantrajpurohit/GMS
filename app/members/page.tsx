@@ -225,6 +225,7 @@ function MembershipManagement() {
     status: editData?.status,
     notes: editData?.notes || "",
     batch: editData?.batch || "",
+    registrationNo: editData?.registrationNo || "",
   };
 
   const form = useForm<MemberInterface>({
@@ -388,7 +389,12 @@ function MembershipManagement() {
                             </div>
                           )}
                           <div>
-                            <div className="font-medium">{member.fullName}</div>
+                            <div className="font-medium">
+                              {member.fullName}{" "}
+                              {member?.registrationNo
+                                ? `(${member?.registrationNo})`
+                                : ""}
+                            </div>
                             <div className="text-sm text-muted-foreground sm:hidden">
                               {member.email}
                             </div>
@@ -397,10 +403,12 @@ function MembershipManagement() {
                       </TableCell>
                       <TableCell className="hidden sm:table-cell">
                         <div className="space-y-1">
-                          <div className="flex items-center gap-2 text-sm">
-                            <Mail className="w-3 h-3" />
-                            {member.email || "N/A"}
-                          </div>
+                          {member?.email && (
+                            <div className="flex items-center gap-2 text-sm">
+                              <Mail className="w-3 h-3" />
+                              {member?.email || "N/A"}
+                            </div>
+                          )}
                           <div className="flex items-center gap-2 text-sm text-muted-foreground">
                             <Phone className="w-3 h-3" />
                             {member.phone || "N/A"}

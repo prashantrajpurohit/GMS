@@ -632,6 +632,7 @@ export const initialFormValues: MemberInterface = {
   status: "active",
   notes: "",
   batch: "",
+  registrationNo:""
 };
 export const getStatusBadge = (status: string) => {
   switch (status) {
