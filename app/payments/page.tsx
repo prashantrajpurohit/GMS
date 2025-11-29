@@ -40,6 +40,10 @@ import {
   Send,
   MessageSquare,
   Loader2,
+  ChevronsLeft,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsRight,
 } from "lucide-react";
 import {
   MonthlyPayment,
@@ -200,6 +204,9 @@ function PaymentManagement() {
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [sendReminderDialogOpen, setSendReminderDialogOpen] = useState(false);
   const [bulkReminderDialogOpen, setBulkReminderDialogOpen] = useState(false);
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const { data = [], isLoading: paymentsLoading } = useQuery({
     queryKey: [
       "allPayments",
@@ -320,6 +327,17 @@ function PaymentManagement() {
   const clearDateRange = () => {
     setDateRange({ from: undefined, to: undefined });
   };
+
+  // Pagination calculations
+  const totalPages = Math.ceil((filteredMembers?.length || 0) / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedMembers = filteredMembers?.slice(startIndex, endIndex);
+
+  // Reset to page 1 when filters change
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, statusFilter, dateRange]);
 
   return (
     <div className="space-y-6">
@@ -553,7 +571,7 @@ function PaymentManagement() {
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredMembers?.map((transaction: Record<string, any>) => {
+                paginatedMembers?.map((transaction: Record<string, any>) => {
                   const currentStatus = transaction?.status;
                   const member = transaction?.memberId;
                   return (
@@ -572,7 +590,12 @@ function PaymentManagement() {
                             </AvatarFallback>
                           </Avatar>
                           <div>
-                            <p className="font-medium">{member.fullName}</p>
+                            <p className="font-medium">
+                              {member.fullName}{" "}
+                              {member?.registrationNo
+                                ? `(${member?.registrationNo})`
+                                : ""}
+                            </p>
                             <p className="text-xs text-muted-foreground">
                               {member.phone}
                             </p>
@@ -659,6 +682,80 @@ function PaymentManagement() {
               )}
             </TableBody>
           </Table>
+
+          {/* Pagination Controls */}
+          {filteredMembers?.length > 0 && (
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-t">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">
+                  Rows per page:
+                </span>
+                <Select
+                  value={itemsPerPage.toString()}
+                  onValueChange={(value) => {
+                    setItemsPerPage(Number(value));
+                    setCurrentPage(1);
+                  }}
+                >
+                  <SelectTrigger className="w-[70px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="5">5</SelectItem>
+                    <SelectItem value="10">10</SelectItem>
+                    <SelectItem value="20">20</SelectItem>
+                    <SelectItem value="50">50</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">
+                  {startIndex + 1}-{Math.min(endIndex, filteredMembers?.length)}{" "}
+                  of {filteredMembers?.length}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(1)}
+                  disabled={currentPage === 1}
+                  className="hidden sm:flex"
+                >
+                  <ChevronsLeft className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(currentPage - 1)}
+                  disabled={currentPage === 1}
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  <span className="hidden sm:inline ml-1">Previous</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                >
+                  <span className="hidden sm:inline mr-1">Next</span>
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(totalPages)}
+                  disabled={currentPage === totalPages}
+                  className="hidden sm:flex"
+                >
+                  <ChevronsRight className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -695,7 +792,12 @@ function PaymentManagement() {
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1">
-                      <p className="font-medium">{member.fullName}</p>
+                      <p className="font-medium">
+                        {member.fullName}{" "}
+                        {member?.registrationNo
+                          ? `(${member?.registrationNo})`
+                          : ""}
+                      </p>
                       <p className="text-sm text-muted-foreground">
                         {member.phone}
                       </p>
