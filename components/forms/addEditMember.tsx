@@ -15,6 +15,7 @@ import { ApiUrl } from "@/api/apiUrls";
 import { useFormContext } from "react-hook-form";
 
 import { Skeleton } from "@/components/ui/skeleton";
+import DatePickerField from "../reusableComponents/customDatePicker";
 
 // Add this component at the top
 const FormFieldsSkeleton = () => (
@@ -270,12 +271,11 @@ export default function AddEditMember({
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
-                <CustomField
+                <DatePickerField
                   name="dateOfBirth"
                   label="Date of Birth"
-                  isLoading={false}
+                  // isLoading={false}
                   placeholder="dd-mm-yyyy"
-                  type="date"
                 />
               </div>
 
@@ -342,12 +342,11 @@ export default function AddEditMember({
           {/* Start Date */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div className="grid gap-2">
-              <CustomField
+              <DatePickerField
                 name="startDate"
                 label="Start Date"
-                isLoading={false}
+                // isLoading={false}
                 placeholder="Select workout batch"
-                type="date"
                 disabled={!!isEditingMember}
               />
             </div>
