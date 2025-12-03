@@ -16,6 +16,7 @@ import { useFormContext } from "react-hook-form";
 
 import { Skeleton } from "@/components/ui/skeleton";
 import DatePickerField from "../reusableComponents/customDatePicker";
+import { toast } from "sonner";
 
 // Add this component at the top
 const FormFieldsSkeleton = () => (
@@ -88,20 +89,17 @@ const FormFieldsSkeleton = () => (
     </div>
   </div>
 );
-export default function AddEditMember({
-  isEditingMember,
-}: {
-  isEditingMember: Record<string, any> | null;
-}) {
+
+// Separate component for image upload to isolate re-renders
+const ImageUploadSection = () => {
   const logoInputRef = useRef<HTMLInputElement | null>(null);
   const memberController = new MembersController();
-  const planController = new PlansController();
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const { data, isLoading } = useQuery({
-    queryKey: ["plans"],
-    queryFn: planController.getPlans,
-  });
+  const form = useFormContext();
+
+  // Only watch the photo field, not all fields
+  const photoValue = form.watch("photo");
 
   const { mutate: deleteMedia, isPending } = useMutation({
     mutationFn: memberController.deleteMedia,
@@ -109,8 +107,7 @@ export default function AddEditMember({
       form.setValue("photo", "");
     },
   });
-  const form = useFormContext();
-  const values = form.watch();
+
   async function handleUploadLogo(e: React.ChangeEvent<HTMLInputElement>) {
     let file = e.target.files?.[0];
     if (!file) return;
@@ -127,9 +124,92 @@ export default function AddEditMember({
     }
     setUploadProgress(0);
   }
+
   async function handleDelete() {
-    deleteMedia(values?.photo);
+    deleteMedia(photoValue);
   }
+
+  return (
+    <div className="relative w-32 h-32 mx-auto">
+      {photoValue ? (
+        <img
+          src={ApiUrl.IMAGE_BASE_URL + photoValue}
+          alt="Member photo"
+          className="w-full h-full object-cover rounded-full border-2 border-muted"
+        />
+      ) : (
+        <div
+          onClick={() => logoInputRef?.current?.click()}
+          className="w-full cursor-pointer h-full bg-muted rounded-full border-2 border-dashed border-muted-foreground/25 flex items-center justify-center"
+        >
+          <Camera className="h-8 w-8 text-muted-foreground/50" />
+        </div>
+      )}
+
+      {/* Upload Progress */}
+      {uploadingLogo && (
+        <div className="absolute inset-0 bg-background/95 backdrop-blur rounded-lg flex flex-col items-center justify-center">
+          <Progress value={uploadProgress} className="h-2 w-20 mb-2" />
+          <p className="text-xs text-muted-foreground">{uploadProgress}%</p>
+        </div>
+      )}
+
+      {/* Upload/Delete Button */}
+      {!photoValue ? (
+        <Button
+          type="button"
+          variant="secondary"
+          size="icon"
+          onClick={() => logoInputRef.current?.click()}
+          disabled={uploadingLogo}
+          className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full shadow-lg"
+        >
+          <Camera className="h-4 w-4" />
+        </Button>
+      ) : (
+        <Button
+          type="button"
+          variant="destructive"
+          size="icon"
+          onClick={handleDelete}
+          disabled={isPending}
+          className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full shadow-lg"
+        >
+          {isPending ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Trash className="h-4 w-4" />
+          )}
+        </Button>
+      )}
+
+      <input
+        type="file"
+        accept="image/*"
+        capture="environment"
+        className="hidden"
+        onChange={handleUploadLogo}
+        ref={logoInputRef}
+      />
+    </div>
+  );
+};
+
+export default function AddEditMember({
+  isEditingMember,
+}: {
+  isEditingMember: Record<string, any> | null;
+}) {
+  const form = useFormContext();
+
+  const planController = new PlansController();
+  const { data, isLoading } = useQuery({
+    queryKey: ["plans"],
+    queryFn: planController.getPlans,
+  });
+  const currentYear = new Date().getFullYear();
+  const minDate = new Date(currentYear - 5, 0, 1);
+  console.log(form.formState.errors, "error");
 
   return (
     <div>
@@ -147,71 +227,8 @@ export default function AddEditMember({
         <FormFieldsSkeleton />
       ) : (
         <div className="grid gap-3 sm:gap-4 py-3 sm:py-4 px-1 sm:px-0">
-          {/* Image Upload Section */}
-          <div className="relative w-32 h-32 mx-auto">
-            {values?.photo ? (
-              <img
-                src={ApiUrl.IMAGE_BASE_URL + values.photo}
-                alt="Member photo"
-                className="w-full h-full object-cover rounded-full border-2 border-muted"
-              />
-            ) : (
-              <div
-                onClick={() => logoInputRef?.current?.click()}
-                className="w-full cursor-pointer h-full bg-muted rounded-full border-2 border-dashed border-muted-foreground/25 flex items-center justify-center"
-              >
-                <Camera className="h-8 w-8 text-muted-foreground/50" />
-              </div>
-            )}
-
-            {/* Upload Progress */}
-            {uploadingLogo && (
-              <div className="absolute inset-0 bg-background/95 backdrop-blur rounded-lg flex flex-col items-center justify-center">
-                <Progress value={uploadProgress} className="h-2 w-20 mb-2" />
-                <p className="text-xs text-muted-foreground">
-                  {uploadProgress}%
-                </p>
-              </div>
-            )}
-
-            {/* Upload/Delete Button */}
-            {!values?.photo ? (
-              <Button
-                type="button"
-                variant="secondary"
-                size="icon"
-                onClick={() => logoInputRef.current?.click()}
-                disabled={uploadingLogo}
-                className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full shadow-lg"
-              >
-                <Camera className="h-4 w-4" />
-              </Button>
-            ) : (
-              <Button
-                type="button"
-                variant="destructive"
-                size="icon"
-                onClick={handleDelete}
-                disabled={isPending}
-                className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full shadow-lg"
-              >
-                {isPending ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Trash className="h-4 w-4" />
-                )}
-              </Button>
-            )}
-
-            <input
-              type="file"
-              accept="image/*"
-              capture="environment"
-              className="hidden"
-              onChange={handleUploadLogo}
-              ref={logoInputRef}
-            />
-          </div>
+          {/* Image Upload Section - Now isolated */}
+          <ImageUploadSection />
 
           <div className="grid gap-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
@@ -274,8 +291,8 @@ export default function AddEditMember({
                 <DatePickerField
                   name="dateOfBirth"
                   label="Date of Birth"
-                  // isLoading={false}
                   placeholder="dd-mm-yyyy"
+                  minDate={minDate}
                 />
               </div>
 
@@ -343,9 +360,9 @@ export default function AddEditMember({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div className="grid gap-2">
               <DatePickerField
+                minDate={new Date()}
                 name="startDate"
                 label="Start Date"
-                // isLoading={false}
                 placeholder="Select workout batch"
                 disabled={!!isEditingMember}
               />

@@ -252,6 +252,15 @@ function MembershipManagement() {
     values: editDataValues ?? { ...initialFormValues },
     resolver: zodResolver(memberSchema),
   });
+  function handleErrors(error: any) {
+    if (Object.keys(error)[0] == "startDate") {
+      const firstError = Object.keys(error)[0];
+      const errorMessage =
+        `${firstError} is required` || "Please check the form for error.";
+      toast.warning(errorMessage);
+    }
+  }
+  console.log(form.watch(), "valll", form.formState.errors);
 
   useEffect(() => {
     setMembers(data);
@@ -286,7 +295,7 @@ function MembershipManagement() {
             </DialogTrigger>
             <DialogContent className="w-[95vw] max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl max-h-[90vh] overflow-y-auto mx-4 sm:mx-0">
               <FormProvider {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)}>
+                <form onSubmit={form.handleSubmit(onSubmit, handleErrors)}>
                   <AddEditMember isEditingMember={editData} />
 
                   <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:gap-0 px-1 sm:px-0">

@@ -1,6 +1,9 @@
 import axios from "axios";
 import { toast } from "sonner";
 import { ApiStatus } from "@/helper/helper";
+import { useDispatch } from "react-redux";
+import { store } from "@/reduxstore/reduxStore";
+import { logout } from "@/reduxstore/authSlice";
 
 const httpRequest = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL + "/api",
@@ -24,14 +27,13 @@ httpRequest.interceptors.response.use(
     return response;
   },
   function (error) {
-    // 2. Handle error responses
     const status = error.response?.status;
     const message = error?.response?.data?.message;
 
     switch (status) {
       case 401:
-        toast.error("Session expired. Please login again.");
-        localStorage.removeItem("token");
+        toast.error(message || "Unauthorized. Please log in again.");
+        store.dispatch(logout());
         break;
 
       case 403:

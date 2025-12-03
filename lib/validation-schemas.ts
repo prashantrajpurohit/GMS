@@ -78,15 +78,17 @@ export const memberSchema = z.object({
   gender: z.enum(["male", "female", "other"]),
   weight: z.number().optional(),
   height: z.number().optional(),
-  dateOfBirth: z
-    .string().optional(),
+  dateOfBirth: z.string().optional(),
   address: z.string().optional(),
   emergencyContact: z.string().optional(),
   photo: z.string().optional(),
   status: z.enum(["active", "inactive", "suspended", "guest", "expired"]),
   startDate: z
     .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be in YYYY-MM-DD format"),
+    .min(1, "Start date is required")
+    .refine((date) => !isNaN(Date.parse(date)), {
+      message: "Invalid date format",
+    }),
   currentPlanId: z.string().min(1, "Current plan ID is required"),
   notes: z.string().optional(),
   batch: z.string().optional(),
