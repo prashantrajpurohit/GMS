@@ -41,18 +41,14 @@ export default class MembersController {
   async uploadFile(file: File, onUploadProgress?: (progress: number) => void) {
     const formData = new FormData();
     formData.append("file", file);
-    const response = await httpRequest.post(
-      `${ApiUrl.MEDIA_URL}`,
-      formData,
-      {
-        headers: { "Content-Type": "multipart/form-data" },
-        onUploadProgress: (e) => {
-          if (onUploadProgress && e.total) {
-            onUploadProgress(Math.round((e.loaded * 100) / e.total));
-          }
-        },
-      }
-    );
+    const response = await httpRequest.post(`${ApiUrl.MEDIA_URL}`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+      onUploadProgress: (e) => {
+        if (onUploadProgress && e.total) {
+          onUploadProgress(Math.round((e.loaded * 100) / e.total));
+        }
+      },
+    });
     return response?.data?.data?.url;
   }
   async deleteMedia(url: string) {
@@ -60,5 +56,9 @@ export default class MembersController {
       `${ApiUrl.MEDIA_URL}/?url=${url}`
     );
     return response?.data?.url;
+  }
+  async memberProfile(id: string) {
+    const data = await httpRequest.get(`${ApiUrl.Member}/${id}`);
+    return data?.data?.data;
   }
 }

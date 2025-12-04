@@ -43,6 +43,7 @@ import {
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
+  Eye,
 } from "lucide-react";
 import { toast } from "sonner";
 import { FormProvider, useForm, type SubmitHandler } from "react-hook-form";
@@ -59,6 +60,7 @@ import { StoreRootState } from "@/reduxstore/reduxStore";
 import NoData from "@/components/reusableComponents/no-data";
 import { ApiUrl } from "@/api/apiUrls";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useRouter } from "next/navigation";
 
 interface extendedMemberInterface
   extends Omit<MemberInterface, "currentPlanId"> {
@@ -137,6 +139,7 @@ const MemberTableSkeleton = () => (
 
 function MembershipManagement() {
   const dispatch = useDispatch();
+  const router = useRouter();
   const queryClient = useQueryClient();
   const editData = useSelector(
     (state: StoreRootState) => state.data.editData as Record<string, any> | null
@@ -471,6 +474,16 @@ function MembershipManagement() {
                             className="hover:bg-neon-green/10 hover:text-neon-green"
                           >
                             <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() =>
+                              router.push(`/members/${member._id}`)
+                            }
+                            className="hover:bg-neon-green/10 hover:text-neon-green"
+                          >
+                            <Eye className="w-4 h-4" />
                           </Button>
                         </div>
                       </TableCell>
