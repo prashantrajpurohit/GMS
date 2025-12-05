@@ -135,6 +135,15 @@ export default function MemberProfilePage() {
     queryFn: () => membersController.memberProfile(id as string),
   });
 
+  const whatsappLink = useMemo(() => {
+    const digits = memberProfile?.phone?.replace(/\D/g, "");
+    const base = digits ? `https://wa.me/${digits}` : "https://wa.me/";
+    const text = encodeURIComponent(
+      "Hello! Greetings from XYZ Gym. How can we help you today?"
+    );
+    return `${base}?text=${text}`;
+  }, [memberProfile?.phone]);
+
   const planProgress = useMemo(() => {
     if (!memberProfile?.startDate || !memberProfile?.endDate) {
       return { percent: 0, daysLeft: 0 };
@@ -161,15 +170,6 @@ export default function MemberProfilePage() {
       .join("")
       .slice(0, 2)
       .toUpperCase() || "GM";
-
-  const whatsappLink = useMemo(() => {
-    const digits = memberProfile.phone?.replace(/\D/g, "");
-    const base = digits ? `https://wa.me/${digits}` : "https://wa.me/";
-    const text = encodeURIComponent(
-      "Hello! Greetings from XYZ Gym. How can we help you today?"
-    );
-    return `${base}?text=${text}`;
-  }, [memberProfile.phone]);
 
   const billingEntries = memberProfile.paymentHistory || [];
 
