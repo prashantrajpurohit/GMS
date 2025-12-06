@@ -23,7 +23,7 @@ export class CommonContoller {
   }
   async searchEnquiries(query: string) {
     const res = await httpRequest.get(
-      `${ApiUrl.ENQUIRES}?search=${encodeURIComponent(query)}`
+      `${ApiUrl.DASHBOARD}/member?search=${query}`
     );
     return res?.data?.data;
   }

@@ -50,7 +50,9 @@ export function SiteHeader({ name }: { name?: string }) {
     enabled: debouncedQuery.length > 0,
   });
   const enquiries = data?.enquiries ?? [];
-  const [selectedEnquiry, setSelectedEnquiry] = useState<Enquiry | null>(null);
+  const [selectedEnquiry, setSelectedEnquiry] = useState<
+    (Enquiry & { createdAt?: string | Date; updatedAt?: string | Date }) | null
+  >(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAddEnquiryOpen, setIsAddEnquiryOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -293,7 +295,9 @@ export function SiteHeader({ name }: { name?: string }) {
                   <div className="flex items-center gap-2">
                     <Calendar className="w-4 h-4 text-muted-foreground" />
                     <p className="text-sm">
-                      {new Date(selectedEnquiry.createdAt).toLocaleDateString()}
+                      {new Date(
+                        selectedEnquiry?.createdAt as string
+                      ).toLocaleDateString()}
                     </p>
                   </div>
                 </div>
@@ -305,7 +309,9 @@ export function SiteHeader({ name }: { name?: string }) {
                   <div className="flex items-center gap-2">
                     <Calendar className="w-4 h-4 text-muted-foreground" />
                     <p className="text-sm">
-                      {new Date(selectedEnquiry.updatedAt).toLocaleDateString()}
+                      {new Date(
+                        selectedEnquiry.updatedAt as string
+                      ).toLocaleDateString()}
                     </p>
                   </div>
                 </div>
