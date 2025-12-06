@@ -44,15 +44,17 @@ export function SiteHeader({ name }: { name?: string }) {
   const commonController = new CommonContoller();
 
   const [open, setOpen] = useState(false);
-  const { data, isLoading, isSuccess } = useQuery<EnquiriesResponse>({
+  const { data, isLoading, isSuccess } = useQuery<[Enquiry]>({
     queryKey: ["search-enquiries", debouncedQuery],
     queryFn: () => commonController.searchEnquiries(debouncedQuery),
     enabled: debouncedQuery.length > 0,
   });
-  const enquiries = data?.enquiries ?? [];
+  const enquiries = data ?? [];
+
   const [selectedEnquiry, setSelectedEnquiry] = useState<
     (Enquiry & { createdAt?: string | Date; updatedAt?: string | Date }) | null
   >(null);
+  console.log(selectedEnquiry, "selectedEnquiry");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAddEnquiryOpen, setIsAddEnquiryOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -69,11 +71,7 @@ export function SiteHeader({ name }: { name?: string }) {
   }, [query, enquiries]);
 
   const getEnquiryLabel = (enquiry: Enquiry) =>
-    enquiry.name ||
-    enquiry.phone ||
-    enquiry.source ||
-    enquiry.referredBy ||
-    enquiry.status;
+    enquiry.source || enquiry.referredBy || enquiry.status;
 
   const handleSuggestionClick = (enquiry: Enquiry) => {
     setSelectedEnquiry(enquiry);
@@ -126,7 +124,7 @@ export function SiteHeader({ name }: { name?: string }) {
     return (
       <span
         className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-          statusColors[status.toLowerCase()] ||
+          statusColors[status?.toLowerCase()] ||
           "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300"
         }`}
       >
@@ -179,7 +177,7 @@ export function SiteHeader({ name }: { name?: string }) {
                           .filter(Boolean)
                           .join(" | ");
                         const key = `${
-                          enquiry.phone ?? enquiry.name ?? index
+                          enquiry.phone ?? enquiry.fullName ?? index
                         }-${index}`;
                         return (
                           <li
@@ -192,10 +190,11 @@ export function SiteHeader({ name }: { name?: string }) {
                           >
                             <div className="flex items-center justify-between gap-2">
                               <span className="font-medium">
-                                {label || "Untitled enquiry"}
+                                {`${enquiry.fullName} (${enquiry.phone})` ||
+                                  "Untitled enquiry"}
                               </span>
                               {enquiry.phone ? (
-                                <span className="text-xs text-muted-foreground">
+                                <span className="text-xs text-muted-sforeground">
                                   {enquiry.phone}
                                 </span>
                               ) : null}
@@ -240,7 +239,7 @@ export function SiteHeader({ name }: { name?: string }) {
         <DialogContent className="w-[95vw] max-w-md sm:max-w-lg">
           <DialogHeader>
             <DialogTitle className="text-xl font-semibold">
-              Enquiry Details
+              {selectedEnquiry?.isEnquiry ? "Enquiry" : "Member"} Details
             </DialogTitle>
           </DialogHeader>
 
@@ -249,7 +248,7 @@ export function SiteHeader({ name }: { name?: string }) {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-muted-foreground mb-1">Name</p>
-                  <p className="font-medium">{selectedEnquiry.name}</p>
+                  <p className="font-medium">{selectedEnquiry.fullName}</p>
                 </div>
 
                 <div>

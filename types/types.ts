@@ -64,11 +64,12 @@ export type UserDataType = {
   phone?: string;
 };
 export interface Enquiry {
-  name: string;
+  fullName: string;
   source: string;
   phone: string;
   referredBy: string;
   status: "new" | "contacted" | "converted" | "closed";
+  isEnquiry: boolean;
 }
 export interface Pagination {
   total: number;
