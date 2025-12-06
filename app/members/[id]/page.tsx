@@ -30,6 +30,8 @@ import MembersController from "../controller";
 import { ApiUrl } from "@/api/apiUrls";
 import { getStatusBadge } from "@/lib/constants";
 import { MemberInterface } from "@/lib/validation-schemas";
+import { useSelector } from "react-redux";
+import { StoreRootState } from "@/reduxstore/reduxStore";
 
 type BillingEntry = {
   _id?: string;
@@ -129,18 +131,46 @@ const MemberSkeleton = () => (
 export default function MemberProfilePage() {
   const { id } = useParams();
   const membersController = new MembersController();
+  const userData = useSelector(
+    (state: StoreRootState) => state?.data?.userdata?.user
+  );
 
   const { data: memberProfile, isLoading } = useQuery<MemberProfile>({
     queryKey: ["member-profile", id],
     queryFn: () => membersController.memberProfile(id as string),
   });
 
+  console.log(userData, "userData");
   const whatsappLink = useMemo(() => {
     const digits = memberProfile?.phone?.replace(/\D/g, "");
     const base = digits ? `https://wa.me/${digits}` : "https://wa.me/";
-    const text = encodeURIComponent(
-      "Hello! Greetings from XYZ Gym. How can we help you today?"
-    );
+
+    // Extract original day
+    const originalDateObj = new Date(memberProfile?.startDate as string);
+    const day = originalDateObj.getDate();
+
+    // Current month & year
+    const currMonth = new Date().toLocaleDateString("en-IN", { month: "long" });
+    const currYear = new Date().getFullYear();
+
+    // Format: 15/December/2025
+    const dueDate = `${day}/${currMonth}/${currYear}`;
+
+    // Whatsapp-safe emojis (direct unicode)
+    const wave = "👋";
+    const calendar = "📆";
+    const pray = "🙏";
+    const muscle = "💪";
+
+    const message =
+      `Hello ${memberProfile?.fullName} \n` +
+      `Your monthly gym fee of ₹${memberProfile?.currentPlan?.price} is due on ${dueDate} \n` +
+      `Kindly complete the payment to avoid interruption in your membership \n` +
+      `Let us know if you need any help!\n` +
+      `— ${userData?.gymName} `;
+
+    const text = encodeURIComponent(message);
+
     return `${base}?text=${text}`;
   }, [memberProfile?.phone]);
 

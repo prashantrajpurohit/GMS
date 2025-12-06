@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Loader2, SearchIcon } from "lucide-react";
+import { Loader2, SearchIcon, Phone, Users, Calendar } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { useForm, FormProvider } from "react-hook-form";
 
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
@@ -11,28 +12,59 @@ import { ModeToggle } from "./ui/mode-toggler";
 import { CommonContoller } from "@/lib/controller/httpApis";
 import { useDebounce } from "@/hooks/use-debounce";
 import { EnquiriesResponse, Enquiry } from "@/types/types";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+interface EnquiryFormData {
+  name: string;
+  phone: string;
+  source?: string;
+  referredBy?: string;
+  status?: string;
+}
 
 export function SiteHeader({ name }: { name?: string }) {
   const [query, setQuery] = useState("");
   const debouncedQuery = useDebounce(query.trim(), 300);
 
   const commonController = new CommonContoller();
-  const { data, isLoading } = useQuery<EnquiriesResponse>({
+
+  const [open, setOpen] = useState(false);
+  const { data, isLoading, isSuccess } = useQuery<EnquiriesResponse>({
     queryKey: ["search-enquiries", debouncedQuery],
     queryFn: () => commonController.searchEnquiries(debouncedQuery),
     enabled: debouncedQuery.length > 0,
   });
-
   const enquiries = data?.enquiries ?? [];
-  const [open, setOpen] = useState(false);
+  const [selectedEnquiry, setSelectedEnquiry] = useState<Enquiry | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isAddEnquiryOpen, setIsAddEnquiryOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const blurTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const form = useForm<EnquiryFormData>();
 
   useEffect(() => {
     if (!query.trim()) {
       setOpen(false);
+    } else if (isSuccess) {
+      setOpen(true);
     }
-  }, [query]);
+  }, [query, enquiries]);
 
   const getEnquiryLabel = (enquiry: Enquiry) =>
     enquiry.name ||
@@ -42,9 +74,23 @@ export function SiteHeader({ name }: { name?: string }) {
     enquiry.status;
 
   const handleSuggestionClick = (enquiry: Enquiry) => {
-    const label = getEnquiryLabel(enquiry);
-    setQuery(label ?? "");
+    setSelectedEnquiry(enquiry);
+    setIsModalOpen(true);
     setOpen(false);
+    setQuery("");
+  };
+
+  const handleAddNewEnquiry = () => {
+    setIsAddEnquiryOpen(true);
+    setOpen(false);
+    setQuery("");
+  };
+
+  const onSubmit = (data: EnquiryFormData) => {
+    console.log("Form submitted:", data);
+    // Add your API call here to create the enquiry
+    setIsAddEnquiryOpen(false);
+    form.reset();
   };
 
   const closeWithDelay = () => {
@@ -63,6 +109,29 @@ export function SiteHeader({ name }: { name?: string }) {
 
   const showSuggestionBox =
     open && (isLoading || enquiries.length > 0 || query.trim().length > 0);
+
+  const getStatusBadge = (status: string) => {
+    const statusColors: Record<string, string> = {
+      pending:
+        "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
+      contacted:
+        "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
+      converted:
+        "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
+      rejected: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
+    };
+
+    return (
+      <span
+        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+          statusColors[status.toLowerCase()] ||
+          "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300"
+        }`}
+      >
+        {status}
+      </span>
+    );
+  };
 
   return (
     <header className="flex h-(--header-height) shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height)">
@@ -96,14 +165,20 @@ export function SiteHeader({ name }: { name?: string }) {
                       <Loader2 className="size-4 animate-spin" />
                       Fetching enquiries...
                     </div>
-                  ) : enquiries.length > 0 ? (
+                  ) : enquiries?.length > 0 ? (
                     <ul className="divide-y divide-border">
-                      {enquiries.map((enquiry, index) => {
+                      {enquiries?.map((enquiry, index) => {
                         const label = getEnquiryLabel(enquiry);
-                        const meta = [enquiry.source, enquiry.status, enquiry.referredBy]
+                        const meta = [
+                          enquiry.source,
+                          enquiry.status,
+                          enquiry.referredBy,
+                        ]
                           .filter(Boolean)
                           .join(" | ");
-                        const key = `${enquiry.phone ?? enquiry.name ?? index}-${index}`;
+                        const key = `${
+                          enquiry.phone ?? enquiry.name ?? index
+                        }-${index}`;
                         return (
                           <li
                             key={key}
@@ -133,9 +208,20 @@ export function SiteHeader({ name }: { name?: string }) {
                       })}
                     </ul>
                   ) : (
-                    <div className="px-3 py-2 text-sm text-muted-foreground">
-                      No enquiries found
-                    </div>
+                    <button
+                      className="w-full px-3 py-2 text-left text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                      onMouseDown={(event) => {
+                        event.preventDefault();
+                        handleAddNewEnquiry();
+                      }}
+                    >
+                      <div className="flex items-center gap-2">
+                        <span>No enquiries found.</span>
+                        <Button className="font-medium text-foreground">
+                          Add new enquiry?
+                        </Button>
+                      </div>
+                    </button>
                   )}
                 </div>
               </div>
@@ -146,6 +232,185 @@ export function SiteHeader({ name }: { name?: string }) {
           </div>
         </div>
       </div>
+
+      {/* View Enquiry Modal */}
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="w-[95vw] max-w-md sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-semibold">
+              Enquiry Details
+            </DialogTitle>
+          </DialogHeader>
+
+          {selectedEnquiry && (
+            <div className="space-y-4 py-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Name</p>
+                  <p className="font-medium">{selectedEnquiry.name}</p>
+                </div>
+
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Status</p>
+                  {getStatusBadge(selectedEnquiry.status)}
+                </div>
+              </div>
+
+              <div>
+                <p className="text-sm text-muted-foreground mb-1">
+                  Phone Number
+                </p>
+                <div className="flex items-center gap-2">
+                  <Phone className="w-4 h-4 text-muted-foreground" />
+                  <p className="font-medium">{selectedEnquiry.phone}</p>
+                </div>
+              </div>
+
+              {selectedEnquiry.source && (
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Source</p>
+                  <p className="font-medium">{selectedEnquiry.source}</p>
+                </div>
+              )}
+
+              {selectedEnquiry.referredBy && (
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">
+                    Referred By
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <Users className="w-4 h-4 text-muted-foreground" />
+                    <p className="font-medium">{selectedEnquiry.referredBy}</p>
+                  </div>
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-4 pt-4 border-t">
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">
+                    Created At
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-muted-foreground" />
+                    <p className="text-sm">
+                      {new Date(selectedEnquiry.createdAt).toLocaleDateString()}
+                    </p>
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">
+                    Last Updated
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-muted-foreground" />
+                    <p className="text-sm">
+                      {new Date(selectedEnquiry.updatedAt).toLocaleDateString()}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsModalOpen(false)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add New Enquiry Modal */}
+      <Dialog open={isAddEnquiryOpen} onOpenChange={setIsAddEnquiryOpen}>
+        <DialogContent className="w-[95vw] max-w-md sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Add New Enquiry</DialogTitle>
+          </DialogHeader>
+          <FormProvider {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)}>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Name *</Label>
+                  <Input
+                    id="name"
+                    placeholder="Enter name"
+                    {...form.register("name", { required: "Name is required" })}
+                  />
+                  {form.formState.errors.name && (
+                    <p className="text-sm text-red-500">
+                      {form.formState.errors.name.message}
+                    </p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Phone Number *</Label>
+                  <Input
+                    id="phone"
+                    placeholder="Enter phone number"
+                    {...form.register("phone", {
+                      required: "Phone number is required",
+                    })}
+                  />
+                  {form.formState.errors.phone && (
+                    <p className="text-sm text-red-500">
+                      {form.formState.errors.phone.message}
+                    </p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="source">Source</Label>
+                  <Input
+                    id="source"
+                    placeholder="e.g., Instagram, Facebook, Walk-in"
+                    {...form.register("source")}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="referredBy">Referred By</Label>
+                  <Input
+                    id="referredBy"
+                    placeholder="Enter referrer name"
+                    {...form.register("referredBy")}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="status">Status</Label>
+                  <Select
+                    onValueChange={(value) => form.setValue("status", value)}
+                    defaultValue="new"
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="new">New</SelectItem>
+                      <SelectItem value="contacted">Contacted</SelectItem>
+                      <SelectItem value="interested">Interested</SelectItem>
+                      <SelectItem value="not_interested">
+                        Not Interested
+                      </SelectItem>
+                      <SelectItem value="converted">Converted</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:gap-0">
+                <Button
+                  type="submit"
+                  className="w-full sm:w-auto bg-gradient-to-r from-neon-green to-neon-blue text-white"
+                >
+                  Add Enquiry
+                </Button>
+              </DialogFooter>
+            </form>
+          </FormProvider>
+        </DialogContent>
+      </Dialog>
     </header>
   );
 }
