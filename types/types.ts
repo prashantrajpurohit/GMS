@@ -63,6 +63,23 @@ export type UserDataType = {
   updatedAt: string;
   phone?: string;
 };
+export interface Enquiry {
+  name: string;
+  source: string;
+  phone: string;
+  referredBy: string;
+  status: "new" | "contacted" | "converted" | "closed";
+}
+export interface Pagination {
+  total: number;
+  skip: number;
+  take: number;
+  hasMore: boolean;
+}
+export interface EnquiriesResponse {
+  enquiries: Enquiry[];
+  pagination: Pagination;
+}
 
 export type AuthValuesType = {
   logout: () => void;

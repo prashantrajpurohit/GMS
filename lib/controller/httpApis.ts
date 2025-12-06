@@ -21,6 +21,13 @@ export class CommonContoller {
     );
     return res?.data;
   }
+  async searchEnquiries(query: string) {
+    const res = await httpRequest.get(
+      `${ApiUrl.ENQUIRES}?search=${encodeURIComponent(query)}`
+    );
+    return res?.data?.data;
+  }
+
   async forgotPassword(payload: { email: string }) {
     const data = await httpRequest.post(`${ApiUrl.FORGOT_PASS_URL}`, payload);
     return data.data;
