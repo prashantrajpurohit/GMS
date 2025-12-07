@@ -64,6 +64,7 @@ export type UserDataType = {
   phone?: string;
 };
 export interface Enquiry {
+  _id?:string
   fullName: string;
   source: string;
   phone: string;

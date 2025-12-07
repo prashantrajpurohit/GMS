@@ -8,10 +8,10 @@ export const routeConfig = [
     subject: "dashboard",
   },
   {
-    title: "Enquery",
+    title: "Enquiry",
     path: "/enquiry",
     icon: MessageCircle,
-    subject: "enquery",
+    subject: "enquiry",
     action: "read",
   },
   {

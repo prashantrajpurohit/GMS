@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import {
   Card,
@@ -25,6 +25,7 @@ import {
   NotebookPen,
   Dumbbell,
   Users,
+  ArrowLeft,
 } from "lucide-react";
 import MembersController from "../controller";
 import { ApiUrl } from "@/api/apiUrls";
@@ -131,6 +132,7 @@ const MemberSkeleton = () => (
 export default function MemberProfilePage() {
   const { id } = useParams();
   const membersController = new MembersController();
+  const router = useRouter();
   const userData = useSelector(
     (state: StoreRootState) => state?.data?.userdata?.user
   );
@@ -205,6 +207,14 @@ export default function MemberProfilePage() {
 
   return (
     <div className="space-y-6">
+      <Button
+        variant="ghost"
+        onClick={() => router.back()}
+        className="mb-2 gap-2 hover:bg-muted"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Back
+      </Button>
       <div className="relative overflow-hidden rounded-2xl border border-neon-green/20 bg-gradient-to-r from-neon-green/10 via-background to-neon-blue/10 p-6 sm:p-8">
         <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_top,_var(--neon-green)_0%,_transparent_40%),_radial-gradient(circle_at_bottom,_var(--neon-blue)_0%,_transparent_35%)]" />
         <div className="relative flex flex-col lg:flex-row lg:items-center gap-6">

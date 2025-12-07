@@ -1,8 +1,16 @@
 "use client";
-
 import { useEffect, useRef, useState } from "react";
-import { Loader2, SearchIcon, Phone, Users, Calendar } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import {
+  Loader2,
+  SearchIcon,
+  Phone,
+  Users,
+  Calendar,
+  Loader,
+  Plus,
+  SearchX,
+} from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm, FormProvider } from "react-hook-form";
 
 import { Separator } from "@/components/ui/separator";
@@ -28,19 +36,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-interface EnquiryFormData {
-  name: string;
-  phone: string;
-  source?: string;
-  referredBy?: string;
-  status?: string;
-}
+import { useRouter } from "next/navigation";
+import EnquiryForm from "./forms/addEditEnquiryForm";
+import EnquiriesController from "@/app/enquiry/controller";
+import { toast } from "sonner";
+import { initialFormValues } from "@/app/enquiry/page";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { EnquiryFormData, enquirySchema } from "@/lib/validation-schemas";
 
 export function SiteHeader({ name }: { name?: string }) {
+  const enquiryController = new EnquiriesController();
+  const queryClient = useQueryClient();
   const [query, setQuery] = useState("");
   const debouncedQuery = useDebounce(query.trim(), 300);
-
+  const router = useRouter();
   const commonController = new CommonContoller();
 
   const [open, setOpen] = useState(false);
@@ -50,17 +59,47 @@ export function SiteHeader({ name }: { name?: string }) {
     enabled: debouncedQuery.length > 0,
   });
   const enquiries = data ?? [];
-
+  const { mutate, isPending } = useMutation({
+    mutationFn: enquiryController.addEnquiry,
+    onSuccess: () => {
+      setIsAddEnquiryOpen(false);
+      queryClient.invalidateQueries({ queryKey: ["enquiries-list"] });
+      toast.success(`Enquiry added successfully!`);
+      form.reset(initialFormValues);
+    },
+    onError: (error: any) => {
+      toast.error(
+        error?.message || "Failed to save enquiry. Please try again."
+      );
+    },
+  });
+  const { mutate: convertMutate, isPending: convertLoading } = useMutation({
+    mutationFn: enquiryController.convertToLead,
+    onSuccess: () => {
+      setIsModalOpen(false);
+      queryClient.invalidateQueries({ queryKey: ["enquiries-list"] });
+      toast.success(`Member added successfully!`);
+      form.reset(initialFormValues);
+    },
+    onError: (error: any) => {
+      toast.error(
+        error?.message || "Failed to save enquiry. Please try again."
+      );
+    },
+  });
   const [selectedEnquiry, setSelectedEnquiry] = useState<
     (Enquiry & { createdAt?: string | Date; updatedAt?: string | Date }) | null
   >(null);
-  console.log(selectedEnquiry, "selectedEnquiry");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAddEnquiryOpen, setIsAddEnquiryOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const blurTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const form = useForm<EnquiryFormData>();
+  const form = useForm<EnquiryFormData>({
+    defaultValues: { ...initialFormValues },
+    resolver: zodResolver(enquirySchema),
+    mode: "onChange", // Validates on change for better UX
+  });
 
   useEffect(() => {
     if (!query.trim()) {
@@ -87,10 +126,8 @@ export function SiteHeader({ name }: { name?: string }) {
   };
 
   const onSubmit = (data: EnquiryFormData) => {
-    console.log("Form submitted:", data);
     // Add your API call here to create the enquiry
-    setIsAddEnquiryOpen(false);
-    form.reset();
+    mutate(data);
   };
 
   const closeWithDelay = () => {
@@ -159,7 +196,7 @@ export function SiteHeader({ name }: { name?: string }) {
             />
             {showSuggestionBox && (
               <div className="absolute left-0 right-0 top-full z-20 mt-2 overflow-hidden rounded-md border bg-background shadow-lg">
-                <div className="max-h-64 overflow-y-auto">
+                <div className="max-h-72 overflow-y-auto">
                   {isLoading ? (
                     <div className="flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground">
                       <Loader2 className="size-4 animate-spin" />
@@ -209,20 +246,49 @@ export function SiteHeader({ name }: { name?: string }) {
                       })}
                     </ul>
                   ) : (
-                    <button
-                      className="w-full px-3 py-2 text-left text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-                      onMouseDown={(event) => {
-                        event.preventDefault();
-                        handleAddNewEnquiry();
-                      }}
-                    >
-                      <div className="flex items-center gap-2">
-                        <span>No enquiries found.</span>
-                        <Button className="font-medium text-foreground">
-                          Add new enquiry?
-                        </Button>
+                    <div className="w-full px-6 py-4 text-center">
+                      <div className="flex flex-col items-center gap-4">
+                        {/* Icon with gradient background */}
+                        <div className="relative">
+                          <div className="absolute inset-0 rounded-full blur-xl opacity-20 animate-pulse bg-gradient-to-r from-[var(--neon-green)] to-[var(--neon-blue)]"></div>
+                          <div className="relative rounded-full p-4 bg-gradient-to-br from-[var(--neon-green)]/10 to-[var(--neon-blue)]/10">
+                            <SearchX
+                              className="w-8 h-8"
+                              style={{ color: "var(--neon-green)" }}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Text content */}
+                        <div className="space-y-1">
+                          <h3 className="text-base font-semibold text-foreground">
+                            No enquiries found
+                          </h3>
+                          <p className="text-sm text-muted-foreground max-w-xs">
+                            We couldn't find any matching enquiries. Would you
+                            like to create a new one?
+                          </p>
+                        </div>
+
+                        {/* CTA Button */}
+                        <button
+                          onClick={handleAddNewEnquiry}
+                          className="group relative inline-flex items-center gap-2 px-6 py-2.5 rounded-lg font-medium text-sm shadow-lg transition-all duration-300 hover:scale-105 bg-gradient-to-r from-[var(--neon-green)] to-[var(--neon-blue)] text-white hover:shadow-xl"
+                          style={{
+                            boxShadow:
+                              "0 10px 25px -5px color-mix(in srgb, var(--neon-green) 25%, transparent)",
+                          }}
+                        >
+                          <Plus className="w-4 h-4 group-hover:rotate-90 transition-transform duration-300" />
+                          <span>Add New Enquiry</span>
+                        </button>
+
+                        {/* Optional: Subtle hint text */}
+                        <p className="text-xs text-muted-foreground/60 mt-2">
+                          Or try adjusting your search terms
+                        </p>
                       </div>
-                    </button>
+                    </div>
                   )}
                 </div>
               </div>
@@ -322,6 +388,35 @@ export function SiteHeader({ name }: { name?: string }) {
             <Button variant="outline" onClick={() => setIsModalOpen(false)}>
               Close
             </Button>
+            {!selectedEnquiry?.isEnquiry ? (
+              <Button
+                // variant="outline"
+                onClick={() => {
+                  setIsModalOpen(false);
+                  router.push(`/members/${selectedEnquiry?._id as string}`);
+                }}
+              >
+                View Profile
+              </Button>
+            ) : (
+              <Button
+                type="button"
+                // variant="outline"
+                onClick={() =>
+                  convertMutate({ id: selectedEnquiry?._id as string })
+                }
+                className="w-full sm:w-auto"
+              >
+                {convertLoading ? (
+                  <>
+                    <Loader className="animate-spin h-4 w-4 mr-2" />
+                    Saving...
+                  </>
+                ) : (
+                  "Convert to Member"
+                )}
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -334,82 +429,29 @@ export function SiteHeader({ name }: { name?: string }) {
           </DialogHeader>
           <FormProvider {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)}>
-              <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Name *</Label>
-                  <Input
-                    id="name"
-                    placeholder="Enter name"
-                    {...form.register("name", { required: "Name is required" })}
-                  />
-                  {form.formState.errors.name && (
-                    <p className="text-sm text-red-500">
-                      {form.formState.errors.name.message}
-                    </p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Phone Number *</Label>
-                  <Input
-                    id="phone"
-                    placeholder="Enter phone number"
-                    {...form.register("phone", {
-                      required: "Phone number is required",
-                    })}
-                  />
-                  {form.formState.errors.phone && (
-                    <p className="text-sm text-red-500">
-                      {form.formState.errors.phone.message}
-                    </p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="source">Source</Label>
-                  <Input
-                    id="source"
-                    placeholder="e.g., Instagram, Facebook, Walk-in"
-                    {...form.register("source")}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="referredBy">Referred By</Label>
-                  <Input
-                    id="referredBy"
-                    placeholder="Enter referrer name"
-                    {...form.register("referredBy")}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="status">Status</Label>
-                  <Select
-                    onValueChange={(value) => form.setValue("status", value)}
-                    defaultValue="new"
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="new">New</SelectItem>
-                      <SelectItem value="contacted">Contacted</SelectItem>
-                      <SelectItem value="interested">Interested</SelectItem>
-                      <SelectItem value="not_interested">
-                        Not Interested
-                      </SelectItem>
-                      <SelectItem value="converted">Converted</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
+              <EnquiryForm isEditing={false} />
               <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:gap-0">
                 <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsAddEnquiryOpen(false)}
+                  className="w-full sm:w-auto"
+                >
+                  Close
+                </Button>
+                <Button
                   type="submit"
+                  disabled={isPending}
                   className="w-full sm:w-auto bg-gradient-to-r from-neon-green to-neon-blue text-white"
                 >
-                  Add Enquiry
+                  {isPending ? (
+                    <>
+                      <Loader className="animate-spin h-4 w-4 mr-2" />
+                      Saving...
+                    </>
+                  ) : (
+                    "Add Enquiry"
+                  )}
                 </Button>
               </DialogFooter>
             </form>

@@ -93,6 +93,30 @@ export const memberSchema = z.object({
   notes: z.string().optional(),
   batch: z.string().optional(),
 });
+
+export const enquirySchema = z.object({
+  fullName: z
+    .string()
+    .min(1, "Name is required")
+    .min(2, "Name must be at least 2 characters")
+    .max(100, "Name must not exceed 100 characters")
+    .regex(/^[a-zA-Z\s]+$/, "Name should only contain letters and spaces"),
+  phone: z
+    .string()
+    .min(1, "Phone number is required")
+    .regex(/^[0-9]{10}$/, "Phone number must be exactly 10 digits"),
+  source: z.string()
+    .min(1, "Source is required"),
+  referredBy: z.string().optional(),
+  status: z.enum(
+    ["new", "contacted", "interested", "not_interested", "converted"],
+    {
+      errorMap: () => ({ message: "Please select a valid status" }),
+    }
+  ),
+});
+
+export type EnquiryFormData = z.infer<typeof enquirySchema>;
 export type RegistrationFormData = z.infer<typeof registrationSchema>;
 
 export type StaffFormData = z.infer<typeof staffSchema>;

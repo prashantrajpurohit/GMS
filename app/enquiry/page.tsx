@@ -57,19 +57,11 @@ import { addEditData } from "@/reduxstore/editIDataSlice";
 import { StoreRootState } from "@/reduxstore/reduxStore";
 import NoData from "@/components/reusableComponents/no-data";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Label } from "@/components/ui/label";
-import { z } from "zod";
+import EnquiriesController from "./controller";
+import { EnquiryFormData, enquirySchema } from "@/lib/validation-schemas";
+import EnquiryForm from "@/components/forms/addEditEnquiryForm";
 
-// Validation Schema
-const enquirySchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  phone: z.string().min(10, "Valid phone number is required"),
-  source: z.string().optional(),
-  referredBy: z.string().optional(),
-  status: z.enum(["new", "contacted", "interested", "not_interested", "converted"]),
-});
-
-type EnquiryFormData = z.infer<typeof enquirySchema>;
+// Enhanced Validation Schema
 
 interface EnquiryInterface extends EnquiryFormData {
   _id: string;
@@ -78,26 +70,10 @@ interface EnquiryInterface extends EnquiryFormData {
   updatedAt: string;
 }
 
-// Mock Controller (replace with actual implementation)
-class EnquiriesController {
-  async getAllEnquiries() {
-    // Replace with actual API call
-    return [];
-  }
+// Mock Controller
 
-  async addEnquiry(data: any) {
-    // Replace with actual API call
-    return data;
-  }
-
-  async updateEnquiry({ id, payload }: { id: string; payload: any }) {
-    // Replace with actual API call
-    return payload;
-  }
-}
-
-const initialFormValues: EnquiryFormData = {
-  name: "",
+export const initialFormValues: EnquiryFormData = {
+  fullName: "",
   phone: "",
   source: "",
   referredBy: "",
@@ -107,17 +83,34 @@ const initialFormValues: EnquiryFormData = {
 // Status Badge Component
 const getStatusBadge = (status: string) => {
   const statusConfig: Record<string, { label: string; className: string }> = {
-    new: { label: "New", className: "bg-blue-500/10 text-blue-500 border-blue-500/20" },
-    contacted: { label: "Contacted", className: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20" },
-    interested: { label: "Interested", className: "bg-green-500/10 text-green-500 border-green-500/20" },
-    not_interested: { label: "Not Interested", className: "bg-red-500/10 text-red-500 border-red-500/20" },
-    converted: { label: "Converted", className: "bg-purple-500/10 text-purple-500 border-purple-500/20" },
+    new: {
+      label: "New",
+      className: "bg-blue-500/10 text-blue-500 border-blue-500/20",
+    },
+    contacted: {
+      label: "Contacted",
+      className: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20",
+    },
+    interested: {
+      label: "Interested",
+      className: "bg-green-500/10 text-green-500 border-green-500/20",
+    },
+    not_interested: {
+      label: "Not Interested",
+      className: "bg-red-500/10 text-red-500 border-red-500/20",
+    },
+    converted: {
+      label: "Converted",
+      className: "bg-purple-500/10 text-purple-500 border-purple-500/20",
+    },
   };
 
   const config = statusConfig[status] || statusConfig.new;
 
   return (
-    <span className={`px-3 py-1 rounded-full text-xs font-medium border ${config.className}`}>
+    <span
+      className={`px-3 py-1 rounded-full text-xs font-medium border ${config.className}`}
+    >
       {config.label}
     </span>
   );
@@ -138,7 +131,9 @@ const EnquiryTableSkeleton = () => (
               <TableHead>Name</TableHead>
               <TableHead>Contact</TableHead>
               <TableHead className="hidden sm:table-cell">Source</TableHead>
-              <TableHead className="hidden md:table-cell">Referred By</TableHead>
+              <TableHead className="hidden md:table-cell">
+                Referred By
+              </TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="hidden lg:table-cell">Date</TableHead>
               <TableHead className="text-right">Actions</TableHead>
@@ -182,81 +177,16 @@ const EnquiryTableSkeleton = () => (
   </Card>
 );
 
-// Enquiry Form Component
-const EnquiryForm = ({ isEditing }: { isEditing: boolean }) => {
-  const { register, formState: { errors } } = useForm<EnquiryFormData>();
-
-  return (
-    <div className="space-y-4 py-4">
-      <div className="space-y-2">
-        <Label htmlFor="name">Name *</Label>
-        <Input
-          id="name"
-          placeholder="Enter name"
-          {...register("name")}
-        />
-        {errors.name && (
-          <p className="text-sm text-red-500">{errors.name.message}</p>
-        )}
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="phone">Phone Number *</Label>
-        <Input
-          id="phone"
-          placeholder="Enter phone number"
-          {...register("phone")}
-        />
-        {errors.phone && (
-          <p className="text-sm text-red-500">{errors.phone.message}</p>
-        )}
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="source">Source</Label>
-        <Input
-          id="source"
-          placeholder="e.g., Instagram, Facebook, Walk-in"
-          {...register("source")}
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="referredBy">Referred By</Label>
-        <Input
-          id="referredBy"
-          placeholder="Enter referrer name"
-          {...register("referredBy")}
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="status">Status</Label>
-        <Select {...register("status")}>
-          <SelectTrigger>
-            <SelectValue placeholder="Select status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="new">New</SelectItem>
-            <SelectItem value="contacted">Contacted</SelectItem>
-            <SelectItem value="interested">Interested</SelectItem>
-            <SelectItem value="not_interested">Not Interested</SelectItem>
-            <SelectItem value="converted">Converted</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-    </div>
-  );
-};
+// Enquiry Form Component with proper validation
 
 // View Details Modal Component
-const ViewEnquiryModal = ({ 
-  enquiry, 
-  isOpen, 
-  onClose 
-}: { 
-  enquiry: EnquiryInterface | null; 
-  isOpen: boolean; 
+const ViewEnquiryModal = ({
+  enquiry,
+  isOpen,
+  onClose,
+}: {
+  enquiry: EnquiryInterface | null;
+  isOpen: boolean;
   onClose: () => void;
 }) => {
   if (!enquiry) return null;
@@ -265,16 +195,18 @@ const ViewEnquiryModal = ({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="w-[95vw] max-w-md sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold">Enquiry Details</DialogTitle>
+          <DialogTitle className="text-xl font-semibold">
+            Enquiry Details
+          </DialogTitle>
         </DialogHeader>
-        
+
         <div className="space-y-4 py-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
               <p className="text-sm text-muted-foreground mb-1">Name</p>
-              <p className="font-medium">{enquiry.name}</p>
+              <p className="font-medium">{enquiry.fullName}</p>
             </div>
-            
+
             <div>
               <p className="text-sm text-muted-foreground mb-1">Status</p>
               {getStatusBadge(enquiry.status)}
@@ -311,15 +243,19 @@ const ViewEnquiryModal = ({
               <p className="text-sm text-muted-foreground mb-1">Created At</p>
               <div className="flex items-center gap-2">
                 <Calendar className="w-4 h-4 text-muted-foreground" />
-                <p className="text-sm">{new Date(enquiry.createdAt).toLocaleDateString()}</p>
+                <p className="text-sm">
+                  {new Date(enquiry.createdAt).toLocaleDateString()}
+                </p>
               </div>
             </div>
-            
+
             <div>
               <p className="text-sm text-muted-foreground mb-1">Last Updated</p>
               <div className="flex items-center gap-2">
                 <Calendar className="w-4 h-4 text-muted-foreground" />
-                <p className="text-sm">{new Date(enquiry.updatedAt).toLocaleDateString()}</p>
+                <p className="text-sm">
+                  {new Date(enquiry.updatedAt).toLocaleDateString()}
+                </p>
               </div>
             </div>
           </div>
@@ -356,15 +292,37 @@ function EnquiriesManagement() {
       setIsAddEnquiryOpen(false);
       queryClient.invalidateQueries({ queryKey: ["enquiries-list"] });
       toast.success(`Enquiry ${editData ? "updated" : "added"} successfully!`);
+      form.reset(initialFormValues);
+      dispatch(addEditData(null));
+    },
+    onError: (error: any) => {
+      toast.error(
+        error?.message || "Failed to save enquiry. Please try again."
+      );
+    },
+  });
+  const { mutate: convertMutate, isPending: convertLoading } = useMutation({
+    mutationFn: enquiryController.convertToLead,
+    onSuccess: () => {
+      setIsAddEnquiryOpen(false);
+      queryClient.invalidateQueries({ queryKey: ["enquiries-list"] });
+      toast.success(`Enquiry ${editData ? "updated" : "added"} successfully!`);
+      form.reset(initialFormValues);
+      dispatch(addEditData(null));
+    },
+    onError: (error: any) => {
+      toast.error(
+        error?.message || "Failed to save enquiry. Please try again."
+      );
     },
   });
 
-  const { data, isLoading } = useQuery({
+  const { data = [], isLoading } = useQuery<[EnquiryInterface] | []>({
     queryKey: ["enquiries-list"],
     queryFn: enquiryController.getAllEnquiries,
   });
-
-  const [enquiries, setEnquiries] = useState<EnquiryInterface[]>([]);
+  const enquiries = data?.length > 0 ? data : [];
+  // const [enquiries, setEnquiries] = useState<EnquiryInterface[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedFilter, setSelectedFilter] = useState("all");
   const [isAddEnquiryOpen, setIsAddEnquiryOpen] = useState(false);
@@ -375,16 +333,18 @@ function EnquiriesManagement() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  const filteredEnquiries = enquiries?.filter((enquiry) => {
-    const matchesSearch =
-      enquiry?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      enquiry?.phone.includes(searchTerm) ||
-      enquiry?.source?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      enquiry?.referredBy?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter =
-      selectedFilter === "all" || enquiry.status === selectedFilter;
-    return matchesSearch && matchesFilter;
-  });
+  const filteredEnquiries = (enquiries?.length > 0 ? enquiries : [])?.filter(
+    (enquiry) => {
+      const matchesSearch =
+        enquiry?.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        enquiry?.phone.includes(searchTerm) ||
+        enquiry?.source?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        enquiry?.referredBy?.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesFilter =
+        selectedFilter === "all" || enquiry.status === selectedFilter;
+      return true;
+    }
+  );
 
   // Pagination calculations
   const totalPages = Math.ceil((filteredEnquiries?.length || 0) / itemsPerPage);
@@ -408,18 +368,24 @@ function EnquiriesManagement() {
   };
 
   const enquiryCounts = {
-    all: enquiries?.length,
-    new: enquiries?.filter((e) => e.status === "new")?.length,
-    contacted: enquiries?.filter((e) => e.status === "contacted")?.length,
-    interested: enquiries?.filter((e) => e.status === "interested")?.length,
-    not_interested: enquiries?.filter((e) => e.status === "not_interested")?.length,
-    converted: enquiries?.filter((e) => e.status === "converted")?.length,
+    all: enquiries?.length || 0,
+    new: enquiries?.filter((e) => e.status === "new")?.length || 0,
+    contacted: enquiries?.filter((e) => e.status === "contacted")?.length || 0,
+    interested:
+      enquiries?.filter((e) => e.status === "interested")?.length || 0,
+    not_interested:
+      enquiries?.filter((e) => e.status === "not_interested")?.length || 0,
+    converted: enquiries?.filter((e) => e.status === "converted")?.length || 0,
   };
 
   const form = useForm<EnquiryFormData>({
-    values: editData || initialFormValues,
+    defaultValues: editData ?? { ...initialFormValues },
+    values: editData ?? undefined,
     resolver: zodResolver(enquirySchema),
+    mode: "onChange", // Validates on change for better UX
   });
+
+  console.log(form.getValues(), "values");
 
   const onSubmit: SubmitHandler<EnquiryFormData> = (data) => {
     mutate(data);
@@ -433,9 +399,9 @@ function EnquiriesManagement() {
     }
   }
 
-  useEffect(() => {
-    setEnquiries(data || []);
-  }, [data]);
+  // useEffect(() => {
+  //   setEnquiries(data || []);
+  // }, [data]);
 
   return (
     <div className="space-y-6">
@@ -443,7 +409,7 @@ function EnquiriesManagement() {
         <div>
           <h1 className="text-3xl mb-2">Enquiries Management</h1>
           <p className="text-muted-foreground">
-            Track and manage gym membership enquiries
+            Track and manage gym membership enquiries 
           </p>
         </div>
 
@@ -466,11 +432,36 @@ function EnquiriesManagement() {
                 <EnquiryForm isEditing={!!editData} />
                 <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:gap-0">
                   <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() =>
+                      editData
+                        ? convertMutate({ id: editData?._id })
+                        : handleOpen(false)
+                    }
+                    className="w-full sm:w-auto"
+                  >
+                    {convertLoading ? (
+                      <>
+                        <Loader className="animate-spin h-4 w-4 mr-2" />
+                        Saving...
+                      </>
+                    ) : editData ? (
+                      "Convert to Member"
+                    ) : (
+                      "Cancel"
+                    )}
+                  </Button>
+                  <Button
                     type="submit"
+                    disabled={isPending}
                     className="w-full sm:w-auto bg-gradient-to-r from-neon-green to-neon-blue text-white"
                   >
                     {isPending ? (
-                      <Loader className="animate-spin h-4 w-4" />
+                      <>
+                        <Loader className="animate-spin h-4 w-4 mr-2" />
+                        Saving...
+                      </>
                     ) : editData ? (
                       "Update Enquiry"
                     ) : (
@@ -503,18 +494,12 @@ function EnquiriesManagement() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">
-                    All ({enquiryCounts.all})
-                  </SelectItem>
-                  <SelectItem value="new">
-                    New ({enquiryCounts.new})
-                  </SelectItem>
+                  <SelectItem value="all">All ({enquiryCounts.all})</SelectItem>
+                  <SelectItem value="new">New ({enquiryCounts.new})</SelectItem>
                   <SelectItem value="contacted">
                     Contacted ({enquiryCounts.contacted})
                   </SelectItem>
-                  <SelectItem value="interested">
-                    Interested ({enquiryCounts.interested})
-                  </SelectItem>
+
                   <SelectItem value="not_interested">
                     Not Interested ({enquiryCounts.not_interested})
                   </SelectItem>
@@ -539,7 +524,9 @@ function EnquiriesManagement() {
           })}
           {...(searchTerm === "" && {
             actionButton: (
-              <Button onClick={() => handleOpen(true)}>Add First Enquiry</Button>
+              <Button onClick={() => handleOpen(true)}>
+                Add First Enquiry
+              </Button>
             ),
           })}
         />
@@ -560,7 +547,9 @@ function EnquiriesManagement() {
                   <TableRow>
                     <TableHead>Name</TableHead>
                     <TableHead>Contact</TableHead>
-                    <TableHead className="hidden sm:table-cell">Source</TableHead>
+                    <TableHead className="hidden sm:table-cell">
+                      Source
+                    </TableHead>
                     <TableHead className="hidden md:table-cell">
                       Referred By
                     </TableHead>
@@ -573,7 +562,7 @@ function EnquiriesManagement() {
                   {paginatedEnquiries?.map((enquiry) => (
                     <TableRow key={enquiry._id}>
                       <TableCell>
-                        <div className="font-medium">{enquiry.name}</div>
+                        <div className="font-medium">{enquiry.fullName}</div>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2 text-sm">
@@ -650,8 +639,9 @@ function EnquiriesManagement() {
 
               <div className="flex items-center gap-2">
                 <span className="text-sm text-muted-foreground">
-                  {startIndex + 1}-{Math.min(endIndex, filteredEnquiries?.length)}{" "}
-                  of {filteredEnquiries?.length}
+                  {startIndex + 1}-
+                  {Math.min(endIndex, filteredEnquiries?.length)} of{" "}
+                  {filteredEnquiries?.length}
                 </span>
               </div>
 

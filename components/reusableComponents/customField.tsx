@@ -1,5 +1,5 @@
-import React from "react";
 
+import React from "react";
 import { useFormContext } from "react-hook-form";
 import {
   FormControl,
@@ -87,6 +87,8 @@ const CustomField = ({
                   const value = String(
                     val?._id ?? val?.id ?? val?.value ?? val?.name ?? val
                   );
+                  console.log(val,"vals");
+                  
                   const label = String(
                     val?.name ?? val?.label ?? val?.value ?? val
                   );

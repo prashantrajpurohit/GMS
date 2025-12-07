@@ -209,7 +209,6 @@ export default function AddEditMember({
   });
   const currentYear = new Date().getFullYear();
   const minDate = new Date(currentYear - 5, 0, 1);
-  console.log(form.formState.errors, "error");
 
   return (
     <div>
@@ -364,7 +363,6 @@ export default function AddEditMember({
                 name="startDate"
                 label="Start Date"
                 placeholder="Select workout batch"
-                disabled={!!isEditingMember}
               />
             </div>
             <div>
