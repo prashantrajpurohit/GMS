@@ -1,10 +1,11 @@
 "use client";
 
 import { useFormContext } from "react-hook-form";
-import DatePicker from "react-datepicker";
+import DatePicker from "react-date-picker";
 import { Calendar as CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-import "react-datepicker/dist/react-datepicker.css";
+import 'react-date-picker/dist/DatePicker.css';
+import 'react-calendar/dist/Calendar.css';
 
 export default function DatePickerField({
   name,
@@ -47,20 +48,20 @@ export default function DatePickerField({
 
       <div className="relative">
         <DatePicker
-          selected={dateValue}
+          // selected={dateValue}
           onChange={(date) => {
             if (date && date instanceof Date && !isNaN(date.getTime())) {
               setValue(name, date.toISOString(), { shouldValidate: true });
             }
           }}
           maxDate={minDate}
-          dateFormat="dd-MM-yyyy"
-          placeholderText={placeholder}
+          // dateFormat="dd-MM-yyyy"
+          // placeholderText={placeholder}
           disabled={disabled}
-          showYearDropdown
-          showMonthDropdown
-          dropdownMode="select"
-          yearDropdownItemNumber={6}
+          // showYearDropdown
+          // showMonthDropdown
+          // dropdownMode="select"
+          // yearDropdownItemNumber={6}
           className={cn(
             "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background pl-10",
             !dateValue && "text-muted-foreground"

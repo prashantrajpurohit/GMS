@@ -40,9 +40,10 @@ import { useRouter } from "next/navigation";
 import EnquiryForm from "./forms/addEditEnquiryForm";
 import EnquiriesController from "@/app/enquiry/controller";
 import { toast } from "sonner";
-import { initialFormValues } from "@/app/enquiry/page";
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { EnquiryFormData, enquirySchema } from "@/lib/validation-schemas";
+import { enquiryInitialFormValues } from "@/lib/constants";
 
 export function SiteHeader({ name }: { name?: string }) {
   const enquiryController = new EnquiriesController();
@@ -65,7 +66,7 @@ export function SiteHeader({ name }: { name?: string }) {
       setIsAddEnquiryOpen(false);
       queryClient.invalidateQueries({ queryKey: ["enquiries-list"] });
       toast.success(`Enquiry added successfully!`);
-      form.reset(initialFormValues);
+      form.reset(enquiryInitialFormValues);
     },
     onError: (error: any) => {
       toast.error(
@@ -79,7 +80,7 @@ export function SiteHeader({ name }: { name?: string }) {
       setIsModalOpen(false);
       queryClient.invalidateQueries({ queryKey: ["enquiries-list"] });
       toast.success(`Member added successfully!`);
-      form.reset(initialFormValues);
+      form.reset(enquiryInitialFormValues);
     },
     onError: (error: any) => {
       toast.error(
@@ -96,7 +97,7 @@ export function SiteHeader({ name }: { name?: string }) {
   const blurTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const form = useForm<EnquiryFormData>({
-    defaultValues: { ...initialFormValues },
+    defaultValues: { ...enquiryInitialFormValues },
     resolver: zodResolver(enquirySchema),
     mode: "onChange", // Validates on change for better UX
   });

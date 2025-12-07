@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/badge";
-import { MemberInterface } from "./validation-schemas";
+import { EnquiryFormData, MemberInterface } from "./validation-schemas";
 
 export const DASHBOARD_DUMMY = [
   {
@@ -632,7 +632,15 @@ export const initialFormValues: MemberInterface = {
   status: "active",
   notes: "",
   batch: "",
-  registrationNo:""
+  registrationNo: "",
+};
+
+export const enquiryInitialFormValues: EnquiryFormData = {
+  fullName: "",
+  phone: "",
+  source: "",
+  referredBy: "",
+  status: "new",
 };
 export const getStatusBadge = (status: string) => {
   switch (status) {

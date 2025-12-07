@@ -60,8 +60,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import EnquiriesController from "./controller";
 import { EnquiryFormData, enquirySchema } from "@/lib/validation-schemas";
 import EnquiryForm from "@/components/forms/addEditEnquiryForm";
-
-// Enhanced Validation Schema
+import { enquiryInitialFormValues } from "@/lib/constants";
 
 interface EnquiryInterface extends EnquiryFormData {
   _id: string;
@@ -70,15 +69,9 @@ interface EnquiryInterface extends EnquiryFormData {
   updatedAt: string;
 }
 
-// Mock Controller
+// Move initialFormValues inside the component or make it a const within this file
+// but NOT exported from a Next.js page
 
-export const initialFormValues: EnquiryFormData = {
-  fullName: "",
-  phone: "",
-  source: "",
-  referredBy: "",
-  status: "new",
-};
 
 // Status Badge Component
 const getStatusBadge = (status: string) => {
@@ -177,8 +170,6 @@ const EnquiryTableSkeleton = () => (
   </Card>
 );
 
-// Enquiry Form Component with proper validation
-
 // View Details Modal Component
 const ViewEnquiryModal = ({
   enquiry,
@@ -271,8 +262,8 @@ const ViewEnquiryModal = ({
   );
 };
 
-// Main Component
-function EnquiriesManagement() {
+// Main Component - DEFAULT EXPORT ONLY
+export default function EnquiriesManagement() {
   const dispatch = useDispatch();
   const queryClient = useQueryClient();
   const editData = useSelector(
@@ -292,7 +283,7 @@ function EnquiriesManagement() {
       setIsAddEnquiryOpen(false);
       queryClient.invalidateQueries({ queryKey: ["enquiries-list"] });
       toast.success(`Enquiry ${editData ? "updated" : "added"} successfully!`);
-      form.reset(initialFormValues);
+      form.reset(enquiryInitialFormValues);
       dispatch(addEditData(null));
     },
     onError: (error: any) => {
@@ -301,13 +292,14 @@ function EnquiriesManagement() {
       );
     },
   });
+
   const { mutate: convertMutate, isPending: convertLoading } = useMutation({
     mutationFn: enquiryController.convertToLead,
     onSuccess: () => {
       setIsAddEnquiryOpen(false);
       queryClient.invalidateQueries({ queryKey: ["enquiries-list"] });
       toast.success(`Enquiry ${editData ? "updated" : "added"} successfully!`);
-      form.reset(initialFormValues);
+      form.reset(enquiryInitialFormValues);
       dispatch(addEditData(null));
     },
     onError: (error: any) => {
@@ -322,7 +314,7 @@ function EnquiriesManagement() {
     queryFn: enquiryController.getAllEnquiries,
   });
   const enquiries = data?.length > 0 ? data : [];
-  // const [enquiries, setEnquiries] = useState<EnquiryInterface[]>([]);
+
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedFilter, setSelectedFilter] = useState("all");
   const [isAddEnquiryOpen, setIsAddEnquiryOpen] = useState(false);
@@ -342,7 +334,7 @@ function EnquiriesManagement() {
         enquiry?.referredBy?.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesFilter =
         selectedFilter === "all" || enquiry.status === selectedFilter;
-      return true;
+      return matchesSearch && matchesFilter;
     }
   );
 
@@ -379,13 +371,11 @@ function EnquiriesManagement() {
   };
 
   const form = useForm<EnquiryFormData>({
-    defaultValues: editData ?? { ...initialFormValues },
+    defaultValues: editData ?? { ...enquiryInitialFormValues },
     values: editData ?? undefined,
     resolver: zodResolver(enquirySchema),
-    mode: "onChange", // Validates on change for better UX
+    mode: "onChange",
   });
-
-  console.log(form.getValues(), "values");
 
   const onSubmit: SubmitHandler<EnquiryFormData> = (data) => {
     mutate(data);
@@ -395,13 +385,9 @@ function EnquiriesManagement() {
     setIsAddEnquiryOpen(open);
     if (!open) {
       dispatch(addEditData(null));
-      form.reset(initialFormValues);
+      form.reset(enquiryInitialFormValues);
     }
   }
-
-  // useEffect(() => {
-  //   setEnquiries(data || []);
-  // }, [data]);
 
   return (
     <div className="space-y-6">
@@ -409,7 +395,7 @@ function EnquiriesManagement() {
         <div>
           <h1 className="text-3xl mb-2">Enquiries Management</h1>
           <p className="text-muted-foreground">
-            Track and manage gym membership enquiries 
+            Track and manage gym membership enquiries
           </p>
         </div>
 
@@ -499,7 +485,6 @@ function EnquiriesManagement() {
                   <SelectItem value="contacted">
                     Contacted ({enquiryCounts.contacted})
                   </SelectItem>
-
                   <SelectItem value="not_interested">
                     Not Interested ({enquiryCounts.not_interested})
                   </SelectItem>
@@ -700,5 +685,3 @@ function EnquiriesManagement() {
     </div>
   );
 }
-
-export default EnquiriesManagement;
