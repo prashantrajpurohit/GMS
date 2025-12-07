@@ -121,8 +121,8 @@ export function SiteHeader({ name }: { name?: string }) {
 
   const handleAddNewEnquiry = () => {
     setIsAddEnquiryOpen(true);
-    setOpen(false);
-    setQuery("");
+    // setOpen(false);
+    // setQuery("");
   };
 
   const onSubmit = (data: EnquiryFormData) => {
@@ -184,7 +184,7 @@ export function SiteHeader({ name }: { name?: string }) {
             <SearchIcon className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               type="search"
-              placeholder="Search enquiries"
+              placeholder="Search enquiries or members..."
               aria-label="Search enquiries"
               autoComplete="off"
               value={query}
@@ -246,7 +246,7 @@ export function SiteHeader({ name }: { name?: string }) {
                       })}
                     </ul>
                   ) : (
-                    <div className="w-full px-6 py-4 text-center">
+                    <div className="w-full px-6 py-4 text-center z-50">
                       <div className="flex flex-col items-center gap-4">
                         {/* Icon with gradient background */}
                         <div className="relative">
@@ -271,8 +271,9 @@ export function SiteHeader({ name }: { name?: string }) {
                         </div>
 
                         {/* CTA Button */}
-                        <button
-                          onClick={handleAddNewEnquiry}
+                        <Button
+                          type="button"
+                          onClick={() => handleAddNewEnquiry()}
                           className="group relative inline-flex items-center gap-2 px-6 py-2.5 rounded-lg font-medium text-sm shadow-lg transition-all duration-300 hover:scale-105 bg-gradient-to-r from-[var(--neon-green)] to-[var(--neon-blue)] text-white hover:shadow-xl"
                           style={{
                             boxShadow:
@@ -281,7 +282,7 @@ export function SiteHeader({ name }: { name?: string }) {
                         >
                           <Plus className="w-4 h-4 group-hover:rotate-90 transition-transform duration-300" />
                           <span>Add New Enquiry</span>
-                        </button>
+                        </Button>
 
                         {/* Optional: Subtle hint text */}
                         <p className="text-xs text-muted-foreground/60 mt-2">

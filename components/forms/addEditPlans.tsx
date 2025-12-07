@@ -4,8 +4,23 @@ import { DialogDescription, DialogHeader, DialogTitle } from "../ui/dialog";
 import CustomField from "../reusableComponents/customField";
 import Autocomplete from "../reusableComponents/autocomplete";
 import CustomTextarea from "../reusableComponents/textArea";
+import { useFormContext } from "react-hook-form";
 
 export default function AddEditPlans() {
+  const qualifiesForFreeze = (durationValue: number, durationUnit: string) => {
+    const value = durationValue || 0;
+    if (durationUnit === "years") return value >= 1;
+    if (durationUnit === "months") return value >= 6;
+    return false;
+  };
+  const form = useFormContext();
+  const values = form.watch();
+  console.log(
+    values,
+    "values",
+    qualifiesForFreeze(values?.duration, values?.unit)
+  );
+
   return (
     <div>
       <DialogHeader>
@@ -82,23 +97,20 @@ export default function AddEditPlans() {
             isLoading={false}
           />
         </div>
-        {/* {qualifiesForFreeze(
-                    values?.durationValue,
-                    values?.durationUnit
-                  ) && (
-                    <div className="grid gap-2">
-                      <CustomField
-                        name="freeze-days"
-                        label="Freeze Days (optional)"
-                        placeholder="0"
-                        isLoading={false}
-                        type="number"
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        Number of days member can pause their membership
-                      </p>
-                    </div>
-                  )} */}
+        {qualifiesForFreeze(values?.duration, values?.unit) && (
+          <div className="grid gap-2">
+            <CustomField
+              name="freezedays"
+              label="Freeze Days (optional)"
+              placeholder="0"
+              isLoading={false}
+              type="number"
+            />
+            <p className="text-xs text-muted-foreground">
+              Number of days member can pause their membership
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

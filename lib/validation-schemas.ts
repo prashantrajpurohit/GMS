@@ -59,6 +59,7 @@ export const planSchema = z.object({
   description: z.string().min(1, "Description is required"),
   price: z.number().positive("Price must be a positive number"),
   duration: z.number().int().positive("Duration must be a positive integer"),
+  freezedays: z.number().int().positive("Days must be a positive integer"),
   features: z.array(z.string()).min(1, "At least one feature is required"),
   unit: z.enum(["days", "months", "years"], {
     required_error: "Duration unit is required",

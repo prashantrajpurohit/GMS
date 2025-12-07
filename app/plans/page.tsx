@@ -9,13 +9,6 @@ import {
   DialogFooter,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Plus,
@@ -23,7 +16,6 @@ import {
   Edit,
   TrendingUp,
   Users,
-  DollarSign,
   Loader,
   IndianRupee,
 } from "lucide-react";
@@ -158,6 +150,7 @@ function WorkoutPlans() {
       isActive: true,
       name: "",
       price: 0,
+      freezedays: 0,
     },
     resolver: zodResolver(planSchema),
   });
